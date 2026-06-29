@@ -1,0 +1,5 @@
+caproto<2,>=1.1
+
+[dev]
+pytest>=7
+ruff>=0.4

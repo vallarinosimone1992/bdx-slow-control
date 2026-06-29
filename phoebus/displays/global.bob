@@ -1,0 +1,859 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<display version="2.0.0">
+  <name>BDX GLOBAL</name>
+  <width>1400</width>
+  <height>1073</height>
+  <widget type="label" version="2.0.0">
+    <name>Label_1</name>
+    <x>20</x>
+    <y>12</y>
+    <width>650</width>
+    <height>38</height>
+    <text>BDX GLOBAL</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="24.0" />
+    </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_2</name>
+    <x>20</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>overview.bob</file>
+        <target>replace</target>
+        <description>Open Overview</description>
+      </action>
+    </actions>
+    <text>Overview</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_3</name>
+    <x>138</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>psu.bob</file>
+        <target>replace</target>
+        <description>Open PSU</description>
+      </action>
+    </actions>
+    <text>PSU</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_4</name>
+    <x>256</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>chiller.bob</file>
+        <target>replace</target>
+        <description>Open Chiller</description>
+      </action>
+    </actions>
+    <text>Chiller</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_5</name>
+    <x>374</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>environment.bob</file>
+        <target>replace</target>
+        <description>Open Environment</description>
+      </action>
+    </actions>
+    <text>Environment</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_6</name>
+    <x>492</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>hv.bob</file>
+        <target>replace</target>
+        <description>Open HV</description>
+      </action>
+    </actions>
+    <text>HV</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_7</name>
+    <x>610</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>daq.bob</file>
+        <target>replace</target>
+        <description>Open DAQ</description>
+      </action>
+    </actions>
+    <text>DAQ</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_8</name>
+    <x>728</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>global.bob</file>
+        <target>replace</target>
+        <description>Open Global</description>
+      </action>
+    </actions>
+    <text>Global</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_9</name>
+    <x>846</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>trends.bob</file>
+        <target>replace</target>
+        <description>Open Trends</description>
+      </action>
+    </actions>
+    <text>Trends</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_10</name>
+    <x>964</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>all_pvs.bob</file>
+        <target>replace</target>
+        <description>Open All PVs</description>
+      </action>
+    </actions>
+    <text>All PVs</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_11</name>
+    <x>20</x>
+    <y>105</y>
+    <width>190</width>
+    <height>28</height>
+    <text>IOC update period</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="14.0" />
+    </font>
+  </widget>
+  <widget type="textentry" version="2.0.0">
+    <name>Setpoint_12</name>
+    <x>220</x>
+    <y>105</y>
+    <width>120</width>
+    <height>28</height>
+    <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_13</name>
+    <x>345</x>
+    <y>105</y>
+    <width>30</width>
+    <height>28</height>
+    <text>s</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0" />
+    </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_14</name>
+    <x>390</x>
+    <y>105</y>
+    <width>75</width>
+    <height>28</height>
+    <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
+        <value>2</value>
+        <description>Write 2 to BDX:GLOBAL:UPDATE_PERIOD_SET</description>
+      </action>
+    </actions>
+    <text>2 s</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_15</name>
+    <x>472</x>
+    <y>105</y>
+    <width>75</width>
+    <height>28</height>
+    <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
+        <value>5</value>
+        <description>Write 5 to BDX:GLOBAL:UPDATE_PERIOD_SET</description>
+      </action>
+    </actions>
+    <text>5 s</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_16</name>
+    <x>554</x>
+    <y>105</y>
+    <width>75</width>
+    <height>28</height>
+    <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
+        <value>10</value>
+        <description>Write 10 to BDX:GLOBAL:UPDATE_PERIOD_SET</description>
+      </action>
+    </actions>
+    <text>10 s</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_17</name>
+    <x>636</x>
+    <y>105</y>
+    <width>75</width>
+    <height>28</height>
+    <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
+        <value>30</value>
+        <description>Write 30 to BDX:GLOBAL:UPDATE_PERIOD_SET</description>
+      </action>
+    </actions>
+    <text>30 s</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_18</name>
+    <x>735</x>
+    <y>105</y>
+    <width>95</width>
+    <height>28</height>
+    <text>Frequency</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="14.0" />
+    </font>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_19</name>
+    <x>835</x>
+    <y>105</y>
+    <width>100</width>
+    <height>28</height>
+    <pv_name>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_20</name>
+    <x>940</x>
+    <y>105</y>
+    <width>35</width>
+    <height>28</height>
+    <text>Hz</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0" />
+    </font>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_21</name>
+    <x>995</x>
+    <y>105</y>
+    <width>390</width>
+    <height>28</height>
+    <text>Allowed period: 2–3600 s; all values remain below 1 Hz.</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0" />
+    </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_22</name>
+    <x>20</x>
+    <y>147</y>
+    <width>160</width>
+    <height>32</height>
+    <pv_name>BDX:GLOBAL:INTERLOCK_TEST_CMD</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:GLOBAL:INTERLOCK_TEST_CMD</pv_name>
+        <value>1</value>
+        <description>Write 1 to BDX:GLOBAL:INTERLOCK_TEST_CMD</description>
+      </action>
+    </actions>
+    <text>TEST INTERLOCK</text>
+    <tooltip>$(actions)</tooltip>
+    <confirm_dialog>true</confirm_dialog>
+    <confirm_message>Trigger the simulated interlock and switch PSU/HV outputs off?</confirm_message>
+    <background_color>
+      <color red="255" green="205" blue="120" />
+    </background_color>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_23</name>
+    <x>190</x>
+    <y>147</y>
+    <width>160</width>
+    <height>32</height>
+    <pv_name>BDX:GLOBAL:INTERLOCK_RESET_CMD</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:GLOBAL:INTERLOCK_RESET_CMD</pv_name>
+        <value>1</value>
+        <description>Write 1 to BDX:GLOBAL:INTERLOCK_RESET_CMD</description>
+      </action>
+    </actions>
+    <text>RESET INTERLOCK</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_24</name>
+    <x>360</x>
+    <y>147</y>
+    <width>160</width>
+    <height>32</height>
+    <pv_name>BDX:GLOBAL:ALLOFF_CMD</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:GLOBAL:ALLOFF_CMD</pv_name>
+        <value>1</value>
+        <description>Write 1 to BDX:GLOBAL:ALLOFF_CMD</description>
+      </action>
+    </actions>
+    <text>GLOBAL ALL OFF</text>
+    <tooltip>$(actions)</tooltip>
+    <confirm_dialog>true</confirm_dialog>
+    <confirm_message>Switch all simulated PSU and HV channels off?</confirm_message>
+    <background_color>
+      <color red="255" green="150" blue="150" />
+    </background_color>
+  </widget>
+  <widget type="stripchart" version="2.1.0">
+    <name>StripChart_25</name>
+    <x>20</x>
+    <y>197</y>
+    <width>670</width>
+    <height>310</height>
+    <title>Prototype update frequency</title>
+    <start>$(BDX_TREND_RANGE=10 minutes)</start>
+    <end />
+    <show_toolbar>true</show_toolbar>
+    <show_legend>true</show_legend>
+    <show_grid>true</show_grid>
+    <y_axes>
+      <y_axis>
+        <title>Value</title>
+        <autoscale>true</autoscale>
+        <log_scale>false</log_scale>
+        <minimum>0.0</minimum>
+        <maximum>100.0</maximum>
+        <show_grid>true</show_grid>
+        <visible>true</visible>
+      </y_axis>
+    </y_axes>
+    <traces>
+      <trace>
+        <name>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</name>
+        <y_pv>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</y_pv>
+        <axis>0</axis>
+        <trace_type>1</trace_type>
+        <color>
+          <color red="33" green="113" blue="181" />
+        </color>
+        <line_width>2</line_width>
+        <point_type>0</point_type>
+        <point_size>6</point_size>
+        <visible>true</visible>
+      </trace>
+    </traces>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_26</name>
+    <x>20</x>
+    <y>537</y>
+    <width>570</width>
+    <height>26</height>
+    <text>PV name</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="14.0" />
+    </font>
+    <background_color>
+      <color red="220" green="228" blue="236" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_27</name>
+    <x>600</x>
+    <y>537</y>
+    <width>250</width>
+    <height>26</height>
+    <text>Current value</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="14.0" />
+    </font>
+    <background_color>
+      <color red="220" green="228" blue="236" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_28</name>
+    <x>870</x>
+    <y>537</y>
+    <width>270</width>
+    <height>26</height>
+    <text>Control</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="14.0" />
+    </font>
+    <background_color>
+      <color red="220" green="228" blue="236" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_29</name>
+    <x>20</x>
+    <y>569</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:GLOBAL:ALLOFF_CMD</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_30</name>
+    <x>600</x>
+    <y>569</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:ALLOFF_CMD</pv_name>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_31</name>
+    <x>870</x>
+    <y>569</y>
+    <width>135</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:ALLOFF_CMD</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:GLOBAL:ALLOFF_CMD</pv_name>
+        <value>1</value>
+        <description>Write 1 to BDX:GLOBAL:ALLOFF_CMD</description>
+      </action>
+    </actions>
+    <text>EXECUTE</text>
+    <tooltip>$(actions)</tooltip>
+    <confirm_dialog>true</confirm_dialog>
+    <confirm_message>Execute all-off command BDX:GLOBAL:ALLOFF_CMD?</confirm_message>
+    <background_color>
+      <color red="255" green="205" blue="120" />
+    </background_color>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_32</name>
+    <x>20</x>
+    <y>598</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:GLOBAL:HEARTBEAT</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_33</name>
+    <x>600</x>
+    <y>598</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:HEARTBEAT</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_34</name>
+    <x>20</x>
+    <y>627</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:GLOBAL:INTERLOCK_ACTIVE</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_35</name>
+    <x>600</x>
+    <y>627</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:INTERLOCK_ACTIVE</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_36</name>
+    <x>20</x>
+    <y>656</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:GLOBAL:INTERLOCK_REASON</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_37</name>
+    <x>600</x>
+    <y>656</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:INTERLOCK_REASON</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_38</name>
+    <x>20</x>
+    <y>685</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:GLOBAL:INTERLOCK_RESET_CMD</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_39</name>
+    <x>600</x>
+    <y>685</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:INTERLOCK_RESET_CMD</pv_name>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_40</name>
+    <x>870</x>
+    <y>685</y>
+    <width>135</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:INTERLOCK_RESET_CMD</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:GLOBAL:INTERLOCK_RESET_CMD</pv_name>
+        <value>1</value>
+        <description>Write 1 to BDX:GLOBAL:INTERLOCK_RESET_CMD</description>
+      </action>
+    </actions>
+    <text>EXECUTE</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_41</name>
+    <x>20</x>
+    <y>714</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:GLOBAL:INTERLOCK_TEST_CMD</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_42</name>
+    <x>600</x>
+    <y>714</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:INTERLOCK_TEST_CMD</pv_name>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_43</name>
+    <x>870</x>
+    <y>714</y>
+    <width>135</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:INTERLOCK_TEST_CMD</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:GLOBAL:INTERLOCK_TEST_CMD</pv_name>
+        <value>1</value>
+        <description>Write 1 to BDX:GLOBAL:INTERLOCK_TEST_CMD</description>
+      </action>
+    </actions>
+    <text>EXECUTE</text>
+    <tooltip>$(actions)</tooltip>
+    <confirm_dialog>true</confirm_dialog>
+    <confirm_message>Trigger the simulated global interlock and switch power outputs off?</confirm_message>
+    <background_color>
+      <color red="255" green="205" blue="120" />
+    </background_color>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_44</name>
+    <x>20</x>
+    <y>743</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:GLOBAL:LAST_ACTION</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_45</name>
+    <x>600</x>
+    <y>743</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:LAST_ACTION</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_46</name>
+    <x>20</x>
+    <y>772</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:GLOBAL:MAX_UPDATE_PERIOD_RBV</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_47</name>
+    <x>600</x>
+    <y>772</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:MAX_UPDATE_PERIOD_RBV</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_48</name>
+    <x>20</x>
+    <y>801</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:GLOBAL:MIN_UPDATE_PERIOD_RBV</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_49</name>
+    <x>600</x>
+    <y>801</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:MIN_UPDATE_PERIOD_RBV</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_50</name>
+    <x>20</x>
+    <y>830</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:GLOBAL:READY</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_51</name>
+    <x>600</x>
+    <y>830</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:READY</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_52</name>
+    <x>20</x>
+    <y>859</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:GLOBAL:SIMULATION</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_53</name>
+    <x>600</x>
+    <y>859</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:SIMULATION</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_54</name>
+    <x>20</x>
+    <y>888</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:GLOBAL:SYSTEM_STATE</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_55</name>
+    <x>600</x>
+    <y>888</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:SYSTEM_STATE</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_56</name>
+    <x>20</x>
+    <y>917</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_57</name>
+    <x>600</x>
+    <y>917</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_58</name>
+    <x>20</x>
+    <y>946</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:GLOBAL:UPDATE_PERIOD_RBV</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_59</name>
+    <x>600</x>
+    <y>946</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:UPDATE_PERIOD_RBV</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_60</name>
+    <x>20</x>
+    <y>975</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:GLOBAL:UPDATE_PERIOD_SET</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_61</name>
+    <x>600</x>
+    <y>975</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
+  </widget>
+  <widget type="textentry" version="2.0.0">
+    <name>Setpoint_62</name>
+    <x>870</x>
+    <y>975</y>
+    <width>270</width>
+    <height>25</height>
+    <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
+  </widget>
+</display>

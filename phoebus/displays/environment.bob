@@ -1,0 +1,323 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<display version="2.0.0">
+  <name>BDX ENVIRONMENT</name>
+  <width>1400</width>
+  <height>868</height>
+  <widget type="label" version="2.0.0">
+    <name>Label_1</name>
+    <x>20</x>
+    <y>12</y>
+    <width>650</width>
+    <height>38</height>
+    <text>BDX ENVIRONMENT</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="24.0" />
+    </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_2</name>
+    <x>20</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>overview.bob</file>
+        <target>replace</target>
+        <description>Open Overview</description>
+      </action>
+    </actions>
+    <text>Overview</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_3</name>
+    <x>138</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>psu.bob</file>
+        <target>replace</target>
+        <description>Open PSU</description>
+      </action>
+    </actions>
+    <text>PSU</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_4</name>
+    <x>256</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>chiller.bob</file>
+        <target>replace</target>
+        <description>Open Chiller</description>
+      </action>
+    </actions>
+    <text>Chiller</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_5</name>
+    <x>374</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>environment.bob</file>
+        <target>replace</target>
+        <description>Open Environment</description>
+      </action>
+    </actions>
+    <text>Environment</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_6</name>
+    <x>492</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>hv.bob</file>
+        <target>replace</target>
+        <description>Open HV</description>
+      </action>
+    </actions>
+    <text>HV</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_7</name>
+    <x>610</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>daq.bob</file>
+        <target>replace</target>
+        <description>Open DAQ</description>
+      </action>
+    </actions>
+    <text>DAQ</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_8</name>
+    <x>728</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>global.bob</file>
+        <target>replace</target>
+        <description>Open Global</description>
+      </action>
+    </actions>
+    <text>Global</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_9</name>
+    <x>846</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>trends.bob</file>
+        <target>replace</target>
+        <description>Open Trends</description>
+      </action>
+    </actions>
+    <text>Trends</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Navigation_10</name>
+    <x>964</x>
+    <y>58</y>
+    <width>112</width>
+    <height>30</height>
+    <actions>
+      <action type="open_display">
+        <file>all_pvs.bob</file>
+        <target>replace</target>
+        <description>Open All PVs</description>
+      </action>
+    </actions>
+    <text>All PVs</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="stripchart" version="2.1.0">
+    <name>StripChart_11</name>
+    <x>20</x>
+    <y>105</y>
+    <width>670</width>
+    <height>310</height>
+    <title>BDX:ENV:HUMIDITY:H01</title>
+    <start>$(BDX_TREND_RANGE=10 minutes)</start>
+    <end />
+    <show_toolbar>true</show_toolbar>
+    <show_legend>true</show_legend>
+    <show_grid>true</show_grid>
+    <y_axes>
+      <y_axis>
+        <title>Value</title>
+        <autoscale>true</autoscale>
+        <log_scale>false</log_scale>
+        <minimum>0.0</minimum>
+        <maximum>100.0</maximum>
+        <show_grid>true</show_grid>
+        <visible>true</visible>
+      </y_axis>
+    </y_axes>
+    <traces>
+      <trace>
+        <name>BDX:ENV:HUMIDITY:H01:VALUE</name>
+        <y_pv>BDX:ENV:HUMIDITY:H01:VALUE</y_pv>
+        <axis>0</axis>
+        <trace_type>1</trace_type>
+        <color>
+          <color red="33" green="113" blue="181" />
+        </color>
+        <line_width>2</line_width>
+        <point_type>0</point_type>
+        <point_size>6</point_size>
+        <visible>true</visible>
+      </trace>
+    </traces>
+  </widget>
+  <widget type="stripchart" version="2.1.0">
+    <name>StripChart_12</name>
+    <x>710</x>
+    <y>105</y>
+    <width>670</width>
+    <height>310</height>
+    <title>BDX:ENV:PRESSURE:P01</title>
+    <start>$(BDX_TREND_RANGE=10 minutes)</start>
+    <end />
+    <show_toolbar>true</show_toolbar>
+    <show_legend>true</show_legend>
+    <show_grid>true</show_grid>
+    <y_axes>
+      <y_axis>
+        <title>Value</title>
+        <autoscale>true</autoscale>
+        <log_scale>false</log_scale>
+        <minimum>0.0</minimum>
+        <maximum>100.0</maximum>
+        <show_grid>true</show_grid>
+        <visible>true</visible>
+      </y_axis>
+    </y_axes>
+    <traces>
+      <trace>
+        <name>BDX:ENV:PRESSURE:P01:VALUE</name>
+        <y_pv>BDX:ENV:PRESSURE:P01:VALUE</y_pv>
+        <axis>0</axis>
+        <trace_type>1</trace_type>
+        <color>
+          <color red="33" green="113" blue="181" />
+        </color>
+        <line_width>2</line_width>
+        <point_type>0</point_type>
+        <point_size>6</point_size>
+        <visible>true</visible>
+      </trace>
+    </traces>
+  </widget>
+  <widget type="stripchart" version="2.1.0">
+    <name>StripChart_13</name>
+    <x>20</x>
+    <y>435</y>
+    <width>670</width>
+    <height>310</height>
+    <title>BDX:ENV:TEMP:T01</title>
+    <start>$(BDX_TREND_RANGE=10 minutes)</start>
+    <end />
+    <show_toolbar>true</show_toolbar>
+    <show_legend>true</show_legend>
+    <show_grid>true</show_grid>
+    <y_axes>
+      <y_axis>
+        <title>Value</title>
+        <autoscale>true</autoscale>
+        <log_scale>false</log_scale>
+        <minimum>0.0</minimum>
+        <maximum>100.0</maximum>
+        <show_grid>true</show_grid>
+        <visible>true</visible>
+      </y_axis>
+    </y_axes>
+    <traces>
+      <trace>
+        <name>BDX:ENV:TEMP:T01:VALUE</name>
+        <y_pv>BDX:ENV:TEMP:T01:VALUE</y_pv>
+        <axis>0</axis>
+        <trace_type>1</trace_type>
+        <color>
+          <color red="33" green="113" blue="181" />
+        </color>
+        <line_width>2</line_width>
+        <point_type>0</point_type>
+        <point_size>6</point_size>
+        <visible>true</visible>
+      </trace>
+    </traces>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_14</name>
+    <x>20</x>
+    <y>775</y>
+    <width>570</width>
+    <height>26</height>
+    <text>PV name</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="14.0" />
+    </font>
+    <background_color>
+      <color red="220" green="228" blue="236" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_15</name>
+    <x>600</x>
+    <y>775</y>
+    <width>250</width>
+    <height>26</height>
+    <text>Current value</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="14.0" />
+    </font>
+    <background_color>
+      <color red="220" green="228" blue="236" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_16</name>
+    <x>870</x>
+    <y>775</y>
+    <width>270</width>
+    <height>26</height>
+    <text>Control</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="14.0" />
+    </font>
+    <background_color>
+      <color red="220" green="228" blue="236" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+</display>

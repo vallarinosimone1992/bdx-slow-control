@@ -1,0 +1,78 @@
+"""Driver construction from JSON configuration."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from ..config import ConfigurationError
+from .simulated import (
+    SimulatedChillerDriver,
+    SimulatedDaqCrateDriver,
+    SimulatedHighVoltageDriver,
+    SimulatedPowerSupplyDriver,
+    SimulatedSensorDriver,
+)
+
+
+def _mode(config: dict[str, Any]) -> str:
+    value = str(config.get("mode", "simulation")).strip().lower()
+    if value not in {"simulation", "hardware"}:
+        raise ConfigurationError(f"Unsupported driver mode: {value}")
+    return value
+
+
+def build_psu_driver(config: dict[str, Any]) -> SimulatedPowerSupplyDriver:
+    if _mode(config) != "simulation":
+        raise NotImplementedError("Hardware PSU driver is not implemented")
+    channels = [int(value) for value in config.get("channels", [])]
+    if not channels:
+        raise ConfigurationError("PSU configuration requires at least one channel")
+    return SimulatedPowerSupplyDriver(
+        channels=channels,
+        initial_voltage=float(config.get("initial_voltage", 0.0)),
+        initial_current_limit=float(config.get("initial_current_limit", 0.5)),
+        initial_ovp=float(config.get("initial_ovp", 10.0)),
+        initial_ocp=float(config.get("initial_ocp", 1.0)),
+    )
+
+
+def build_hv_driver(config: dict[str, Any]) -> SimulatedHighVoltageDriver:
+    if _mode(config) != "simulation":
+        raise NotImplementedError("Hardware HV driver is not implemented")
+    channels = [int(value) for value in config.get("channels", [])]
+    if not channels:
+        raise ConfigurationError("HV configuration requires at least one channel")
+    return SimulatedHighVoltageDriver(
+        channels=channels,
+        initial_voltage=float(config.get("initial_voltage", 0.0)),
+        initial_current_limit=float(config.get("initial_current_limit", 0.001)),
+        initial_ovp=float(config.get("initial_ovp", 2500.0)),
+        initial_ocp=float(config.get("initial_ocp", 0.01)),
+    )
+
+
+def build_chiller_driver(config: dict[str, Any]) -> SimulatedChillerDriver:
+    if _mode(config) != "simulation":
+        raise NotImplementedError("Hardware chiller driver is not implemented")
+    return SimulatedChillerDriver(
+        initial_setpoint_c=float(config.get("initial_setpoint_c", 20.0)),
+        initial_temperature_c=float(config.get("initial_temperature_c", 21.0)),
+        initial_pressure_bar=float(config.get("initial_pressure_bar", 0.5)),
+    )
+
+
+def build_sensor_driver(config: dict[str, Any]) -> SimulatedSensorDriver:
+    if _mode(config) != "simulation":
+        raise NotImplementedError("Hardware sensor driver is not implemented")
+    return SimulatedSensorDriver(
+        initial_value=float(config.get("initial_value", 0.0)),
+        amplitude=float(config.get("amplitude", 0.0)),
+    )
+
+
+def build_daq_driver(config: dict[str, Any]) -> SimulatedDaqCrateDriver:
+    if _mode(config) != "simulation":
+        raise NotImplementedError("Hardware DAQ crate driver is not implemented")
+    return SimulatedDaqCrateDriver(
+        initial_configuration=str(config.get("initial_configuration", "default"))
+    )

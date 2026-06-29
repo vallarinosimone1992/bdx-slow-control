@@ -1,0 +1,38 @@
+{
+  "server": {
+    "interfaces": [
+      "0.0.0.0"
+    ],
+    "poll_interval": 5.0,
+    "log_pv_names": false
+  },
+  "sensors": [
+    {
+      "name": "T01",
+      "prefix": "BDX:ENV:TEMP:T01:",
+      "kind": "temperature",
+      "unit": "degC",
+      "mode": "simulation",
+      "initial_value": 22.0,
+      "amplitude": 0.3
+    },
+    {
+      "name": "H01",
+      "prefix": "BDX:ENV:HUMIDITY:H01:",
+      "kind": "humidity",
+      "unit": "percent",
+      "mode": "simulation",
+      "initial_value": 45.0,
+      "amplitude": 1.0
+    },
+    {
+      "name": "P01",
+      "prefix": "BDX:ENV:PRESSURE:P01:",
+      "kind": "pressure",
+      "unit": "mbar",
+      "mode": "simulation",
+      "initial_value": 1013.0,
+      "amplitude": 0.5
+    }
+  ]
+}

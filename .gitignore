@@ -1,0 +1,10 @@
+build/
+bin/
+lib/
+*.o
+*.so
+*.dylib
+*.root
+*.pcm
+*.d
+.DS_Store

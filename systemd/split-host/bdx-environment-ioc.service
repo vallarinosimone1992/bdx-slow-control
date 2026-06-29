@@ -1,0 +1,20 @@
+[Unit]
+Description=BDX environment IOC
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=streamdaq
+Group=streamdaq
+WorkingDirectory=/opt/bdx-slow-control
+EnvironmentFile=-/etc/bdx-slow-control/bdx.env
+ExecStart=/opt/bdx-slow-control/.venv/bin/bdx-environment-ioc --config /etc/bdx-slow-control/environment.json
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
