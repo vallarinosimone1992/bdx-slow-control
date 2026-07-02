@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import fcntl
 import os
+from pathlib import Path
 from typing import Any
 
 from ...config import ConfigurationError
@@ -62,7 +63,10 @@ class LinuxI2CBus:
 
     def open(self) -> None:
         if self._fd is None:
-            self._fd = os.open(self.path, os.O_RDWR)
+            try:
+                self._fd = os.open(self.path, os.O_RDWR)
+            except OSError as exc:
+                raise OSError(f"Cannot open I2C device {self.path!r}: {exc}") from exc
 
     def close(self) -> None:
         if self._fd is not None:
@@ -72,21 +76,41 @@ class LinuxI2CBus:
     def _select_slave(self, address: int) -> None:
         self.open()
         assert self._fd is not None
-        fcntl.ioctl(self._fd, I2C_SLAVE, address)
+        try:
+            fcntl.ioctl(self._fd, I2C_SLAVE, address)
+        except OSError as exc:
+            raise OSError(
+                f"Cannot select I2C address 0x{address:02X} on {self.path}: {exc}"
+            ) from exc
 
     def write(self, address: int, payload: bytes) -> None:
         self._select_slave(address)
         assert self._fd is not None
-        written = os.write(self._fd, payload)
+        try:
+            written = os.write(self._fd, payload)
+        except OSError as exc:
+            raise OSError(
+                f"I2C write to 0x{address:02X} on {self.path} failed: {exc}"
+            ) from exc
         if written != len(payload):
-            raise OSError(f"Short I2C write to 0x{address:02X}: {written}/{len(payload)} bytes")
+            raise OSError(
+                f"Short I2C write to 0x{address:02X} on {self.path}: "
+                f"{written}/{len(payload)} bytes"
+            )
 
     def read(self, address: int, length: int) -> bytes:
         self._select_slave(address)
         assert self._fd is not None
-        data = os.read(self._fd, length)
+        try:
+            data = os.read(self._fd, length)
+        except OSError as exc:
+            raise OSError(
+                f"I2C read from 0x{address:02X} on {self.path} failed: {exc}"
+            ) from exc
         if len(data) != length:
-            raise OSError(f"Short I2C read from 0x{address:02X}: {len(data)}/{length} bytes")
+            raise OSError(
+                f"Short I2C read from 0x{address:02X} on {self.path}: {len(data)}/{length} bytes"
+            )
         return data
 
     def write_register(self, address: int, register: int, *values: int) -> None:
@@ -104,6 +128,7 @@ class MCP9808SensorDriver(SensorDriver):
     bus: LinuxI2CBus
     address: int
     resolution_c: float = 0.0625
+    last_error: Exception | None = field(init=False, default=None)
 
     simulation = False
 
@@ -112,15 +137,23 @@ class MCP9808SensorDriver(SensorDriver):
 
     def initialize(self) -> None:
         code = RESOLUTION_CODES[self.resolution_c]
-        self.bus.write_register(self.address, RESOLUTION_REGISTER, code)
-        self._initialized = True
+        try:
+            self.bus.write_register(self.address, RESOLUTION_REGISTER, code)
+        except OSError as exc:
+            self._initialized = False
+            self.last_error = exc
+            raise
+        else:
+            self._initialized = True
+            self.last_error = None
 
     def ping(self) -> bool:
         try:
             if not self._initialized:
                 self.initialize()
             return True
-        except OSError:
+        except OSError as exc:
+            self.last_error = exc
             self._initialized = False
             return False
 
@@ -132,7 +165,22 @@ class MCP9808SensorDriver(SensorDriver):
         except OSError:
             self._initialized = False
             raise
-        return decode_temperature(data)
+        value = decode_temperature(data)
+        self.last_error = None
+        return value
+
+
+def verify_i2c_device_access(path: str) -> None:
+    """Verify that an I2C device exists and can be opened read/write."""
+    device = Path(path)
+    if not device.exists():
+        raise FileNotFoundError(f"I2C device does not exist: {path}")
+
+    fd = os.open(path, os.O_RDWR)
+    try:
+        return None
+    finally:
+        os.close(fd)
 
 
 def decode_temperature(data: bytes) -> float:

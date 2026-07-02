@@ -6,6 +6,7 @@ src/bdx_slow_control/builders.py
 src/bdx_slow_control/cli.py
 src/bdx_slow_control/config.py
 src/bdx_slow_control/context.py
+src/bdx_slow_control/environment_check.py
 src/bdx_slow_control/logging_setup.py
 src/bdx_slow_control/phoebus_generator.py
 src/bdx_slow_control/prototype.py
@@ -22,6 +23,7 @@ src/bdx_slow_control/drivers/base.py
 src/bdx_slow_control/drivers/factory.py
 src/bdx_slow_control/drivers/simulated.py
 src/bdx_slow_control/drivers/hardware/__init__.py
+src/bdx_slow_control/drivers/hardware/mcp9808.py
 src/bdx_slow_control/iocs/__init__.py
 src/bdx_slow_control/iocs/chiller.py
 src/bdx_slow_control/iocs/common.py
@@ -30,8 +32,13 @@ src/bdx_slow_control/iocs/environment.py
 src/bdx_slow_control/iocs/global_system.py
 src/bdx_slow_control/iocs/power.py
 tests/test_config.py
+tests/test_deployment_profiles.py
+tests/test_environment_check.py
+tests/test_environment_ioc.py
+tests/test_mcp9808_driver.py
 tests/test_phoebus_displays.py
 tests/test_prototype.py
 tests/test_pv_contract.py
+tests/test_raspberry_deployment.py
 tests/test_runtime.py
 tests/test_simulated_drivers.py

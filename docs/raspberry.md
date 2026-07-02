@@ -35,6 +35,21 @@ profile as `/etc/bdx-slow-control/profiles/raspberry/`, and renders
 
 It does not enable or start the service automatically.
 
+## Check I2C
+
+Enable I2C on the Raspberry Pi before starting the IOC. The expected Linux device is
+`/dev/i2c-1`.
+
+Use `i2cdetect` to confirm that the configured MCP9808 addresses answer on bus 1:
+
+```bash
+sudo i2cdetect -y 1
+```
+
+The expected addresses are `0x18`, `0x19`, `0x1A`, and `0x1B`. `i2cdetect` is a
+low-level bus check only; the IOC diagnostic below reads the same JSON configuration
+used by the service.
+
 ## Configure Interface
 
 Edit `/etc/bdx-slow-control/bdx.env` if the Raspberry has multiple network interfaces.
@@ -53,9 +68,31 @@ BDX_LOG_LEVEL=INFO
 
 If `BDX_EPICS_INTERFACE` is not set, the JSON default binds the IOC to `0.0.0.0`.
 
+## Diagnostic Check
+
+Run the environment diagnostic as the same runtime user used by the systemd service:
+
+```bash
+sudo -u <runtime-user> /opt/bdx-slow-control/.venv/bin/bdx-environment-check \
+  --config /etc/bdx-slow-control/profiles/raspberry/environment.json
+```
+
+The command verifies that `/dev/i2c-1` exists, checks read/write access for the current
+user, and reads only the configured MCP9808 addresses. It prints one line per sensor
+with the sensor name, bus, address, connectivity, and temperature when readable.
+
+Example successful output:
+
+```text
+sensor=T00 bus=/dev/i2c-1 address=0x18 connectivity=OK temperature_c=22.5625
+sensor=T01 bus=/dev/i2c-1 address=0x19 connectivity=OK temperature_c=22.6250
+```
+
+Do not start the IOC service until this command exits with status code 0.
+
 ## Manual Test
 
-Before enabling the service, test the IOC directly:
+After diagnostics succeed, test the IOC directly:
 
 ```bash
 sudo -u <runtime-user> /opt/bdx-slow-control/.venv/bin/bdx-environment-ioc \
@@ -74,7 +111,7 @@ Stop the manual IOC with `Ctrl+C`.
 
 ## Enable Service
 
-After the manual test succeeds:
+After the diagnostic command and the manual IOC test succeed:
 
 ```bash
 sudo systemctl enable bdx-environment-ioc

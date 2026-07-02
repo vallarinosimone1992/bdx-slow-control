@@ -25,6 +25,18 @@ class FakeBus:
         return self.data
 
 
+class FlakyInitializationBus(FakeBus):
+    def __init__(self, data: bytes):
+        super().__init__(data)
+        self.failures_remaining = 1
+
+    def write_register(self, address, register, *values):
+        super().write_register(address, register, *values)
+        if self.failures_remaining:
+            self.failures_remaining -= 1
+            raise OSError("temporary I2C write failure")
+
+
 def test_decode_temperature_positive():
     assert decode_temperature(bytes([0x01, 0x90])) == pytest.approx(25.0)
 
@@ -40,6 +52,18 @@ def test_mcp9808_driver_initializes_resolution_and_reads_value():
     assert driver.ping() is True
     assert bus.writes == [(0x18, RESOLUTION_REGISTER, (0x03,))]
     assert driver.read_value() == pytest.approx(25.0625)
+
+
+def test_mcp9808_driver_recovers_after_temporary_initialization_failure():
+    bus = FlakyInitializationBus(bytes([0x01, 0x90]))
+    driver = MCP9808SensorDriver(bus=bus, address=0x18, resolution_c=0.0625)
+
+    assert driver.ping() is False
+    assert isinstance(driver.last_error, OSError)
+
+    assert driver.ping() is True
+    assert driver.read_value() == pytest.approx(25.0)
+    assert driver.last_error is None
 
 
 def test_parse_i2c_address_accepts_hex_string():

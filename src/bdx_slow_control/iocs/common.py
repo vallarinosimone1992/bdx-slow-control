@@ -38,6 +38,8 @@ class ManagedIOC(PVGroup):
             initial_update_period=float(poll_interval),
             minimum_update_period=0.1,
         )
+        self._poll_failed = False
+        self._last_failure_message = ""
         super().__init__(*args, **kwargs)
 
     async def poll_device(self) -> None:
@@ -50,12 +52,26 @@ class ManagedIOC(PVGroup):
         await self.LAST_UPDATE.write(value=utc_timestamp())
         await self.ERROR_CODE.write(value=0)
         await self.ERROR_MESSAGE.write(value="")
+        if self._poll_failed:
+            logger.info("IOC communication recovered for prefix %s", self.prefix)
+        self._poll_failed = False
+        self._last_failure_message = ""
 
     async def mark_failure(self, exc: Exception) -> None:
+        message = str(exc) or exc.__class__.__name__
         await self.COMM_STATUS.write(value="DEVICE_ERROR")
         await self.ERROR_CODE.write(value=1)
-        await self.ERROR_MESSAGE.write(value=str(exc))
-        logger.exception("IOC poll failed for prefix %s", self.prefix)
+        await self.ERROR_MESSAGE.write(value=message)
+        should_log = not self._poll_failed or message != self._last_failure_message
+        self._poll_failed = True
+        self._last_failure_message = message
+        if should_log:
+            logger.warning("IOC poll failed for prefix %s: %s", self.prefix, message)
+            logger.debug(
+                "IOC poll failure traceback for prefix %s",
+                self.prefix,
+                exc_info=(type(exc), exc, exc.__traceback__),
+            )
 
     @HEARTBEAT.startup
     async def HEARTBEAT(self, instance, async_lib):
@@ -67,6 +83,11 @@ class ManagedIOC(PVGroup):
             await instance.write(value=counter)
             try:
                 if not self.driver.ping():
+                    last_error = getattr(self.driver, "last_error", None)
+                    if last_error is not None:
+                        raise ConnectionError(
+                            f"Driver communication check failed: {last_error}"
+                        ) from last_error
                     raise ConnectionError("Driver communication check failed")
                 await self.poll_device()
                 await self.mark_success()

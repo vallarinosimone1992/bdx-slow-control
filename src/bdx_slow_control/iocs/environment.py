@@ -20,7 +20,13 @@ class EnvironmentalSensorIOC(ManagedIOC):
         super().__init__(*args, **kwargs)
 
     async def poll_device(self) -> None:
-        await self.VALUE.write(value=self.driver.read_value())
         await self.UNIT.write(value=self.unit)
         await self.SENSOR_KIND.write(value=self.sensor_kind)
+        await self.VALUE.write(value=self.driver.read_value())
         await self.STATUS.write(value="VALID")
+
+    async def mark_failure(self, exc: Exception) -> None:
+        await self.UNIT.write(value=self.unit)
+        await self.SENSOR_KIND.write(value=self.sensor_kind)
+        await self.STATUS.write(value="DISCONNECTED")
+        await super().mark_failure(exc)

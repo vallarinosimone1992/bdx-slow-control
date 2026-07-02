@@ -88,6 +88,13 @@ BDX:ENV:TEMP:T03:VALUE
 Do not run another environment IOC on the main server when the Raspberry is active.
 Two Channel Access servers must never expose the same PV names.
 
+On the Raspberry, check the installed hardware configuration before starting the IOC:
+
+```bash
+/opt/bdx-slow-control/.venv/bin/bdx-environment-check \
+  --config /etc/bdx-slow-control/profiles/raspberry/environment.json
+```
+
 ## Command-line test
 
 From a second terminal:
