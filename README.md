@@ -67,6 +67,32 @@ caproto-get BDX:GLOBAL:UPDATE_FREQUENCY_RBV
 
 The minimum period of 2 seconds limits the prototype update frequency to 0.5 Hz.
 
+## Run the Raspberry MCP9808 temperature IOC
+
+The Raspberry Pi at `10.0.2.133` should run the environment IOC locally, because the
+MCP9808 sensors are connected to its I2C bus:
+
+```bash
+ssh <user>@10.0.2.133
+cd /path/to/bdx-slow-control
+./scripts/bootstrap.sh
+source .venv/bin/activate
+bdx-environment-ioc --config config/environment_mcp9808.json
+```
+
+`config/environment_mcp9808.json` defines four MCP9808 sensors at I2C addresses
+`0x18`, `0x19`, `0x1A`, and `0x1B`, exposed as:
+
+```text
+BDX:ENV:TEMP:T00:VALUE
+BDX:ENV:TEMP:T01:VALUE
+BDX:ENV:TEMP:T02:VALUE
+BDX:ENV:TEMP:T03:VALUE
+```
+
+If the Raspberry exposes the sensor bus with a different device path, edit the `bus`
+fields in `config/environment_mcp9808.json`.
+
 ## Command-line test
 
 From a second terminal:
@@ -81,6 +107,14 @@ caproto-put BDX:PSU:PSU1:CH1:OUTPUT_SET 1
 ```
 
 When EPICS Base is configured in the shell, `caget`, `caput`, `cainfo`, and `camonitor` can be used instead.
+
+For the Raspberry temperature IOC, point Channel Access clients at the Raspberry:
+
+```bash
+export EPICS_CA_ADDR_LIST=10.0.2.133
+export EPICS_CA_AUTO_ADDR_LIST=NO
+caproto-get BDX:ENV:TEMP:T00:VALUE
+```
 
 ## Phoebus displays
 

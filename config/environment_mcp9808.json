@@ -1,0 +1,55 @@
+{
+  "server": {
+    "interfaces": [
+      "0.0.0.0"
+    ],
+    "poll_interval": 5.0,
+    "log_pv_names": true
+  },
+  "sensors": [
+    {
+      "name": "T00",
+      "prefix": "BDX:ENV:TEMP:T00:",
+      "kind": "temperature",
+      "unit": "degC",
+      "mode": "hardware",
+      "driver": "mcp9808",
+      "bus": "/dev/i2c-21",
+      "address": "0x18",
+      "resolution_c": 0.0625
+    },
+    {
+      "name": "T01",
+      "prefix": "BDX:ENV:TEMP:T01:",
+      "kind": "temperature",
+      "unit": "degC",
+      "mode": "hardware",
+      "driver": "mcp9808",
+      "bus": "/dev/i2c-21",
+      "address": "0x19",
+      "resolution_c": 0.0625
+    },
+    {
+      "name": "T02",
+      "prefix": "BDX:ENV:TEMP:T02:",
+      "kind": "temperature",
+      "unit": "degC",
+      "mode": "hardware",
+      "driver": "mcp9808",
+      "bus": "/dev/i2c-21",
+      "address": "0x1A",
+      "resolution_c": 0.0625
+    },
+    {
+      "name": "T03",
+      "prefix": "BDX:ENV:TEMP:T03:",
+      "kind": "temperature",
+      "unit": "degC",
+      "mode": "hardware",
+      "driver": "mcp9808",
+      "bus": "/dev/i2c-21",
+      "address": "0x1B",
+      "resolution_c": 0.0625
+    }
+  ]
+}

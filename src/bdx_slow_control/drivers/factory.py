@@ -61,9 +61,14 @@ def build_chiller_driver(config: dict[str, Any]) -> SimulatedChillerDriver:
     )
 
 
-def build_sensor_driver(config: dict[str, Any]) -> SimulatedSensorDriver:
-    if _mode(config) != "simulation":
-        raise NotImplementedError("Hardware sensor driver is not implemented")
+def build_sensor_driver(config: dict[str, Any]):
+    if _mode(config) == "hardware":
+        driver = str(config.get("driver", "")).strip().lower()
+        if driver == "mcp9808":
+            from .hardware.mcp9808 import build_mcp9808_driver
+
+            return build_mcp9808_driver(config)
+        raise NotImplementedError("Hardware sensor driver requires driver='mcp9808'")
     return SimulatedSensorDriver(
         initial_value=float(config.get("initial_value", 0.0)),
         amplitude=float(config.get("amplitude", 0.0)),
