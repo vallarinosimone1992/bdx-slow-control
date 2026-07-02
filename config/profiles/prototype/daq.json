@@ -1,0 +1,17 @@
+{
+  "server": {
+    "interfaces": [
+      "0.0.0.0"
+    ],
+    "poll_interval": 5.0,
+    "log_pv_names": false
+  },
+  "crates": [
+    {
+      "name": "CRATE01",
+      "prefix": "BDX:DAQ:CRATE01:",
+      "mode": "simulation",
+      "initial_configuration": "prototype-default"
+    }
+  ]
+}

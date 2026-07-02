@@ -1,7 +1,7 @@
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
-from bdx_slow_control.phoebus_generator import catalog, generate
+from bdx_slow_control.phoebus_generator import generate
 
 
 def _pv_references(path: Path) -> set[str]:

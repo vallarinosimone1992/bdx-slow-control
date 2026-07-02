@@ -67,21 +67,12 @@ caproto-get BDX:GLOBAL:UPDATE_FREQUENCY_RBV
 
 The minimum period of 2 seconds limits the prototype update frequency to 0.5 Hz.
 
-## Run the Raspberry MCP9808 temperature IOC
+## Raspberry MCP9808 temperature IOC
 
-The Raspberry Pi at `10.0.2.133` should run the environment IOC locally, because the
-MCP9808 sensors are connected to its I2C bus:
+The Raspberry Pi should run only the environment IOC because the MCP9808 sensors are
+attached to its local I2C bus. See `docs/raspberry.md` for the deployment procedure.
 
-```bash
-ssh <user>@10.0.2.133
-cd /path/to/bdx-slow-control
-./scripts/bootstrap.sh
-source .venv/bin/activate
-bdx-environment-ioc --config config/environment_mcp9808.json
-```
-
-`config/environment_mcp9808.json` defines four MCP9808 sensors at I2C addresses
-`0x18`, `0x19`, `0x1A`, and `0x1B`, exposed as:
+The Raspberry configuration source is `config/raspberry/environment.json`. It exposes:
 
 ```text
 BDX:ENV:TEMP:T00:VALUE
@@ -89,9 +80,6 @@ BDX:ENV:TEMP:T01:VALUE
 BDX:ENV:TEMP:T02:VALUE
 BDX:ENV:TEMP:T03:VALUE
 ```
-
-If the Raspberry exposes the sensor bus with a different device path, edit the `bus`
-fields in `config/environment_mcp9808.json`.
 
 ## Command-line test
 

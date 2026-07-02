@@ -1,0 +1,17 @@
+{
+  "server": {
+    "interfaces": [
+      "0.0.0.0"
+    ],
+    "poll_interval": 5.0,
+    "log_pv_names": false
+  },
+  "device": {
+    "name": "CHILLER1",
+    "prefix": "BDX:CHILLER:CHILLER1:",
+    "mode": "simulation",
+    "initial_setpoint_c": 20.0,
+    "initial_temperature_c": 21.0,
+    "initial_pressure_bar": 0.5
+  }
+}

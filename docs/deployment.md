@@ -43,6 +43,13 @@ sudo systemctl status bdx-prototype-ioc
 journalctl -u bdx-prototype-ioc -f
 ```
 
+## Raspberry environment IOC deployment
+
+Use the dedicated Raspberry installer when only the MCP9808 environment IOC should run
+on a Raspberry Pi. It installs `bdx-environment-ioc`, not the full prototype IOC.
+
+See `docs/raspberry.md`.
+
 ## Channel Access interface
 
 Set the interface in `/etc/bdx-slow-control/bdx.env`:

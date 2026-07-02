@@ -56,7 +56,15 @@ def test_parse_resolution_rejects_unsupported_value():
         parse_resolution(0.1)
 
 
-def test_environment_mcp9808_config_builds_pvdb_without_opening_i2c():
-    pvdb, _ = build_environment(load_json("config/environment_mcp9808.json"))
+def test_raspberry_environment_config_builds_pvdb_without_opening_i2c():
+    pvdb, _ = build_environment(load_json("config/raspberry/environment.json"))
     assert "BDX:ENV:TEMP:T00:VALUE" in pvdb
     assert "BDX:ENV:TEMP:T03:VALUE" in pvdb
+
+
+def test_raspberry_environment_config_uses_expected_bus_and_addresses():
+    config = load_json("config/raspberry/environment.json")
+    sensors = config["sensors"]
+    assert config["server"]["poll_interval"] == 5.0
+    assert {sensor["bus"] for sensor in sensors} == {"/dev/i2c-1"}
+    assert [sensor["address"] for sensor in sensors] == ["0x18", "0x19", "0x1A", "0x1B"]

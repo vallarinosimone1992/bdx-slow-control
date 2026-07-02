@@ -21,4 +21,4 @@ Each implementation must preserve the interfaces declared in `drivers/base.py`.
 or GPIO triggers.
 
 Use `mode: "hardware"` and `driver: "mcp9808"` in an environment sensor
-configuration. See `config/environment_mcp9808.json`.
+configuration. See `config/raspberry/environment.json`.
