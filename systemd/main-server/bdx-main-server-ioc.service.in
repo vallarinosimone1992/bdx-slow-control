@@ -1,15 +1,15 @@
 [Unit]
-Description=BDX PSU IOC
+Description=BDX main-server IOC
 Wants=network-online.target
 After=network-online.target
 
 [Service]
 Type=simple
-User=streamdaq
-Group=streamdaq
+User=@BDX_RUNTIME_USER@
+Group=@BDX_RUNTIME_GROUP@
 WorkingDirectory=/opt/bdx-slow-control
-EnvironmentFile=-/etc/bdx-slow-control/bdx.env
-ExecStart=/opt/bdx-slow-control/.venv/bin/bdx-psu-ioc --config /etc/bdx-slow-control/profiles/prototype/psu.json
+EnvironmentFile=/etc/bdx-slow-control/bdx.env
+ExecStart=/opt/bdx-slow-control/.venv/bin/bdx-prototype-ioc --config-dir /etc/bdx-slow-control/profiles/main-server
 Restart=on-failure
 RestartSec=5
 TimeoutStopSec=15

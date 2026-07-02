@@ -31,6 +31,7 @@ def _build_context(config_dir: Path) -> PrototypeContext:
 def build_prototype(config_dir: Path) -> tuple[dict, ServerSettings]:
     """Build all configured IOC groups in one caproto server database."""
     merged = {}
+    pv_owners: dict[str, str] = {}
     selected_settings: ServerSettings | None = None
     context = _build_context(config_dir)
 
@@ -40,10 +41,14 @@ def build_prototype(config_dir: Path) -> tuple[dict, ServerSettings]:
             continue
 
         pvdb, settings = builder(load_json(path), context=context)
-        overlap = set(merged).intersection(pvdb)
+        overlap = sorted(set(pvdb).intersection(pv_owners))
         if overlap:
+            details = ", ".join(
+                f"{pv} ({pv_owners[pv]} and {subsystem})" for pv in overlap[:5]
+            )
             raise ConfigurationError(
-                f"Duplicate PV names across configurations: {sorted(overlap)}"
+                "Duplicate PV names across configured local subsystems: "
+                f"{details}"
             )
 
         if selected_settings is None:
@@ -55,6 +60,8 @@ def build_prototype(config_dir: Path) -> tuple[dict, ServerSettings]:
             )
 
         merged.update(pvdb)
+        for pv in pvdb:
+            pv_owners[pv] = subsystem
 
     if selected_settings is None:
         raise ConfigurationError(f"No subsystem configuration found in {config_dir}")

@@ -21,7 +21,9 @@ The initial hardware backends are simulations. Hardware implementations can be a
 
 ```text
 bdx-slow-control/
-├── config/                 IOC and simulated-device configuration
+├── config/
+│   ├── profiles/           Installable IOC configuration profiles
+│   └── examples/           Non-installed configuration examples
 ├── docs/                   Architecture and deployment notes
 ├── phoebus/
 │   ├── displays/           Generated .bob displays and PV table
@@ -58,6 +60,8 @@ The bootstrap script installs the package in editable mode and regenerates the P
 ./scripts/run_all_simulated.sh
 ```
 
+This uses the full simulated profile in `config/profiles/prototype`.
+
 The default simulation update period is 5 seconds, corresponding to 0.2 Hz. It can be changed at runtime between 2 and 3600 seconds:
 
 ```bash
@@ -72,7 +76,7 @@ The minimum period of 2 seconds limits the prototype update frequency to 0.5 Hz.
 The Raspberry Pi should run only the environment IOC because the MCP9808 sensors are
 attached to its local I2C bus. See `docs/raspberry.md` for the deployment procedure.
 
-The Raspberry configuration source is `config/raspberry/environment.json`. It exposes:
+The Raspberry configuration source is `config/profiles/raspberry/environment.json`. It exposes:
 
 ```text
 BDX:ENV:TEMP:T00:VALUE
@@ -80,6 +84,9 @@ BDX:ENV:TEMP:T01:VALUE
 BDX:ENV:TEMP:T02:VALUE
 BDX:ENV:TEMP:T03:VALUE
 ```
+
+Do not run another environment IOC on the main server when the Raspberry is active.
+Two Channel Access servers must never expose the same PV names.
 
 ## Command-line test
 
@@ -169,6 +176,13 @@ BDX_PHOEBUS_DISPLAY
 
 Relative launcher paths are resolved first from the current working directory and then from the repository root.
 
+For the deployed two-host layout, configure Phoebus with both Channel Access servers:
+
+```bash
+BDX_CA_ADDR_LIST="<MAIN_SERVER_IP> <RASPBERRY_IP>"
+BDX_CA_AUTO_ADDR_LIST=false
+```
+
 ## Launch Phoebus
 
 With the IOC already running:
@@ -197,7 +211,7 @@ The launcher creates a runtime `settings.ini` containing the local Channel Acces
 
 ```bash
 source .venv/bin/activate
-bdx-generate-displays --config-dir config --output-dir phoebus/displays
+bdx-generate-displays --config-dir config/profiles/prototype --output-dir phoebus/displays
 ```
 
 The generator reads the actual caproto PV database. It also creates a valid Phoebus PV Table file using the `<pvtable version="3.0">` format.
@@ -225,7 +239,14 @@ Set the Channel Access server interface explicitly when the host has multiple ne
 export BDX_EPICS_INTERFACE=193.206.147.141
 ```
 
-For a local Phoebus client, the default client address list is `127.0.0.1`. For a remote client or routed network, set `BDX_CA_ADDR_LIST` to the IOC address or the appropriate broadcast address.
+For a local Phoebus client, the default client address list is `127.0.0.1`. For the two-host deployment, set `BDX_CA_ADDR_LIST` to both IOC host addresses:
+
+```bash
+BDX_CA_ADDR_LIST="<MAIN_SERVER_IP> <RASPBERRY_IP>"
+BDX_CA_AUTO_ADDR_LIST=false
+```
+
+Do not use a client address list that can discover two servers publishing the same PV names.
 
 ## Single-host and split-host deployment
 

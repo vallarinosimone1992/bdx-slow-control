@@ -6,7 +6,8 @@ APP_DIR="/opt/bdx-slow-control"
 CONFIG_DIR="/etc/bdx-slow-control"
 SERVICE_TEMPLATE="$ROOT_DIR/systemd/raspberry/bdx-environment-ioc.service.in"
 SERVICE_PATH="/etc/systemd/system/bdx-environment-ioc.service"
-RASPBERRY_CONFIG="$ROOT_DIR/config/raspberry/environment.json"
+RASPBERRY_PROFILE="$ROOT_DIR/config/profiles/raspberry"
+RASPBERRY_CONFIG="$RASPBERRY_PROFILE/environment.json"
 
 usage() {
     cat <<EOF
@@ -49,12 +50,22 @@ if ! command -v rsync >/dev/null 2>&1; then
     exit 2
 fi
 
+if [[ ! -f "$RASPBERRY_CONFIG" ]]; then
+    echo "Raspberry environment configuration not found: $RASPBERRY_CONFIG" >&2
+    exit 2
+fi
+
+if [[ ! -f "$SERVICE_TEMPLATE" ]]; then
+    echo "Service template not found: $SERVICE_TEMPLATE" >&2
+    exit 2
+fi
+
 if ! getent group i2c >/dev/null 2>&1; then
     echo "Warning: group 'i2c' does not exist on this host. Enable I2C support before starting the service." >&2
 fi
 
 install -d -m 0755 "$APP_DIR"
-install -d -m 0755 "$CONFIG_DIR"
+install -d -m 0755 "$CONFIG_DIR/profiles"
 
 rsync -a --delete \
     --exclude .git \
@@ -69,7 +80,8 @@ python3 -m venv "$APP_DIR/.venv"
 "$APP_DIR/.venv/bin/python" -m pip install --upgrade pip
 "$APP_DIR/.venv/bin/python" -m pip install "$APP_DIR"
 
-install -m 0644 "$RASPBERRY_CONFIG" "$CONFIG_DIR/environment.json"
+install -d -m 0755 "$CONFIG_DIR/profiles/raspberry"
+rsync -a --delete "$RASPBERRY_PROFILE/" "$CONFIG_DIR/profiles/raspberry/"
 
 if [[ ! -f "$CONFIG_DIR/bdx.env" ]]; then
     cat > "$CONFIG_DIR/bdx.env" <<'EOF'
@@ -98,7 +110,7 @@ Application directory:
   $APP_DIR
 
 Installed configuration:
-  $CONFIG_DIR/environment.json
+  $CONFIG_DIR/profiles/raspberry/environment.json
   $CONFIG_DIR/bdx.env
 
 Installed service:

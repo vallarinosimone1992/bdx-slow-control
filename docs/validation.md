@@ -8,13 +8,13 @@ Validation steps:
 ./scripts/bootstrap.sh
 source .venv/bin/activate
 pytest
-bdx-pv-list --config-dir config | wc -l
-bdx-generate-displays --config-dir config --output-dir phoebus/displays
+bdx-pv-list --config-dir config/profiles/prototype | wc -l
+bdx-generate-displays --config-dir config/profiles/prototype --output-dir phoebus/displays
 ```
 
-Results:
+Expected results:
 
-- 13 automated tests passed;
+- automated tests passed;
 - 176 PVs were generated;
 - all `.bob` files parsed as valid XML;
 - all PV references in the displays matched the configured IOC database;

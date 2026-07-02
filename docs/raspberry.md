@@ -2,9 +2,9 @@
 
 This deployment runs only the environmental MCP9808 IOC on a Raspberry Pi. The IOC
 command is `bdx-environment-ioc`, and the installed configuration is
-`/etc/bdx-slow-control/environment.json`.
+`/etc/bdx-slow-control/profiles/raspberry/environment.json`.
 
-The repository source configuration is `config/raspberry/environment.json`. It uses:
+The repository source configuration is `config/profiles/raspberry/environment.json`. It uses:
 
 - I2C device `/dev/i2c-1`;
 - MCP9808 addresses `0x18`, `0x19`, `0x1A`, and `0x1B`;
@@ -30,7 +30,7 @@ sudo ./scripts/install_raspberry.sh
 
 The installer copies the application to `/opt/bdx-slow-control`, creates
 `/opt/bdx-slow-control/.venv`, installs the Python package, installs only the Raspberry
-environment configuration as `/etc/bdx-slow-control/environment.json`, and renders
+profile as `/etc/bdx-slow-control/profiles/raspberry/`, and renders
 `/etc/systemd/system/bdx-environment-ioc.service`.
 
 It does not enable or start the service automatically.
@@ -59,7 +59,7 @@ Before enabling the service, test the IOC directly:
 
 ```bash
 sudo -u <runtime-user> /opt/bdx-slow-control/.venv/bin/bdx-environment-ioc \
-  --config /etc/bdx-slow-control/environment.json
+  --config /etc/bdx-slow-control/profiles/raspberry/environment.json
 ```
 
 From another terminal or client host:

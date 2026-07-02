@@ -647,7 +647,7 @@ def generate(config_dir: Path, output: Path) -> list[PVInfo]:
 
 def main(argv: Sequence[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="bdx-generate-displays")
-    parser.add_argument("--config-dir", default="config")
+    parser.add_argument("--config-dir", default="config/profiles/prototype")
     parser.add_argument("--output-dir", default="phoebus/displays")
     args = parser.parse_args(argv)
     pvs = generate(Path(args.config_dir), Path(args.output_dir))

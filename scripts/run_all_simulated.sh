@@ -9,4 +9,4 @@ if [[ ! -x .venv/bin/bdx-prototype-ioc ]]; then
     exit 1
 fi
 
-exec .venv/bin/bdx-prototype-ioc --config-dir config
+exec .venv/bin/bdx-prototype-ioc --config-dir config/profiles/prototype

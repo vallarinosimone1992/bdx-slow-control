@@ -40,34 +40,34 @@ def _run(builder_name: str, default_config: str, argv=None) -> None:
 
 
 def psu_main(argv=None) -> None:
-    _run("psu", "config/psu.json", argv)
+    _run("psu", "config/profiles/prototype/psu.json", argv)
 
 
 def chiller_main(argv=None) -> None:
-    _run("chiller", "config/chiller.json", argv)
+    _run("chiller", "config/profiles/prototype/chiller.json", argv)
 
 
 def environment_main(argv=None) -> None:
-    _run("environment", "config/environment.json", argv)
+    _run("environment", "config/profiles/prototype/environment.json", argv)
 
 
 def hv_main(argv=None) -> None:
-    _run("hv", "config/hv.json", argv)
+    _run("hv", "config/profiles/prototype/hv.json", argv)
 
 
 def daq_main(argv=None) -> None:
-    _run("daq", "config/daq.json", argv)
+    _run("daq", "config/profiles/prototype/daq.json", argv)
 
 
 def global_main(argv=None) -> None:
-    _run("global", "config/global.json", argv)
+    _run("global", "config/profiles/prototype/global.json", argv)
 
 
 def prototype_main(argv=None) -> None:
     """Run every configured subsystem in one Channel Access server process."""
     configure_logging()
     parser = argparse.ArgumentParser(prog="bdx-prototype-ioc")
-    parser.add_argument("--config-dir", default="config")
+    parser.add_argument("--config-dir", default="config/profiles/prototype")
     args = parser.parse_args(argv)
 
     try:
@@ -85,7 +85,7 @@ def prototype_main(argv=None) -> None:
 def pv_list_main(argv=None) -> None:
     configure_logging()
     parser = argparse.ArgumentParser(prog="bdx-pv-list")
-    parser.add_argument("--config-dir", default="config")
+    parser.add_argument("--config-dir", default="config/profiles/prototype")
     parser.add_argument("--output", help="Optional output file")
     args = parser.parse_args(argv)
 

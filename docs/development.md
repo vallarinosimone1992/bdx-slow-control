@@ -42,7 +42,7 @@ Hardware driver methods are synchronous in this template. If a device API blocks
 After adding, removing, or renaming PVs:
 
 ```bash
-bdx-generate-displays --config-dir config --output-dir phoebus/displays
+bdx-generate-displays --config-dir config/profiles/prototype --output-dir phoebus/displays
 pytest
 ```
 

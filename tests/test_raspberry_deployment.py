@@ -5,7 +5,10 @@ def test_raspberry_service_template_targets_environment_ioc_only():
     text = Path("systemd/raspberry/bdx-environment-ioc.service.in").read_text(
         encoding="utf-8"
     )
-    assert "bdx-environment-ioc --config /etc/bdx-slow-control/environment.json" in text
+    assert (
+        "bdx-environment-ioc --config "
+        "/etc/bdx-slow-control/profiles/raspberry/environment.json"
+    ) in text
     assert "bdx-prototype-ioc" not in text
     assert "EnvironmentFile=/etc/bdx-slow-control/bdx.env" in text
     assert "SupplementaryGroups=i2c" in text
@@ -26,6 +29,6 @@ def test_raspberry_installer_does_not_enable_or_start_service():
     assert "systemctl start bdx-environment-ioc" not in executable_lines
     assert "systemctl daemon-reload" in text
     assert 'CONFIG_DIR="/etc/bdx-slow-control"' in text
-    assert "config/raspberry/environment.json" in text
-    assert '"$CONFIG_DIR/environment.json"' in text
+    assert "config/profiles/raspberry" in text
+    assert '"$CONFIG_DIR/profiles/raspberry/"' in text
     assert "SUDO_USER" in text

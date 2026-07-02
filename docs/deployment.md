@@ -15,7 +15,7 @@ A production-style layout is:
 
 ```text
 /opt/bdx-slow-control/          source tree and virtual environment
-/etc/bdx-slow-control/          JSON configuration and environment file
+/etc/bdx-slow-control/          environment file and installed profiles
 /var/log/bdx-slow-control/      optional file logs
 ```
 
@@ -23,25 +23,32 @@ The default implementation logs to standard output. Under `systemd`, logs are st
 
 ## Service installation
 
-Review all service files before installation. The examples assume:
+Review all service files before installation. The installer copies one explicit profile
+under `/etc/bdx-slow-control/profiles/<profile>`.
 
-- user: `streamdaq`;
-- application path: `/opt/bdx-slow-control`;
-- configuration path: `/etc/bdx-slow-control`.
-
-Install with:
+Install the main-server profile:
 
 ```bash
-sudo ./scripts/install_systemd.sh
+sudo ./scripts/install_systemd.sh main-server <runtime-user>
 ```
 
-Then:
+Install the full simulated prototype profile:
 
 ```bash
-sudo systemctl enable --now bdx-prototype-ioc
-sudo systemctl status bdx-prototype-ioc
-journalctl -u bdx-prototype-ioc -f
+sudo ./scripts/install_systemd.sh prototype <runtime-user>
 ```
+
+The installer does not enable or start services automatically. Start the main-server
+service after reviewing `/etc/bdx-slow-control/bdx.env`:
+
+```bash
+sudo systemctl enable bdx-main-server-ioc
+sudo systemctl start bdx-main-server-ioc
+sudo systemctl status bdx-main-server-ioc
+journalctl -u bdx-main-server-ioc -f
+```
+
+For the simulated prototype service, use `bdx-prototype-ioc` instead.
 
 ## Raspberry environment IOC deployment
 
@@ -61,14 +68,28 @@ BDX_LOG_LEVEL=INFO
 
 Do not bind production IOCs to unrelated VPN, container, or loopback interfaces.
 
+## Profiles and PV uniqueness
+
+Deployment profiles live under `config/profiles/`:
+
+```text
+config/profiles/prototype/     all simulated subsystems
+config/profiles/main-server/   global, PSU, chiller, HV, DAQ; no environment IOC
+config/profiles/raspberry/     environment MCP9808 IOC only
+```
+
+The main server and Raspberry Pi are separate Channel Access servers. They must never
+publish the same PV names. The aggregated local IOC validates duplicate PV names inside
+one configured profile; cross-host uniqueness is an operator responsibility.
+
 ## Validation
 
 Before enabling automatic startup:
 
 ```bash
 source /opt/bdx-slow-control/.venv/bin/activate
-bdx-pv-list --config-dir /etc/bdx-slow-control
-bdx-prototype-ioc --config-dir /etc/bdx-slow-control
+bdx-pv-list --config-dir /etc/bdx-slow-control/profiles/main-server
+bdx-prototype-ioc --config-dir /etc/bdx-slow-control/profiles/main-server
 ```
 
 From a client:
@@ -114,3 +135,12 @@ BDX_CA_AUTO_ADDR_LIST=false
 ```
 
 For a remote client, replace the address list with the IOC host address or the appropriate subnet broadcast address.
+
+For the deployed main-server plus Raspberry layout:
+
+```bash
+BDX_CA_ADDR_LIST="<MAIN_SERVER_IP> <RASPBERRY_IP>"
+BDX_CA_AUTO_ADDR_LIST=false
+```
+
+Only include both hosts when their configured profiles expose disjoint PV names.

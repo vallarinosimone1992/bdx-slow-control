@@ -8,7 +8,7 @@ python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
-bdx-generate-displays --config-dir config --output-dir phoebus/displays
+bdx-generate-displays --config-dir config/profiles/prototype --output-dir phoebus/displays
 
 echo
 echo "Environment created at $ROOT_DIR/.venv"

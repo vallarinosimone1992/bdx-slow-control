@@ -20,7 +20,7 @@ trap cleanup EXIT INT TERM
 
 if ! .venv/bin/caproto-get BDX:GLOBAL:SYSTEM_STATE >/dev/null 2>&1; then
     echo "Starting the BDX prototype IOC"
-    .venv/bin/bdx-prototype-ioc --config-dir config &
+    .venv/bin/bdx-prototype-ioc --config-dir config/profiles/prototype &
     ioc_pid="$!"
     for _ in {1..30}; do
         if .venv/bin/caproto-get BDX:GLOBAL:SYSTEM_STATE >/dev/null 2>&1; then
