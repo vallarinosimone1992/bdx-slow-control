@@ -49,6 +49,9 @@ org.phoebus.pv.ca/server_port=$BDX_CA_SERVER_PORT
 org.phoebus.pv.ca/repeater_port=$BDX_CA_REPEATER_PORT
 org.phoebus.pv.ca/max_array_size=1000000
 org.csstudio.display.builder.runtime/update_throttle=$BDX_PHOEBUS_UPDATE_THROTTLE_MS
+org.csstudio.trends.databrowser3/urls=
+org.csstudio.trends.databrowser3/archives=
+org.csstudio.trends.databrowser3/use_default_archives=false
 EOF
 
 resolve_path() {

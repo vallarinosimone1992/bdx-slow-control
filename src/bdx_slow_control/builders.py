@@ -21,7 +21,7 @@ from .drivers.factory import (
 )
 from .iocs.chiller import ChillerIOC
 from .iocs.daq import DaqCrateIOC
-from .iocs.environment import EnvironmentalSensorIOC
+from .iocs.environment import EnvironmentalSensorIOC, EnvironmentSummaryIOC
 from .iocs.global_system import GlobalIOC
 from .iocs.power import PowerChannelIOC, PowerDeviceIOC
 from .runtime import RuntimeSettings
@@ -107,7 +107,14 @@ def build_chiller(config: dict[str, Any], context: PrototypeContext | None = Non
 def build_environment(config: dict[str, Any], context: PrototypeContext | None = None):
     settings = server_settings(config)
     context = _context_or_default(context, settings.poll_interval)
-    groups = []
+    summary_config = config.get("summary", {})
+    if summary_config is not None and not isinstance(summary_config, dict):
+        raise ConfigurationError("environment summary must be an object when provided")
+    summary = EnvironmentSummaryIOC(
+        prefix=normalized_prefix((summary_config or {}).get("prefix", "BDX:ENV:")),
+        runtime_settings=context.runtime,
+    )
+    groups = [summary]
     for raw_sensor in require_list(config, "sensors"):
         if not isinstance(raw_sensor, dict):
             raise ConfigurationError("Each sensor entry must be an object")
@@ -117,6 +124,7 @@ def build_environment(config: dict[str, Any], context: PrototypeContext | None =
                 driver=build_sensor_driver(raw_sensor),
                 unit=str(raw_sensor.get("unit", "")),
                 sensor_kind=str(raw_sensor.get("kind", "unknown")),
+                summary=summary,
                 runtime_settings=context.runtime,
             )
         )

@@ -136,6 +136,7 @@ phoebus/displays/overview.bob
 phoebus/displays/psu.bob
 phoebus/displays/chiller.bob
 phoebus/displays/environment.bob
+phoebus/displays/environment_expert.bob
 phoebus/displays/hv.bob
 phoebus/displays/daq.bob
 phoebus/displays/global.bob
@@ -154,7 +155,7 @@ The global and overview displays provide:
 - live update-period selection;
 - update-frequency readback.
 
-The trend widgets subscribe to live Channel Access updates. Their sampling cadence follows `BDX:GLOBAL:UPDATE_PERIOD_SET`. Their time range can be adjusted from the plot toolbar or by setting `BDX_TREND_RANGE` before launching Phoebus.
+The trend widgets subscribe to live Channel Access updates. Generated Data Browser plots use a moving time window ending at `now`; set `BDX_TREND_RANGE` and `BDX_TREND_SCAN_PERIOD` when regenerating displays to change the default range and live scan period. The launcher disables Phoebus default Data Browser archive sources so these plots remain live-only.
 
 ## Configure the Phoebus launcher
 

@@ -13,11 +13,17 @@ import xml.etree.ElementTree as ET
 from .prototype import build_prototype
 
 DEFAULT_TREND_RANGE = "10 minutes"
+DEFAULT_TREND_SCAN_PERIOD = 5.0
 
 
 def trend_range() -> str:
     """Live trend window, configurable through the BDX_TREND_RANGE environment variable."""
     return os.environ.get("BDX_TREND_RANGE", DEFAULT_TREND_RANGE)
+
+
+def trend_scan_period() -> float:
+    """Live trend scan period used to timestamp Data Browser samples."""
+    return float(os.environ.get("BDX_TREND_SCAN_PERIOD", DEFAULT_TREND_SCAN_PERIOD))
 
 
 def slug(text: str) -> str:
@@ -225,6 +231,34 @@ class Display:
         ET.SubElement(widget, "on_label").text = on_label
         return widget
 
+    def led(
+        self,
+        pv: str,
+        x: int,
+        y: int,
+        width: int = 26,
+        height: int = 26,
+        *,
+        off_color: tuple[int, int, int] = (180, 40, 40),
+        on_color: tuple[int, int, int] = (40, 170, 80),
+    ) -> ET.Element:
+        widget = self.widget("led", "2.0.0", "StatusLED", x, y, width, height)
+        ET.SubElement(widget, "pv_name").text = pv
+        off = ET.SubElement(widget, "off_color")
+        ET.SubElement(
+            off,
+            "color",
+            {"red": str(off_color[0]), "green": str(off_color[1]), "blue": str(off_color[2])},
+        )
+        on = ET.SubElement(widget, "on_color")
+        ET.SubElement(
+            on,
+            "color",
+            {"red": str(on_color[0]), "green": str(on_color[1]), "blue": str(on_color[2])},
+        )
+        ET.SubElement(widget, "border_alarm_sensitive").text = "false"
+        return widget
+
     def action_button(
         self,
         text: str,
@@ -411,11 +445,35 @@ def status_pv_for_value(value_pv: str) -> str:
     return value_pv.removesuffix(":VALUE") + ":STATUS"
 
 
+def status_ok_pv_for_value(value_pv: str) -> str:
+    return value_pv.removesuffix(":VALUE") + ":STATUS_OK"
+
+
 def temperature_summary_height(sensor_count: int) -> int:
     if sensor_count == 0:
         return 0
     rows = (sensor_count + 3) // 4
     return 42 + rows * 115
+
+
+def add_environment_health(
+    display: Display,
+    pvs: Sequence[PVInfo],
+    y: int,
+) -> int:
+    names = {pv.name for pv in pvs}
+    if "BDX:ENV:HEARTBEAT" not in names and "BDX:ENV:LAST_TEMPERATURE_UPDATE" not in names:
+        return y
+
+    display.label("Environment slow control", 20, y, 300, 30, size=18, bold=True)
+    display.label("Heartbeat", 350, y + 3, 88, 24, size=12, bold=True)
+    if "BDX:ENV:HEARTBEAT" in names:
+        display.text_update("BDX:ENV:HEARTBEAT", 442, y, 100, 28, size=13)
+    display.label("Last temperature update", 585, y + 3, 190, 24, size=12, bold=True)
+    if "BDX:ENV:LAST_TEMPERATURE_UPDATE" in names:
+        display.text_update("BDX:ENV:LAST_TEMPERATURE_UPDATE", 780, y, 260, 28, size=13)
+    display.open_button("Expert PVs", "environment_expert.bob", 1190, y, 150, 30)
+    return y + 52
 
 
 def add_temperature_summary(display: Display, traces: Sequence[TraceInfo], y: int) -> int:
@@ -443,6 +501,7 @@ def add_temperature_summary(display: Display, traces: Sequence[TraceInfo], y: in
 
         display.label("", x, card_y, card_width, card_height, background=(245, 248, 250))
         display.label(trace.label, x + 12, card_y + 10, 56, 28, size=16, bold=True, background=color, foreground=(255, 255, 255))
+        display.led(status_ok_pv_for_value(trace.pv), x + 12, card_y + 52, 30, 30)
         display.text_update(
             trace.pv,
             x + 78,
@@ -457,16 +516,7 @@ def add_temperature_summary(display: Display, traces: Sequence[TraceInfo], y: in
             background=pale_color,
         )
         display.label("°C", x + 232, card_y + 17, 34, 28, size=16, bold=True)
-        display.label("Status", x + 78, card_y + 58, 58, 22, size=11, bold=True)
-        display.text_update(
-            status_pv_for_value(trace.pv),
-            x + 140,
-            card_y + 56,
-            165,
-            25,
-            size=11,
-            show_units=False,
-        )
+        display.label("Status", x + 52, card_y + 56, 58, 22, size=11, bold=True)
 
     return y + ((len(traces) + 3) // 4) * (card_height + row_gap)
 
@@ -705,12 +755,17 @@ def generate_subsystem(
     selected = [pv for pv in pvs if pv.subsystem == subsystem]
     chart_groups = groups.get(subsystem, [])
     summary_traces = temperature_traces(chart_groups) if subsystem == "environment" else []
+    health_height = 52 if subsystem == "environment" and any(
+        pv.name in {"BDX:ENV:HEARTBEAT", "BDX:ENV:LAST_TEMPERATURE_UPDATE"}
+        for pv in selected
+    ) else 0
     summary_height = temperature_summary_height(len(summary_traces))
     chart_rows = (len(chart_groups) + 1) // 2
     plot_height = chart_rows * 330
     control_height = 100 if subsystem == "global" else 50 if subsystem == "daq" else 0
-    table_start = 118 + control_height + summary_height + plot_height
-    height = table_start + 90 + len(selected) * 29
+    table_height = 0 if subsystem == "environment" else 90 + len(selected) * 29
+    table_start = 118 + control_height + health_height + summary_height + plot_height
+    height = table_start + table_height + 30
     display = Display(f"BDX {subsystem.upper()}", 1400, max(760, height))
     add_header(display, f"BDX {subsystem.upper()}")
 
@@ -762,6 +817,9 @@ def generate_subsystem(
             )
         y += 45
 
+    if subsystem == "environment":
+        y = add_environment_health(display, selected, y)
+
     if summary_traces:
         y = add_temperature_summary(display, summary_traces, y)
 
@@ -780,8 +838,20 @@ def generate_subsystem(
             )
         y += chart_rows * 330
 
-    add_pv_table(display, selected, y + 10)
+    if subsystem != "environment":
+        add_pv_table(display, selected, y + 10)
     display.write(output / f"{subsystem}.bob")
+    if subsystem == "environment":
+        generate_environment_expert(selected, output)
+
+
+def generate_environment_expert(pvs: Sequence[PVInfo], output: Path) -> None:
+    height = 170 + len(pvs) * 29
+    display = Display("BDX ENVIRONMENT EXPERT", 1400, max(760, height))
+    add_header(display, "BDX ENVIRONMENT EXPERT")
+    display.open_button("Back to environment", "environment.bob", 20, 105, 210, 32)
+    add_pv_table(display, pvs, 150)
+    display.write(output / "environment_expert.bob")
 
 
 def generate_trends(
@@ -847,7 +917,7 @@ def write_databrowser_plt(
         '    <show_legend>true</show_legend>',
         '    <show_toolbar>true</show_toolbar>',
         '    <grid>true</grid>',
-        '    <update_period>3.0</update_period>',
+        '    <update_period>1.0</update_period>',
         '    <scroll_step>5</scroll_step>',
         '    <scroll>true</scroll>',
         f'    <start>-{trend_range()}</start>',
@@ -891,9 +961,9 @@ def write_databrowser_plt(
                 '            <point_type>NONE</point_type>',
                 '            <point_size>6</point_size>',
                 '            <waveform_index>0</waveform_index>',
-                '            <period>0.0</period>',
+                f'            <period>{trend_scan_period():.1f}</period>',
                 '            <ring_size>5000</ring_size>',
-                '            <request>OPTIMIZED</request>',
+                '            <request>RAW</request>',
                 '        </pv>',
             ]
         )

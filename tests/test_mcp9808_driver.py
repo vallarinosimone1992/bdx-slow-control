@@ -82,8 +82,12 @@ def test_parse_resolution_rejects_unsupported_value():
 
 def test_raspberry_environment_config_builds_pvdb_without_opening_i2c():
     pvdb, _ = build_environment(load_json("config/profiles/raspberry/environment.json"))
+    assert "BDX:ENV:HEARTBEAT" in pvdb
+    assert "BDX:ENV:LAST_TEMPERATURE_UPDATE" in pvdb
     assert "BDX:ENV:TEMP:T00:VALUE" in pvdb
+    assert "BDX:ENV:TEMP:T00:STATUS_OK" in pvdb
     assert "BDX:ENV:TEMP:T03:VALUE" in pvdb
+    assert "BDX:ENV:TEMP:T03:STATUS_OK" in pvdb
 
 
 def test_raspberry_environment_config_uses_expected_bus_and_addresses():

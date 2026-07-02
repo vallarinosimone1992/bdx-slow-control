@@ -4,6 +4,7 @@ import logging
 import pytest
 
 from bdx_slow_control.iocs.environment import EnvironmentalSensorIOC
+from bdx_slow_control.iocs.environment import EnvironmentSummaryIOC
 from bdx_slow_control.runtime import RuntimeSettings
 
 
@@ -26,11 +27,16 @@ class SequenceSensorDriver:
 def test_environment_ioc_preserves_last_value_and_recovers_status(caplog):
     async def scenario():
         driver = SequenceSensorDriver([21.5, OSError("temporary I2C failure"), 22.0])
+        summary = EnvironmentSummaryIOC(
+            prefix="BDX:ENV:",
+            runtime_settings=RuntimeSettings(),
+        )
         group = EnvironmentalSensorIOC(
             prefix="BDX:ENV:TEMP:T00:",
             driver=driver,
             unit="degC",
             sensor_kind="temperature",
+            summary=summary,
             runtime_settings=RuntimeSettings(),
         )
 
@@ -38,6 +44,8 @@ def test_environment_ioc_preserves_last_value_and_recovers_status(caplog):
         await group.mark_success()
         assert group.VALUE.value == pytest.approx(21.5)
         assert group.STATUS.value == "VALID"
+        assert group.STATUS_OK.value == 1
+        assert summary.LAST_TEMPERATURE_UPDATE.value
 
         with pytest.raises(OSError) as exc_info:
             await group.poll_device()
@@ -45,6 +53,7 @@ def test_environment_ioc_preserves_last_value_and_recovers_status(caplog):
 
         assert group.VALUE.value == pytest.approx(21.5)
         assert group.STATUS.value == "DISCONNECTED"
+        assert group.STATUS_OK.value == 0
         assert group.COMM_STATUS.value == "DEVICE_ERROR"
         assert group.ERROR_MESSAGE.value == "temporary I2C failure"
 
@@ -53,6 +62,7 @@ def test_environment_ioc_preserves_last_value_and_recovers_status(caplog):
 
         assert group.VALUE.value == pytest.approx(22.0)
         assert group.STATUS.value == "VALID"
+        assert group.STATUS_OK.value == 1
         assert group.COMM_STATUS.value == "OK"
         assert group.ERROR_MESSAGE.value == ""
 

@@ -5,7 +5,7 @@
     <show_legend>true</show_legend>
     <show_toolbar>true</show_toolbar>
     <grid>true</grid>
-    <update_period>3.0</update_period>
+    <update_period>1.0</update_period>
     <scroll_step>5</scroll_step>
     <scroll>true</scroll>
     <start>-10 minutes</start>
@@ -44,9 +44,9 @@
             <point_type>NONE</point_type>
             <point_size>6</point_size>
             <waveform_index>0</waveform_index>
-            <period>0.0</period>
+            <period>5.0</period>
             <ring_size>5000</ring_size>
-            <request>OPTIMIZED</request>
+            <request>RAW</request>
         </pv>
         <pv>
             <display_name>T01</display_name>
@@ -64,9 +64,9 @@
             <point_type>NONE</point_type>
             <point_size>6</point_size>
             <waveform_index>0</waveform_index>
-            <period>0.0</period>
+            <period>5.0</period>
             <ring_size>5000</ring_size>
-            <request>OPTIMIZED</request>
+            <request>RAW</request>
         </pv>
         <pv>
             <display_name>T02</display_name>
@@ -84,9 +84,9 @@
             <point_type>NONE</point_type>
             <point_size>6</point_size>
             <waveform_index>0</waveform_index>
-            <period>0.0</period>
+            <period>5.0</period>
             <ring_size>5000</ring_size>
-            <request>OPTIMIZED</request>
+            <request>RAW</request>
         </pv>
         <pv>
             <display_name>T03</display_name>
@@ -104,9 +104,9 @@
             <point_type>NONE</point_type>
             <point_size>6</point_size>
             <waveform_index>0</waveform_index>
-            <period>0.0</period>
+            <period>5.0</period>
             <ring_size>5000</ring_size>
-            <request>OPTIMIZED</request>
+            <request>RAW</request>
         </pv>
     </pvlist>
 </databrowser>

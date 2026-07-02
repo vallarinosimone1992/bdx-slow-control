@@ -1,4 +1,6 @@
 from pathlib import Path
+import os
+import subprocess
 import xml.etree.ElementTree as ET
 
 from bdx_slow_control.phoebus_generator import generate
@@ -12,13 +14,17 @@ RASPBERRY_TEMPERATURE_PVS = {
     "BDX:ENV:TEMP:T02:VALUE",
     "BDX:ENV:TEMP:T03:VALUE",
 }
-RASPBERRY_STATUS_PVS = {
-    "BDX:ENV:TEMP:T00:STATUS",
-    "BDX:ENV:TEMP:T01:STATUS",
-    "BDX:ENV:TEMP:T02:STATUS",
-    "BDX:ENV:TEMP:T03:STATUS",
+RASPBERRY_STATUS_OK_PVS = {
+    "BDX:ENV:TEMP:T00:STATUS_OK",
+    "BDX:ENV:TEMP:T01:STATUS_OK",
+    "BDX:ENV:TEMP:T02:STATUS_OK",
+    "BDX:ENV:TEMP:T03:STATUS_OK",
 }
 RASPBERRY_TEMPERATURE_LABELS = {"T00", "T01", "T02", "T03"}
+ENVIRONMENT_SUMMARY_PVS = {
+    "BDX:ENV:HEARTBEAT",
+    "BDX:ENV:LAST_TEMPERATURE_UPDATE",
+}
 
 
 def _pv_references(path: Path) -> set[str]:
@@ -69,6 +75,24 @@ def _text_updates(path: Path) -> list[ET.Element]:
     ]
 
 
+def _widgets(path: Path, widget_type: str) -> list[ET.Element]:
+    root = ET.parse(path).getroot()
+    return [
+        widget
+        for widget in root.findall("widget")
+        if widget.get("type") == widget_type
+    ]
+
+
+def _labels(path: Path) -> set[str]:
+    root = ET.parse(path).getroot()
+    return {
+        element.text
+        for element in root.findall("widget/text")
+        if element.text
+    }
+
+
 def test_generated_displays_are_valid_xml_and_cover_every_pv(tmp_path: Path):
     pvs = generate(PROTOTYPE_PROFILE, tmp_path)
     for path in tmp_path.glob("*.bob"):
@@ -116,6 +140,14 @@ def test_generated_databrowser_plt_files_do_not_configure_archive_data_sources(
     generate(PROTOTYPE_PROFILE, tmp_path)
     for path in tmp_path.glob("*.plt"):
         assert _plt(path).find("pvlist/pv/archive") is None
+        assert {
+            period.text
+            for period in _plt(path).findall("pvlist/pv/period")
+        } == {"5.0"}
+        assert {
+            request.text
+            for request in _plt(path).findall("pvlist/pv/request")
+        } == {"RAW"}
 
 
 def test_raspberry_environment_display_groups_all_temperatures_in_one_databrowser_chart(
@@ -154,6 +186,7 @@ def test_raspberry_environment_display_uses_live_relative_time_window(
         assert plt_root.findtext("start") == "-10 minutes"
         assert plt_root.findtext("end") == "now"
         assert plt_root.findtext("scroll") == "true"
+        assert plt_root.findtext("update_period") == "1.0"
         assert widget.findtext("show_toolbar") == "true"
 
 
@@ -169,15 +202,37 @@ def test_raspberry_environment_display_contains_live_temperature_summary(
         if widget.findtext("precision") == "2"
         and widget.findtext("format") == "1"
     }
-    summary_statuses = {
+    summary_pvs = {
         widget.findtext("pv_name")
         for widget in text_updates
-        if widget.findtext("show_units") == "false"
-        and widget.findtext("pv_name", "").endswith(":STATUS")
+    }
+    status_leds = {
+        widget.findtext("pv_name")
+        for widget in _widgets(tmp_path / "environment.bob", "led")
     }
 
     assert summary_values == RASPBERRY_TEMPERATURE_PVS
-    assert summary_statuses == RASPBERRY_STATUS_PVS
+    assert ENVIRONMENT_SUMMARY_PVS.issubset(summary_pvs)
+    assert status_leds == RASPBERRY_STATUS_OK_PVS
+
+
+def test_raspberry_environment_operator_display_links_to_expert_pv_display(
+    tmp_path: Path,
+):
+    pvs = generate(RASPBERRY_PROFILE, tmp_path, only="environment")
+
+    operator_display = tmp_path / "environment.bob"
+    expert_display = tmp_path / "environment_expert.bob"
+    assert ET.parse(operator_display).getroot().tag == "display"
+    assert ET.parse(expert_display).getroot().tag == "display"
+
+    operator_references = _pv_references(operator_display)
+    expert_references = _pv_references(expert_display)
+    assert "Expert PVs" in _labels(operator_display)
+    assert "PV name" not in _labels(operator_display)
+    assert "BDX:ENV:TEMP:T00:CLEAR_ERROR_CMD" not in operator_references
+    assert "BDX:ENV:TEMP:T00:ERROR_MESSAGE" not in operator_references
+    assert {pv.name for pv in pvs}.issubset(expert_references)
 
 
 def test_raspberry_environment_display_contains_no_humidity_or_pressure_traces(
@@ -201,6 +256,34 @@ def test_generate_only_environment_does_not_overwrite_unrelated_displays(tmp_pat
     assert ET.parse(tmp_path / "environment.bob").getroot().tag == "display"
     assert psu_display.read_text(encoding="utf-8") == "keep psu"
     assert overview_display.read_text(encoding="utf-8") == "keep overview"
+
+
+def test_phoebus_launcher_disables_default_databrowser_archives(tmp_path: Path):
+    launcher = tmp_path / "fake_phoebus.sh"
+    launcher.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+    launcher.chmod(0o755)
+
+    env = {
+        **os.environ,
+        "BDX_PHOEBUS_CMD": str(launcher),
+        "BDX_PHOEBUS_ENV": str(tmp_path / "missing.env"),
+        "XDG_RUNTIME_DIR": str(tmp_path),
+    }
+    subprocess.run(
+        ["bash", "scripts/launch_phoebus.sh", "environment"],
+        check=True,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+    settings = (tmp_path / "bdx-phoebus" / "settings.ini").read_text(
+        encoding="utf-8"
+    )
+    assert "org.csstudio.trends.databrowser3/urls=\n" in settings
+    assert "org.csstudio.trends.databrowser3/archives=\n" in settings
+    assert "org.csstudio.trends.databrowser3/use_default_archives=false\n" in settings
     assert not (tmp_path / "all_pvs.bob").exists()
 
 
