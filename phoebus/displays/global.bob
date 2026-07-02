@@ -358,44 +358,14 @@
       <color red="255" green="150" blue="150" />
     </background_color>
   </widget>
-  <widget type="stripchart" version="2.1.0">
-    <name>StripChart_25</name>
+  <widget type="databrowser" version="2.0.0">
+    <name>DataBrowser_25</name>
     <x>20</x>
     <y>197</y>
     <width>670</width>
     <height>310</height>
-    <title>Prototype update frequency</title>
-    <start>$(BDX_TREND_RANGE=10 minutes)</start>
-    <end />
+    <file>global_0_prototype_update_frequency.plt</file>
     <show_toolbar>true</show_toolbar>
-    <show_legend>true</show_legend>
-    <show_grid>true</show_grid>
-    <y_axes>
-      <y_axis>
-        <title>Value</title>
-        <autoscale>true</autoscale>
-        <log_scale>false</log_scale>
-        <minimum>0.0</minimum>
-        <maximum>100.0</maximum>
-        <show_grid>true</show_grid>
-        <visible>true</visible>
-      </y_axis>
-    </y_axes>
-    <traces>
-      <trace>
-        <name>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</name>
-        <y_pv>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</y_pv>
-        <axis>0</axis>
-        <trace_type>1</trace_type>
-        <color>
-          <color red="33" green="113" blue="181" />
-        </color>
-        <line_width>2</line_width>
-        <point_type>0</point_type>
-        <point_size>6</point_size>
-        <visible>true</visible>
-      </trace>
-    </traces>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_26</name>

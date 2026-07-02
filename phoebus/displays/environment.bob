@@ -509,83 +509,14 @@
     </font>
     <show_units>false</show_units>
   </widget>
-  <widget type="stripchart" version="2.1.0">
-    <name>StripChart_36</name>
+  <widget type="databrowser" version="2.0.0">
+    <name>DataBrowser_36</name>
     <x>20</x>
     <y>260</y>
     <width>670</width>
     <height>310</height>
-    <title>Environment temperatures</title>
-    <start>-$(BDX_TREND_RANGE=10 minutes)</start>
-    <end>now</end>
+    <file>environment_0_environment_temperatures.plt</file>
     <show_toolbar>true</show_toolbar>
-    <show_legend>true</show_legend>
-    <show_grid>true</show_grid>
-    <y_axes>
-      <y_axis>
-        <title>Temperature [degC]</title>
-        <autoscale>true</autoscale>
-        <log_scale>false</log_scale>
-        <minimum>0.0</minimum>
-        <maximum>100.0</maximum>
-        <show_grid>true</show_grid>
-        <visible>true</visible>
-      </y_axis>
-    </y_axes>
-    <traces>
-      <trace>
-        <name>T00</name>
-        <y_pv>BDX:ENV:TEMP:T00:VALUE</y_pv>
-        <axis>0</axis>
-        <trace_type>1</trace_type>
-        <color>
-          <color red="33" green="113" blue="181" />
-        </color>
-        <line_width>2</line_width>
-        <point_type>0</point_type>
-        <point_size>6</point_size>
-        <visible>true</visible>
-      </trace>
-      <trace>
-        <name>T01</name>
-        <y_pv>BDX:ENV:TEMP:T01:VALUE</y_pv>
-        <axis>0</axis>
-        <trace_type>1</trace_type>
-        <color>
-          <color red="230" green="85" blue="13" />
-        </color>
-        <line_width>2</line_width>
-        <point_type>0</point_type>
-        <point_size>6</point_size>
-        <visible>true</visible>
-      </trace>
-      <trace>
-        <name>T02</name>
-        <y_pv>BDX:ENV:TEMP:T02:VALUE</y_pv>
-        <axis>0</axis>
-        <trace_type>1</trace_type>
-        <color>
-          <color red="49" green="163" blue="84" />
-        </color>
-        <line_width>2</line_width>
-        <point_type>0</point_type>
-        <point_size>6</point_size>
-        <visible>true</visible>
-      </trace>
-      <trace>
-        <name>T03</name>
-        <y_pv>BDX:ENV:TEMP:T03:VALUE</y_pv>
-        <axis>0</axis>
-        <trace_type>1</trace_type>
-        <color>
-          <color red="117" green="107" blue="177" />
-        </color>
-        <line_width>2</line_width>
-        <point_type>0</point_type>
-        <point_size>6</point_size>
-        <visible>true</visible>
-      </trace>
-    </traces>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_37</name>

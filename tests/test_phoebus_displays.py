@@ -31,27 +31,31 @@ def _pv_references(path: Path) -> set[str]:
     return references
 
 
-def _stripcharts(path: Path) -> list[ET.Element]:
+def _databrowsers(path: Path) -> list[ET.Element]:
     root = ET.parse(path).getroot()
     return [
         widget
         for widget in root.findall("widget")
-        if widget.get("type") == "stripchart"
+        if widget.get("type") == "databrowser"
     ]
 
 
-def _stripchart_traces(stripchart: ET.Element) -> set[str]:
+def _plt(path: Path) -> ET.Element:
+    return ET.parse(path).getroot()
+
+
+def _plt_traces(plt_root: ET.Element) -> set[str]:
     return {
         element.text
-        for element in stripchart.iter("y_pv")
+        for element in plt_root.findall("pvlist/pv/name")
         if element.text and element.text.startswith("BDX:")
     }
 
 
-def _stripchart_trace_labels(stripchart: ET.Element) -> set[str]:
+def _plt_trace_labels(plt_root: ET.Element) -> set[str]:
     return {
         element.text
-        for element in stripchart.findall("traces/trace/name")
+        for element in plt_root.findall("pvlist/pv/display_name")
         if element.text
     }
 
@@ -69,6 +73,8 @@ def test_generated_displays_are_valid_xml_and_cover_every_pv(tmp_path: Path):
     pvs = generate(PROTOTYPE_PROFILE, tmp_path)
     for path in tmp_path.glob("*.bob"):
         assert ET.parse(path).getroot().tag == "display"
+    for path in tmp_path.glob("*.plt"):
+        assert ET.parse(path).getroot().tag == "databrowser"
 
     expected = {pv.name for pv in pvs}
     assert expected.issubset(_pv_references(tmp_path / "all_pvs.bob"))
@@ -98,28 +104,42 @@ def test_all_display_pv_references_and_navigation_targets_exist(tmp_path: Path):
         for file_element in root.iter("file"):
             if file_element.text and file_element.text.endswith(".bob"):
                 assert (tmp_path / file_element.text).exists()
+            elif file_element.text and file_element.text.endswith(".plt"):
+                assert (tmp_path / file_element.text).exists()
 
 
-def test_raspberry_environment_display_groups_all_temperatures_in_one_stripchart(
+def test_generated_databrowser_plt_files_do_not_configure_archive_data_sources(
+    tmp_path: Path,
+):
+    """No archive appliance is deployed; a configured-but-unreachable archive
+    data source can stall a Data Browser plot's live samples."""
+    generate(PROTOTYPE_PROFILE, tmp_path)
+    for path in tmp_path.glob("*.plt"):
+        assert _plt(path).find("pvlist/pv/archive") is None
+
+
+def test_raspberry_environment_display_groups_all_temperatures_in_one_databrowser_chart(
     tmp_path: Path,
 ):
     generate(RASPBERRY_PROFILE, tmp_path, only="environment")
 
-    stripcharts = _stripcharts(tmp_path / "environment.bob")
+    databrowsers = _databrowsers(tmp_path / "environment.bob")
     temperature_charts = [
-        stripchart
-        for stripchart in stripcharts
-        if RASPBERRY_TEMPERATURE_PVS.issubset(_stripchart_traces(stripchart))
+        widget
+        for widget in databrowsers
+        if RASPBERRY_TEMPERATURE_PVS.issubset(
+            _plt_traces(_plt(tmp_path / widget.findtext("file")))
+        )
     ]
 
     assert len(temperature_charts) == 1
-    chart = temperature_charts[0]
-    assert chart.findtext("title") == "Environment temperatures"
-    assert chart.findtext("show_legend") == "true"
-    assert chart.findtext("y_axes/y_axis/title") == "Temperature [degC]"
-    assert chart.findtext("y_axes/y_axis/autoscale") == "true"
-    assert _stripchart_traces(chart) == RASPBERRY_TEMPERATURE_PVS
-    assert _stripchart_trace_labels(chart) == RASPBERRY_TEMPERATURE_LABELS
+    plt_root = _plt(tmp_path / temperature_charts[0].findtext("file"))
+    assert plt_root.findtext("title") == "Environment temperatures"
+    assert plt_root.findtext("show_legend") == "true"
+    assert plt_root.findtext("axes/axis/name") == "Temperature [degC]"
+    assert plt_root.findtext("axes/axis/autoscale") == "true"
+    assert _plt_traces(plt_root) == RASPBERRY_TEMPERATURE_PVS
+    assert _plt_trace_labels(plt_root) == RASPBERRY_TEMPERATURE_LABELS
 
 
 def test_raspberry_environment_display_uses_live_relative_time_window(
@@ -127,16 +147,14 @@ def test_raspberry_environment_display_uses_live_relative_time_window(
 ):
     generate(RASPBERRY_PROFILE, tmp_path, only="environment")
 
-    path = tmp_path / "environment.bob"
-    root = ET.parse(path).getroot()
-    stripcharts = _stripcharts(path)
-    assert stripcharts
-    for stripchart in stripcharts:
-        assert stripchart.findtext("start") == "-$(BDX_TREND_RANGE=10 minutes)"
-        assert stripchart.findtext("end") == "now"
-        assert stripchart.findtext("show_toolbar") == "true"
-
-    assert ET.tostring(root, encoding="unicode").find("<end />") == -1
+    databrowsers = _databrowsers(tmp_path / "environment.bob")
+    assert databrowsers
+    for widget in databrowsers:
+        plt_root = _plt(tmp_path / widget.findtext("file"))
+        assert plt_root.findtext("start") == "-10 minutes"
+        assert plt_root.findtext("end") == "now"
+        assert plt_root.findtext("scroll") == "true"
+        assert widget.findtext("show_toolbar") == "true"
 
 
 def test_raspberry_environment_display_contains_live_temperature_summary(
@@ -191,13 +209,13 @@ def test_raspberry_overview_environment_chart_uses_configured_temperature_pvs(
 ):
     generate(RASPBERRY_PROFILE, tmp_path, only="overview")
 
-    stripcharts = _stripcharts(tmp_path / "overview.bob")
+    databrowsers = _databrowsers(tmp_path / "overview.bob")
     environment_charts = [
-        stripchart
-        for stripchart in stripcharts
-        if stripchart.findtext("title") == "Environment"
-        or stripchart.findtext("title") == "Environment temperatures"
+        widget
+        for widget in databrowsers
+        if _plt(tmp_path / widget.findtext("file")).findtext("title")
+        in ("Environment", "Environment temperatures")
     ]
     assert len(environment_charts) == 1
-    traces = _stripchart_traces(environment_charts[0])
+    traces = _plt_traces(_plt(tmp_path / environment_charts[0].findtext("file")))
     assert traces == RASPBERRY_TEMPERATURE_PVS

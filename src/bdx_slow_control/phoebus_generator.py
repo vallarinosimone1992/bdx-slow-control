@@ -3,12 +3,25 @@
 from __future__ import annotations
 
 import argparse
+import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 import xml.etree.ElementTree as ET
 
 from .prototype import build_prototype
+
+DEFAULT_TREND_RANGE = "10 minutes"
+
+
+def trend_range() -> str:
+    """Live trend window, configurable through the BDX_TREND_RANGE environment variable."""
+    return os.environ.get("BDX_TREND_RANGE", DEFAULT_TREND_RANGE)
+
+
+def slug(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_")
 
 
 @dataclass(frozen=True)
@@ -265,53 +278,17 @@ class Display:
         ET.SubElement(widget, "tooltip").text = "$(actions)"
         return widget
 
-    def stripchart(
+    def databrowser(
         self,
-        title: str,
-        traces: Sequence[TraceInfo],
+        plt_filename: str,
         x: int,
         y: int,
         width: int,
         height: int,
-        *,
-        y_axis_title: str = "Value",
     ) -> ET.Element:
-        widget = self.widget("stripchart", "2.1.0", "StripChart", x, y, width, height)
-        ET.SubElement(widget, "title").text = title
-        ET.SubElement(widget, "start").text = "-$(BDX_TREND_RANGE=10 minutes)"
-        ET.SubElement(widget, "end").text = "now"
+        widget = self.widget("databrowser", "2.0.0", "DataBrowser", x, y, width, height)
+        ET.SubElement(widget, "file").text = plt_filename
         ET.SubElement(widget, "show_toolbar").text = "true"
-        ET.SubElement(widget, "show_legend").text = "true"
-        ET.SubElement(widget, "show_grid").text = "true"
-
-        axes = ET.SubElement(widget, "y_axes")
-        axis = ET.SubElement(axes, "y_axis")
-        ET.SubElement(axis, "title").text = y_axis_title
-        ET.SubElement(axis, "autoscale").text = "true"
-        ET.SubElement(axis, "log_scale").text = "false"
-        ET.SubElement(axis, "minimum").text = "0.0"
-        ET.SubElement(axis, "maximum").text = "100.0"
-        ET.SubElement(axis, "show_grid").text = "true"
-        ET.SubElement(axis, "visible").text = "true"
-
-        trace_nodes = ET.SubElement(widget, "traces")
-        for index, trace_info in enumerate(traces):
-            trace = ET.SubElement(trace_nodes, "trace")
-            ET.SubElement(trace, "name").text = trace_info.label
-            ET.SubElement(trace, "y_pv").text = trace_info.pv
-            ET.SubElement(trace, "axis").text = "0"
-            ET.SubElement(trace, "trace_type").text = "1"
-            color = ET.SubElement(trace, "color")
-            rgb = PALETTE[index % len(PALETTE)]
-            ET.SubElement(
-                color,
-                "color",
-                {"red": str(rgb[0]), "green": str(rgb[1]), "blue": str(rgb[2])},
-            )
-            ET.SubElement(trace, "line_width").text = "2"
-            ET.SubElement(trace, "point_type").text = "0"
-            ET.SubElement(trace, "point_size").text = "6"
-            ET.SubElement(trace, "visible").text = "true"
         return widget
 
     def write(self, path: Path) -> None:
@@ -689,15 +666,14 @@ def generate_overview(pvs: Sequence[PVInfo], output: Path) -> None:
 
     environment_group = environment_overview_group(pvs)
     if environment_group:
-        display.stripchart(
+        plt_filename = f"overview_{slug(environment_group.title)}.plt"
+        write_databrowser_plt(
+            output / plt_filename,
             environment_group.title,
             environment_group.traces,
-            20,
-            y,
-            670,
-            360,
-            y_axis_title=environment_group.y_axis_title,
+            environment_group.y_axis_title,
         )
+        display.databrowser(plt_filename, 20, y, 670, 360)
 
     names = {pv.name for pv in pvs}
     chiller_traces = [
@@ -710,14 +686,13 @@ def generate_overview(pvs: Sequence[PVInfo], output: Path) -> None:
         if name in names
     ]
     if chiller_traces:
-        display.stripchart(
+        write_databrowser_plt(
+            output / "overview_chiller.plt",
             "Chiller",
             traces_for_pvs(chiller_traces),
-            710,
-            y,
-            670,
-            360,
+            "Value",
         )
+        display.databrowser("overview_chiller.plt", 710, y, 670, 360)
     display.write(output / "overview.bob")
 
 
@@ -794,14 +769,14 @@ def generate_subsystem(
         for index, group in enumerate(chart_groups):
             column = index % 2
             row = index // 2
-            display.stripchart(
-                group.title,
-                group.traces,
+            plt_filename = f"{subsystem}_{index}_{slug(group.title)}.plt"
+            write_databrowser_plt(output / plt_filename, group.title, group.traces, group.y_axis_title)
+            display.databrowser(
+                plt_filename,
                 20 + column * 690,
                 y + row * 330,
                 670,
                 310,
-                y_axis_title=group.y_axis_title,
             )
         y += chart_rows * 330
 
@@ -821,7 +796,7 @@ def generate_trends(
     add_header(display, "BDX live trends")
     y = add_timing_controls(display, 105)
     display.label(
-        "Strip charts subscribe to live PV updates. Change the IOC update period above; "
+        "Trend charts subscribe to live PV updates. Change the IOC update period above; "
         "use each chart toolbar to adjust its time range.",
         20,
         y,
@@ -832,14 +807,14 @@ def generate_trends(
     for index, group in enumerate(all_groups):
         column = index % 2
         row = index // 2
-        display.stripchart(
-            group.title,
-            group.traces,
+        plt_filename = f"trends_{index}_{slug(group.title)}.plt"
+        write_databrowser_plt(output / plt_filename, group.title, group.traces, group.y_axis_title)
+        display.databrowser(
+            plt_filename,
             20 + column * 690,
             y + row * 330,
             670,
             310,
-            y_axis_title=group.y_axis_title,
         )
     display.write(output / "trends.bob")
 
@@ -850,6 +825,81 @@ def generate_all_pvs(pvs: Sequence[PVInfo], output: Path) -> None:
     add_header(display, "BDX complete simulation PV table")
     add_pv_table(display, pvs, 105)
     display.write(output / "all_pvs.bob")
+
+
+def write_databrowser_plt(
+    path: Path,
+    title: str,
+    traces: Sequence[TraceInfo],
+    y_axis_title: str,
+) -> None:
+    """Write a Data Browser *.plt file backing an embedded 'databrowser' widget.
+
+    Traces intentionally omit <archive> data sources: this deployment has no
+    archive appliance, and a configured-but-unreachable archive data source
+    can stall the plot's live samples.
+    """
+    lines = [
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+        '<databrowser>',
+        f'    <title>{title}</title>',
+        '    <save_changes>false</save_changes>',
+        '    <show_legend>true</show_legend>',
+        '    <show_toolbar>true</show_toolbar>',
+        '    <grid>true</grid>',
+        '    <update_period>3.0</update_period>',
+        '    <scroll_step>5</scroll_step>',
+        '    <scroll>true</scroll>',
+        f'    <start>-{trend_range()}</start>',
+        '    <end>now</end>',
+        '    <archive_rescale>NONE</archive_rescale>',
+        '    <axes>',
+        '        <axis>',
+        '            <visible>true</visible>',
+        f'            <name>{y_axis_title}</name>',
+        '            <use_axis_name>true</use_axis_name>',
+        '            <use_trace_names>false</use_trace_names>',
+        '            <right>false</right>',
+        '            <min>0.0</min>',
+        '            <max>100.0</max>',
+        '            <grid>true</grid>',
+        '            <autoscale>true</autoscale>',
+        '            <log_scale>false</log_scale>',
+        '        </axis>',
+        '    </axes>',
+        '    <annotations>',
+        '    </annotations>',
+        '    <pvlist>',
+    ]
+    for index, trace_info in enumerate(traces):
+        rgb = PALETTE[index % len(PALETTE)]
+        lines.extend(
+            [
+                '        <pv>',
+                f'            <display_name>{trace_info.label}</display_name>',
+                '            <visible>true</visible>',
+                f'            <name>{trace_info.pv}</name>',
+                '            <axis>0</axis>',
+                '            <color>',
+                f'                <red>{rgb[0]}</red>',
+                f'                <green>{rgb[1]}</green>',
+                f'                <blue>{rgb[2]}</blue>',
+                '            </color>',
+                '            <trace_type>SINGLE_LINE</trace_type>',
+                '            <linewidth>2</linewidth>',
+                '            <line_style>SOLID</line_style>',
+                '            <point_type>NONE</point_type>',
+                '            <point_size>6</point_size>',
+                '            <waveform_index>0</waveform_index>',
+                '            <period>0.0</period>',
+                '            <ring_size>5000</ring_size>',
+                '            <request>OPTIMIZED</request>',
+                '        </pv>',
+            ]
+        )
+    lines.extend(['    </pvlist>', '</databrowser>'])
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def write_pv_table(pvs: Sequence[PVInfo], output: Path) -> None:

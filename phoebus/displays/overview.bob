@@ -643,134 +643,22 @@
     <height>25</height>
     <pv_name>BDX:PSU:PSU1:COMM_STATUS</pv_name>
   </widget>
-  <widget type="stripchart" version="2.1.0">
-    <name>StripChart_55</name>
+  <widget type="databrowser" version="2.0.0">
+    <name>DataBrowser_55</name>
     <x>20</x>
     <y>355</y>
     <width>670</width>
     <height>360</height>
-    <title>Environment</title>
-    <start>$(BDX_TREND_RANGE=10 minutes)</start>
-    <end />
+    <file>overview_environment.plt</file>
     <show_toolbar>true</show_toolbar>
-    <show_legend>true</show_legend>
-    <show_grid>true</show_grid>
-    <y_axes>
-      <y_axis>
-        <title>Value</title>
-        <autoscale>true</autoscale>
-        <log_scale>false</log_scale>
-        <minimum>0.0</minimum>
-        <maximum>100.0</maximum>
-        <show_grid>true</show_grid>
-        <visible>true</visible>
-      </y_axis>
-    </y_axes>
-    <traces>
-      <trace>
-        <name>BDX:ENV:TEMP:T01:VALUE</name>
-        <y_pv>BDX:ENV:TEMP:T01:VALUE</y_pv>
-        <axis>0</axis>
-        <trace_type>1</trace_type>
-        <color>
-          <color red="33" green="113" blue="181" />
-        </color>
-        <line_width>2</line_width>
-        <point_type>0</point_type>
-        <point_size>6</point_size>
-        <visible>true</visible>
-      </trace>
-      <trace>
-        <name>BDX:ENV:HUMIDITY:H01:VALUE</name>
-        <y_pv>BDX:ENV:HUMIDITY:H01:VALUE</y_pv>
-        <axis>0</axis>
-        <trace_type>1</trace_type>
-        <color>
-          <color red="230" green="85" blue="13" />
-        </color>
-        <line_width>2</line_width>
-        <point_type>0</point_type>
-        <point_size>6</point_size>
-        <visible>true</visible>
-      </trace>
-      <trace>
-        <name>BDX:ENV:PRESSURE:P01:VALUE</name>
-        <y_pv>BDX:ENV:PRESSURE:P01:VALUE</y_pv>
-        <axis>0</axis>
-        <trace_type>1</trace_type>
-        <color>
-          <color red="49" green="163" blue="84" />
-        </color>
-        <line_width>2</line_width>
-        <point_type>0</point_type>
-        <point_size>6</point_size>
-        <visible>true</visible>
-      </trace>
-    </traces>
   </widget>
-  <widget type="stripchart" version="2.1.0">
-    <name>StripChart_56</name>
+  <widget type="databrowser" version="2.0.0">
+    <name>DataBrowser_56</name>
     <x>710</x>
     <y>355</y>
     <width>670</width>
     <height>360</height>
-    <title>Chiller</title>
-    <start>$(BDX_TREND_RANGE=10 minutes)</start>
-    <end />
+    <file>overview_chiller.plt</file>
     <show_toolbar>true</show_toolbar>
-    <show_legend>true</show_legend>
-    <show_grid>true</show_grid>
-    <y_axes>
-      <y_axis>
-        <title>Value</title>
-        <autoscale>true</autoscale>
-        <log_scale>false</log_scale>
-        <minimum>0.0</minimum>
-        <maximum>100.0</maximum>
-        <show_grid>true</show_grid>
-        <visible>true</visible>
-      </y_axis>
-    </y_axes>
-    <traces>
-      <trace>
-        <name>BDX:CHILLER:CHILLER1:TEMPERATURE_RBV</name>
-        <y_pv>BDX:CHILLER:CHILLER1:TEMPERATURE_RBV</y_pv>
-        <axis>0</axis>
-        <trace_type>1</trace_type>
-        <color>
-          <color red="33" green="113" blue="181" />
-        </color>
-        <line_width>2</line_width>
-        <point_type>0</point_type>
-        <point_size>6</point_size>
-        <visible>true</visible>
-      </trace>
-      <trace>
-        <name>BDX:CHILLER:CHILLER1:SETPOINT_RBV</name>
-        <y_pv>BDX:CHILLER:CHILLER1:SETPOINT_RBV</y_pv>
-        <axis>0</axis>
-        <trace_type>1</trace_type>
-        <color>
-          <color red="230" green="85" blue="13" />
-        </color>
-        <line_width>2</line_width>
-        <point_type>0</point_type>
-        <point_size>6</point_size>
-        <visible>true</visible>
-      </trace>
-      <trace>
-        <name>BDX:CHILLER:CHILLER1:PRESSURE_RBV</name>
-        <y_pv>BDX:CHILLER:CHILLER1:PRESSURE_RBV</y_pv>
-        <axis>0</axis>
-        <trace_type>1</trace_type>
-        <color>
-          <color red="49" green="163" blue="84" />
-        </color>
-        <line_width>2</line_width>
-        <point_type>0</point_type>
-        <point_size>6</point_size>
-        <visible>true</visible>
-      </trace>
-    </traces>
   </widget>
 </display>
