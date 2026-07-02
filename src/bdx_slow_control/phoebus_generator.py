@@ -32,6 +32,18 @@ NAVIGATION = [
     ("All PVs", "all_pvs.bob"),
 ]
 
+GENERATABLE_TARGETS = (
+    "overview",
+    "psu",
+    "chiller",
+    "environment",
+    "hv",
+    "daq",
+    "global",
+    "trends",
+    "all-pvs",
+)
+
 PALETTE = [
     (33, 113, 181),
     (230, 85, 13),
@@ -199,6 +211,8 @@ class Display:
         y: int,
         width: int,
         height: int,
+        *,
+        y_axis_title: str = "Value",
     ) -> ET.Element:
         widget = self.widget("stripchart", "2.1.0", "StripChart", x, y, width, height)
         ET.SubElement(widget, "title").text = title
@@ -210,7 +224,7 @@ class Display:
 
         axes = ET.SubElement(widget, "y_axes")
         axis = ET.SubElement(axes, "y_axis")
-        ET.SubElement(axis, "title").text = "Value"
+        ET.SubElement(axis, "title").text = y_axis_title
         ET.SubElement(axis, "autoscale").text = "true"
         ET.SubElement(axis, "log_scale").text = "false"
         ET.SubElement(axis, "minimum").text = "0.0"
@@ -323,9 +337,54 @@ def add_pv_table(
     return y
 
 
-def trend_groups(pvs: Sequence[PVInfo]) -> dict[str, list[tuple[str, list[str]]]]:
+@dataclass(frozen=True)
+class TrendGroup:
+    title: str
+    traces: list[str]
+    y_axis_title: str = "Value"
+
+
+def _environment_group(
+    names: set[str],
+    prefix: str,
+    title: str,
+    y_axis_title: str,
+) -> TrendGroup | None:
+    traces = sorted(
+        name
+        for name in names
+        if name.startswith(prefix) and name.endswith(":VALUE")
+    )
+    if not traces:
+        return None
+    return TrendGroup(title, traces, y_axis_title)
+
+
+def environment_overview_group(pvs: Sequence[PVInfo]) -> TrendGroup | None:
+    """Build an overview environment chart from the PVs present in this profile."""
     names = {pv.name for pv in pvs}
-    groups: dict[str, list[tuple[str, list[str]]]] = {
+    traces = sorted(
+        name
+        for prefix in ("BDX:ENV:TEMP:", "BDX:ENV:HUMIDITY:", "BDX:ENV:PRESSURE:")
+        for name in names
+        if name.startswith(prefix) and name.endswith(":VALUE")
+    )
+    if not traces:
+        return None
+
+    axis_title = "Value"
+    if all(name.startswith("BDX:ENV:TEMP:") for name in traces):
+        axis_title = "Temperature [degC]"
+    elif all(name.startswith("BDX:ENV:HUMIDITY:") for name in traces):
+        axis_title = "Humidity [%]"
+    elif all(name.startswith("BDX:ENV:PRESSURE:") for name in traces):
+        axis_title = "Pressure"
+    return TrendGroup("Environment", traces, axis_title)
+
+
+def trend_groups(pvs: Sequence[PVInfo]) -> dict[str, list[TrendGroup]]:
+    names = {pv.name for pv in pvs}
+    groups: dict[str, list[TrendGroup]] = {
         "psu": [],
         "chiller": [],
         "environment": [],
@@ -347,9 +406,9 @@ def trend_groups(pvs: Sequence[PVInfo]) -> dict[str, list[tuple[str, list[str]]]
         )
         key = subsystem.lower()
         if voltage:
-            groups[key].append((f"{subsystem} voltage and protection", voltage))
+            groups[key].append(TrendGroup(f"{subsystem} voltage and protection", voltage))
         if current:
-            groups[key].append((f"{subsystem} current and protection", current))
+            groups[key].append(TrendGroup(f"{subsystem} current and protection", current))
 
     chiller_temp = sorted(
         name
@@ -360,22 +419,39 @@ def trend_groups(pvs: Sequence[PVInfo]) -> dict[str, list[tuple[str, list[str]]]
         name for name in names if name.startswith("BDX:CHILLER:") and name.endswith("PRESSURE_RBV")
     )
     if chiller_temp:
-        groups["chiller"].append(("Chiller temperature", chiller_temp))
+        groups["chiller"].append(TrendGroup("Chiller temperature", chiller_temp))
     if chiller_pressure:
-        groups["chiller"].append(("Chiller pressure", chiller_pressure))
+        groups["chiller"].append(TrendGroup("Chiller pressure", chiller_pressure))
 
-    env_pvs = sorted(
-        name for name in names if name.startswith("BDX:ENV:") and name.endswith(":VALUE")
+    environment_groups = (
+        _environment_group(
+            names,
+            "BDX:ENV:TEMP:",
+            "Environment temperatures",
+            "Temperature [degC]",
+        ),
+        _environment_group(
+            names,
+            "BDX:ENV:HUMIDITY:",
+            "Environment humidity",
+            "Humidity [%]",
+        ),
+        _environment_group(
+            names,
+            "BDX:ENV:PRESSURE:",
+            "Environment pressure",
+            "Pressure",
+        ),
     )
-    for name in env_pvs:
-        groups["environment"].append((name.rsplit(":", 1)[0], [name]))
+    groups["environment"].extend(group for group in environment_groups if group is not None)
 
-    groups["global"].append(
-        (
-            "Prototype update frequency",
-            ["BDX:GLOBAL:UPDATE_FREQUENCY_RBV"],
+    if "BDX:GLOBAL:UPDATE_FREQUENCY_RBV" in names:
+        groups["global"].append(
+            TrendGroup(
+                "Prototype update frequency",
+                ["BDX:GLOBAL:UPDATE_FREQUENCY_RBV"],
+            )
         )
-    )
     return groups
 
 
@@ -461,37 +537,44 @@ def generate_overview(pvs: Sequence[PVInfo], output: Path) -> None:
             y += 58
     y += 70
 
-    display.stripchart(
-        "Environment",
-        [
-            "BDX:ENV:TEMP:T01:VALUE",
-            "BDX:ENV:HUMIDITY:H01:VALUE",
-            "BDX:ENV:PRESSURE:P01:VALUE",
-        ],
-        20,
-        y,
-        670,
-        360,
-    )
-    display.stripchart(
-        "Chiller",
-        [
+    environment_group = environment_overview_group(pvs)
+    if environment_group:
+        display.stripchart(
+            environment_group.title,
+            environment_group.traces,
+            20,
+            y,
+            670,
+            360,
+            y_axis_title=environment_group.y_axis_title,
+        )
+
+    names = {pv.name for pv in pvs}
+    chiller_traces = [
+        name
+        for name in (
             "BDX:CHILLER:CHILLER1:TEMPERATURE_RBV",
             "BDX:CHILLER:CHILLER1:SETPOINT_RBV",
             "BDX:CHILLER:CHILLER1:PRESSURE_RBV",
-        ],
-        710,
-        y,
-        670,
-        360,
-    )
+        )
+        if name in names
+    ]
+    if chiller_traces:
+        display.stripchart(
+            "Chiller",
+            chiller_traces,
+            710,
+            y,
+            670,
+            360,
+        )
     display.write(output / "overview.bob")
 
 
 def generate_subsystem(
     subsystem: str,
     pvs: Sequence[PVInfo],
-    groups: dict[str, list[tuple[str, list[str]]]],
+    groups: dict[str, list[TrendGroup]],
     output: Path,
 ) -> None:
     selected = [pv for pv in pvs if pv.subsystem == subsystem]
@@ -553,16 +636,17 @@ def generate_subsystem(
         y += 45
 
     if chart_groups:
-        for index, (title, traces) in enumerate(chart_groups):
+        for index, group in enumerate(chart_groups):
             column = index % 2
             row = index // 2
             display.stripchart(
-                title,
-                traces,
+                group.title,
+                group.traces,
                 20 + column * 690,
                 y + row * 330,
                 670,
                 310,
+                y_axis_title=group.y_axis_title,
             )
         y += chart_rows * 330
 
@@ -571,10 +655,10 @@ def generate_subsystem(
 
 
 def generate_trends(
-    groups: dict[str, list[tuple[str, list[str]]]],
+    groups: dict[str, list[TrendGroup]],
     output: Path,
 ) -> None:
-    all_groups: list[tuple[str, list[str]]] = []
+    all_groups: list[TrendGroup] = []
     for subsystem in ("environment", "chiller", "psu", "hv", "global"):
         all_groups.extend(groups.get(subsystem, []))
     rows = (len(all_groups) + 1) // 2
@@ -590,16 +674,17 @@ def generate_trends(
         28,
     )
     y += 38
-    for index, (title, traces) in enumerate(all_groups):
+    for index, group in enumerate(all_groups):
         column = index % 2
         row = index // 2
         display.stripchart(
-            title,
-            traces,
+            group.title,
+            group.traces,
             20 + column * 690,
             y + row * 330,
             670,
             310,
+            y_axis_title=group.y_axis_title,
         )
     display.write(output / "trends.bob")
 
@@ -612,16 +697,7 @@ def generate_all_pvs(pvs: Sequence[PVInfo], output: Path) -> None:
     display.write(output / "all_pvs.bob")
 
 
-def generate(config_dir: Path, output: Path) -> list[PVInfo]:
-    pvs = catalog(config_dir)
-    groups = trend_groups(pvs)
-    output.mkdir(parents=True, exist_ok=True)
-    generate_overview(pvs, output)
-    for subsystem in ("psu", "chiller", "environment", "hv", "daq", "global"):
-        generate_subsystem(subsystem, pvs, groups, output)
-    generate_trends(groups, output)
-    generate_all_pvs(pvs, output)
-
+def write_pv_table(pvs: Sequence[PVInfo], output: Path) -> None:
     pv_table = [
         '<?xml version="1.0" encoding="UTF-8" standalone="no"?>',
         '<pvtable enable_save_restore="true" version="3.0">',
@@ -642,6 +718,35 @@ def generate(config_dir: Path, output: Path) -> list[PVInfo]:
         )
     pv_table.extend(['  </pvlist>', '</pvtable>'])
     (output / "pv_list.pvs").write_text("\n".join(pv_table) + "\n", encoding="utf-8")
+
+
+def generate(config_dir: Path, output: Path, only: str | None = None) -> list[PVInfo]:
+    if only is not None and only not in GENERATABLE_TARGETS:
+        raise ValueError(f"Unsupported display generation target: {only}")
+
+    pvs = catalog(config_dir)
+    groups = trend_groups(pvs)
+    output.mkdir(parents=True, exist_ok=True)
+    if only == "overview":
+        generate_overview(pvs, output)
+        return pvs
+    if only in {"psu", "chiller", "environment", "hv", "daq", "global"}:
+        generate_subsystem(only, pvs, groups, output)
+        return pvs
+    if only == "trends":
+        generate_trends(groups, output)
+        return pvs
+    if only == "all-pvs":
+        generate_all_pvs(pvs, output)
+        write_pv_table(pvs, output)
+        return pvs
+
+    generate_overview(pvs, output)
+    for subsystem in ("psu", "chiller", "environment", "hv", "daq", "global"):
+        generate_subsystem(subsystem, pvs, groups, output)
+    generate_trends(groups, output)
+    generate_all_pvs(pvs, output)
+    write_pv_table(pvs, output)
     return pvs
 
 
@@ -649,9 +754,17 @@ def main(argv: Sequence[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="bdx-generate-displays")
     parser.add_argument("--config-dir", default="config/profiles/prototype")
     parser.add_argument("--output-dir", default="phoebus/displays")
+    parser.add_argument(
+        "--only",
+        choices=GENERATABLE_TARGETS,
+        help="Generate only one display or display artifact",
+    )
     args = parser.parse_args(argv)
-    pvs = generate(Path(args.config_dir), Path(args.output_dir))
-    print(f"Generated Phoebus displays for {len(pvs)} PVs in {args.output_dir}")
+    pvs = generate(Path(args.config_dir), Path(args.output_dir), only=args.only)
+    if args.only:
+        print(f"Generated Phoebus {args.only} display for {len(pvs)} PVs in {args.output_dir}")
+    else:
+        print(f"Generated Phoebus displays for {len(pvs)} PVs in {args.output_dir}")
 
 
 if __name__ == "__main__":

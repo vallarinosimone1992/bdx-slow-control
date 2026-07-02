@@ -91,7 +91,16 @@ The minimum period of 2 seconds limits the prototype update frequency to 0.5 Hz.
 The Raspberry Pi should run only the environment IOC because the MCP9808 sensors are
 attached to its local I2C bus. See `docs/raspberry.md` for the deployment procedure.
 
-The Raspberry configuration source is `config/profiles/raspberry/environment.json`. It exposes:
+The Raspberry configuration source is `config/profiles/raspberry/environment.json`.
+The verified hardware uses Raspberry Pi 4B BSC6 on GPIO22/GPIO23, Linux device
+`/dev/i2c-6`, and MCP9808 addresses `0x18` through `0x1B`. The Raspberry boot
+configuration must include:
+
+```text
+dtoverlay=i2c6,pins_22_23,baudrate=10000
+```
+
+It exposes:
 
 ```text
 BDX:ENV:TEMP:T00:VALUE
@@ -234,6 +243,16 @@ The launcher creates a runtime `settings.ini` containing the local Channel Acces
 ```bash
 source .venv/bin/activate
 bdx-generate-displays --config-dir config/profiles/prototype --output-dir phoebus/displays
+```
+
+To update only the deployed Raspberry environment display on a laptop without
+overwriting unrelated displays:
+
+```bash
+bdx-generate-displays \
+  --config-dir config/profiles/raspberry \
+  --output-dir phoebus/displays \
+  --only environment
 ```
 
 The generator reads the actual caproto PV database. It also creates a valid Phoebus PV Table file using the `<pvtable version="3.0">` format.

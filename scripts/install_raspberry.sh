@@ -119,6 +119,12 @@ Installed service:
 The service has not been enabled or started.
 Review the configuration, set BDX_EPICS_INTERFACE in $CONFIG_DIR/bdx.env if needed, then run:
 
+  # Ensure /boot/firmware/config.txt contains:
+  # dtoverlay=i2c6,pins_22_23,baudrate=10000
+  # Reboot after adding the overlay, then verify with:
+  # i2cdetect -l
+  # sudo i2cdetect -y 6
+  sudo -u $runtime_user $APP_DIR/.venv/bin/bdx-environment-check --config $CONFIG_DIR/profiles/raspberry/environment.json
   sudo systemctl enable bdx-environment-ioc
   sudo systemctl start bdx-environment-ioc
   sudo systemctl status bdx-environment-ioc
