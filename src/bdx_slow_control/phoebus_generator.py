@@ -20,6 +20,12 @@ class PVInfo:
     command: bool
 
 
+@dataclass(frozen=True)
+class TraceInfo:
+    pv: str
+    label: str
+
+
 NAVIGATION = [
     ("Overview", "overview.bob"),
     ("PSU", "psu.bob"),
@@ -100,6 +106,7 @@ class Display:
         size: float = 14.0,
         bold: bool = False,
         background: tuple[int, int, int] | None = None,
+        foreground: tuple[int, int, int] | None = None,
     ) -> ET.Element:
         widget = self.widget("label", "2.0.0", "Label", x, y, width, height)
         ET.SubElement(widget, "text").text = text
@@ -122,11 +129,66 @@ class Display:
                 {"red": str(background[0]), "green": str(background[1]), "blue": str(background[2])},
             )
             ET.SubElement(widget, "transparent").text = "false"
+        if foreground is not None:
+            color = ET.SubElement(widget, "foreground_color")
+            ET.SubElement(
+                color,
+                "color",
+                {"red": str(foreground[0]), "green": str(foreground[1]), "blue": str(foreground[2])},
+            )
         return widget
 
-    def text_update(self, pv: str, x: int, y: int, width: int, height: int = 25) -> ET.Element:
+    def text_update(
+        self,
+        pv: str,
+        x: int,
+        y: int,
+        width: int,
+        height: int = 25,
+        *,
+        size: float | None = None,
+        bold: bool = False,
+        precision: int | None = None,
+        format_code: int | None = None,
+        show_units: bool | None = None,
+        background: tuple[int, int, int] | None = None,
+        foreground: tuple[int, int, int] | None = None,
+    ) -> ET.Element:
         widget = self.widget("textupdate", "2.0.0", "Readback", x, y, width, height)
         ET.SubElement(widget, "pv_name").text = pv
+        if size is not None:
+            font = ET.SubElement(widget, "font")
+            ET.SubElement(
+                font,
+                "font",
+                {
+                    "name": "Default",
+                    "family": "Liberation Sans",
+                    "style": "BOLD" if bold else "REGULAR",
+                    "size": f"{size:.1f}",
+                },
+            )
+        if format_code is not None:
+            ET.SubElement(widget, "format").text = str(format_code)
+        if precision is not None:
+            ET.SubElement(widget, "precision").text = str(precision)
+        if show_units is not None:
+            ET.SubElement(widget, "show_units").text = str(show_units).lower()
+        if background is not None:
+            color = ET.SubElement(widget, "background_color")
+            ET.SubElement(
+                color,
+                "color",
+                {"red": str(background[0]), "green": str(background[1]), "blue": str(background[2])},
+            )
+            ET.SubElement(widget, "transparent").text = "false"
+        if foreground is not None:
+            color = ET.SubElement(widget, "foreground_color")
+            ET.SubElement(
+                color,
+                "color",
+                {"red": str(foreground[0]), "green": str(foreground[1]), "blue": str(foreground[2])},
+            )
         return widget
 
     def text_entry(self, pv: str, x: int, y: int, width: int, height: int = 25) -> ET.Element:
@@ -206,7 +268,7 @@ class Display:
     def stripchart(
         self,
         title: str,
-        traces: Sequence[str],
+        traces: Sequence[TraceInfo],
         x: int,
         y: int,
         width: int,
@@ -216,8 +278,8 @@ class Display:
     ) -> ET.Element:
         widget = self.widget("stripchart", "2.1.0", "StripChart", x, y, width, height)
         ET.SubElement(widget, "title").text = title
-        ET.SubElement(widget, "start").text = "$(BDX_TREND_RANGE=10 minutes)"
-        ET.SubElement(widget, "end").text = ""
+        ET.SubElement(widget, "start").text = "-$(BDX_TREND_RANGE=10 minutes)"
+        ET.SubElement(widget, "end").text = "now"
         ET.SubElement(widget, "show_toolbar").text = "true"
         ET.SubElement(widget, "show_legend").text = "true"
         ET.SubElement(widget, "show_grid").text = "true"
@@ -233,10 +295,10 @@ class Display:
         ET.SubElement(axis, "visible").text = "true"
 
         trace_nodes = ET.SubElement(widget, "traces")
-        for index, pv in enumerate(traces):
+        for index, trace_info in enumerate(traces):
             trace = ET.SubElement(trace_nodes, "trace")
-            ET.SubElement(trace, "name").text = pv
-            ET.SubElement(trace, "y_pv").text = pv
+            ET.SubElement(trace, "name").text = trace_info.label
+            ET.SubElement(trace, "y_pv").text = trace_info.pv
             ET.SubElement(trace, "axis").text = "0"
             ET.SubElement(trace, "trace_type").text = "1"
             color = ET.SubElement(trace, "color")
@@ -264,6 +326,9 @@ def catalog(config_dir: Path) -> list[PVInfo]:
     result = []
     for name, channel in sorted(pvdb.items()):
         class_name = type(channel).__name__
+        subsystem = name.split(":", 2)[1].lower()
+        if subsystem == "env":
+            subsystem = "environment"
         read_only = class_name.endswith("RO")
         if "String" in class_name:
             kind = "string"
@@ -276,7 +341,7 @@ def catalog(config_dir: Path) -> list[PVInfo]:
         result.append(
             PVInfo(
                 name=name,
-                subsystem=name.split(":", 2)[1].lower(),
+                subsystem=subsystem,
                 read_only=read_only,
                 kind=kind,
                 command=name.endswith("_CMD"),
@@ -340,8 +405,93 @@ def add_pv_table(
 @dataclass(frozen=True)
 class TrendGroup:
     title: str
-    traces: list[str]
+    traces: list[TraceInfo]
     y_axis_title: str = "Value"
+
+
+def trace_label(pv_name: str) -> str:
+    parts = pv_name.split(":")
+    if len(parts) >= 2 and parts[-1] == "VALUE":
+        return parts[-2]
+    return pv_name
+
+
+def traces_for_pvs(pv_names: Sequence[str], *, concise_value_labels: bool = False) -> list[TraceInfo]:
+    return [
+        TraceInfo(pv=name, label=trace_label(name) if concise_value_labels else name)
+        for name in pv_names
+    ]
+
+
+def temperature_traces(groups: Sequence[TrendGroup]) -> list[TraceInfo]:
+    for group in groups:
+        if group.title == "Environment temperatures":
+            return group.traces
+    return []
+
+
+def status_pv_for_value(value_pv: str) -> str:
+    return value_pv.removesuffix(":VALUE") + ":STATUS"
+
+
+def temperature_summary_height(sensor_count: int) -> int:
+    if sensor_count == 0:
+        return 0
+    rows = (sensor_count + 3) // 4
+    return 42 + rows * 115
+
+
+def add_temperature_summary(display: Display, traces: Sequence[TraceInfo], y: int) -> int:
+    if not traces:
+        return y
+
+    display.label("Current temperatures", 20, y, 340, 30, size=18, bold=True)
+    y += 40
+
+    card_width = 320
+    card_height = 92
+    column_gap = 20
+    row_gap = 23
+    for index, trace in enumerate(traces):
+        row = index // 4
+        column = index % 4
+        x = 20 + column * (card_width + column_gap)
+        card_y = y + row * (card_height + row_gap)
+        color = PALETTE[index % len(PALETTE)]
+        pale_color = (
+            min(255, color[0] + 205),
+            min(255, color[1] + 205),
+            min(255, color[2] + 205),
+        )
+
+        display.label("", x, card_y, card_width, card_height, background=(245, 248, 250))
+        display.label(trace.label, x + 12, card_y + 10, 56, 28, size=16, bold=True, background=color, foreground=(255, 255, 255))
+        display.text_update(
+            trace.pv,
+            x + 78,
+            card_y + 6,
+            145,
+            46,
+            size=28,
+            bold=True,
+            precision=2,
+            format_code=1,
+            show_units=False,
+            background=pale_color,
+        )
+        display.label("°C", x + 232, card_y + 17, 34, 28, size=16, bold=True)
+        display.label("Status", x + 78, card_y + 58, 58, 22, size=11, bold=True)
+        display.text_update(
+            status_pv_for_value(trace.pv),
+            x + 140,
+            card_y + 56,
+            165,
+            25,
+            size=11,
+            show_units=False,
+        )
+
+    return y + ((len(traces) + 3) // 4) * (card_height + row_gap)
 
 
 def _environment_group(
@@ -357,7 +507,7 @@ def _environment_group(
     )
     if not traces:
         return None
-    return TrendGroup(title, traces, y_axis_title)
+    return TrendGroup(title, traces_for_pvs(traces, concise_value_labels=True), y_axis_title)
 
 
 def environment_overview_group(pvs: Sequence[PVInfo]) -> TrendGroup | None:
@@ -379,7 +529,7 @@ def environment_overview_group(pvs: Sequence[PVInfo]) -> TrendGroup | None:
         axis_title = "Humidity [%]"
     elif all(name.startswith("BDX:ENV:PRESSURE:") for name in traces):
         axis_title = "Pressure"
-    return TrendGroup("Environment", traces, axis_title)
+    return TrendGroup("Environment", traces_for_pvs(traces, concise_value_labels=True), axis_title)
 
 
 def trend_groups(pvs: Sequence[PVInfo]) -> dict[str, list[TrendGroup]]:
@@ -406,9 +556,9 @@ def trend_groups(pvs: Sequence[PVInfo]) -> dict[str, list[TrendGroup]]:
         )
         key = subsystem.lower()
         if voltage:
-            groups[key].append(TrendGroup(f"{subsystem} voltage and protection", voltage))
+            groups[key].append(TrendGroup(f"{subsystem} voltage and protection", traces_for_pvs(voltage)))
         if current:
-            groups[key].append(TrendGroup(f"{subsystem} current and protection", current))
+            groups[key].append(TrendGroup(f"{subsystem} current and protection", traces_for_pvs(current)))
 
     chiller_temp = sorted(
         name
@@ -419,9 +569,9 @@ def trend_groups(pvs: Sequence[PVInfo]) -> dict[str, list[TrendGroup]]:
         name for name in names if name.startswith("BDX:CHILLER:") and name.endswith("PRESSURE_RBV")
     )
     if chiller_temp:
-        groups["chiller"].append(TrendGroup("Chiller temperature", chiller_temp))
+        groups["chiller"].append(TrendGroup("Chiller temperature", traces_for_pvs(chiller_temp)))
     if chiller_pressure:
-        groups["chiller"].append(TrendGroup("Chiller pressure", chiller_pressure))
+        groups["chiller"].append(TrendGroup("Chiller pressure", traces_for_pvs(chiller_pressure)))
 
     environment_groups = (
         _environment_group(
@@ -449,7 +599,7 @@ def trend_groups(pvs: Sequence[PVInfo]) -> dict[str, list[TrendGroup]]:
         groups["global"].append(
             TrendGroup(
                 "Prototype update frequency",
-                ["BDX:GLOBAL:UPDATE_FREQUENCY_RBV"],
+                traces_for_pvs(["BDX:GLOBAL:UPDATE_FREQUENCY_RBV"]),
             )
         )
     return groups
@@ -562,7 +712,7 @@ def generate_overview(pvs: Sequence[PVInfo], output: Path) -> None:
     if chiller_traces:
         display.stripchart(
             "Chiller",
-            chiller_traces,
+            traces_for_pvs(chiller_traces),
             710,
             y,
             670,
@@ -579,10 +729,12 @@ def generate_subsystem(
 ) -> None:
     selected = [pv for pv in pvs if pv.subsystem == subsystem]
     chart_groups = groups.get(subsystem, [])
+    summary_traces = temperature_traces(chart_groups) if subsystem == "environment" else []
+    summary_height = temperature_summary_height(len(summary_traces))
     chart_rows = (len(chart_groups) + 1) // 2
     plot_height = chart_rows * 330
     control_height = 100 if subsystem == "global" else 50 if subsystem == "daq" else 0
-    table_start = 118 + control_height + plot_height
+    table_start = 118 + control_height + summary_height + plot_height
     height = table_start + 90 + len(selected) * 29
     display = Display(f"BDX {subsystem.upper()}", 1400, max(760, height))
     add_header(display, f"BDX {subsystem.upper()}")
@@ -634,6 +786,9 @@ def generate_subsystem(
                 30,
             )
         y += 45
+
+    if summary_traces:
+        y = add_temperature_summary(display, summary_traces, y)
 
     if chart_groups:
         for index, group in enumerate(chart_groups):

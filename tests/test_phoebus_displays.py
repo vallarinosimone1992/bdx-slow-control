@@ -12,6 +12,13 @@ RASPBERRY_TEMPERATURE_PVS = {
     "BDX:ENV:TEMP:T02:VALUE",
     "BDX:ENV:TEMP:T03:VALUE",
 }
+RASPBERRY_STATUS_PVS = {
+    "BDX:ENV:TEMP:T00:STATUS",
+    "BDX:ENV:TEMP:T01:STATUS",
+    "BDX:ENV:TEMP:T02:STATUS",
+    "BDX:ENV:TEMP:T03:STATUS",
+}
+RASPBERRY_TEMPERATURE_LABELS = {"T00", "T01", "T02", "T03"}
 
 
 def _pv_references(path: Path) -> set[str]:
@@ -39,6 +46,23 @@ def _stripchart_traces(stripchart: ET.Element) -> set[str]:
         for element in stripchart.iter("y_pv")
         if element.text and element.text.startswith("BDX:")
     }
+
+
+def _stripchart_trace_labels(stripchart: ET.Element) -> set[str]:
+    return {
+        element.text
+        for element in stripchart.findall("traces/trace/name")
+        if element.text
+    }
+
+
+def _text_updates(path: Path) -> list[ET.Element]:
+    root = ET.parse(path).getroot()
+    return [
+        widget
+        for widget in root.findall("widget")
+        if widget.get("type") == "textupdate"
+    ]
 
 
 def test_generated_displays_are_valid_xml_and_cover_every_pv(tmp_path: Path):
@@ -95,6 +119,47 @@ def test_raspberry_environment_display_groups_all_temperatures_in_one_stripchart
     assert chart.findtext("y_axes/y_axis/title") == "Temperature [degC]"
     assert chart.findtext("y_axes/y_axis/autoscale") == "true"
     assert _stripchart_traces(chart) == RASPBERRY_TEMPERATURE_PVS
+    assert _stripchart_trace_labels(chart) == RASPBERRY_TEMPERATURE_LABELS
+
+
+def test_raspberry_environment_display_uses_live_relative_time_window(
+    tmp_path: Path,
+):
+    generate(RASPBERRY_PROFILE, tmp_path, only="environment")
+
+    path = tmp_path / "environment.bob"
+    root = ET.parse(path).getroot()
+    stripcharts = _stripcharts(path)
+    assert stripcharts
+    for stripchart in stripcharts:
+        assert stripchart.findtext("start") == "-$(BDX_TREND_RANGE=10 minutes)"
+        assert stripchart.findtext("end") == "now"
+        assert stripchart.findtext("show_toolbar") == "true"
+
+    assert ET.tostring(root, encoding="unicode").find("<end />") == -1
+
+
+def test_raspberry_environment_display_contains_live_temperature_summary(
+    tmp_path: Path,
+):
+    generate(RASPBERRY_PROFILE, tmp_path, only="environment")
+
+    text_updates = _text_updates(tmp_path / "environment.bob")
+    summary_values = {
+        widget.findtext("pv_name")
+        for widget in text_updates
+        if widget.findtext("precision") == "2"
+        and widget.findtext("format") == "1"
+    }
+    summary_statuses = {
+        widget.findtext("pv_name")
+        for widget in text_updates
+        if widget.findtext("show_units") == "false"
+        and widget.findtext("pv_name", "").endswith(":STATUS")
+    }
+
+    assert summary_values == RASPBERRY_TEMPERATURE_PVS
+    assert summary_statuses == RASPBERRY_STATUS_PVS
 
 
 def test_raspberry_environment_display_contains_no_humidity_or_pressure_traces(
