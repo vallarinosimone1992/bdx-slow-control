@@ -8,6 +8,7 @@ SERVICE_TEMPLATE="$ROOT_DIR/systemd/raspberry/bdx-environment-ioc.service.in"
 SERVICE_PATH="/etc/systemd/system/bdx-environment-ioc.service"
 RASPBERRY_PROFILE="$ROOT_DIR/config/profiles/raspberry"
 RASPBERRY_CONFIG="$RASPBERRY_PROFILE/environment.json"
+RASPBERRY_ENV="$RASPBERRY_PROFILE/bdx.env"
 
 usage() {
     cat <<EOF
@@ -55,6 +56,11 @@ if [[ ! -f "$RASPBERRY_CONFIG" ]]; then
     exit 2
 fi
 
+if [[ ! -f "$RASPBERRY_ENV" ]]; then
+    echo "Raspberry IOC environment file not found: $RASPBERRY_ENV" >&2
+    exit 2
+fi
+
 if [[ ! -f "$SERVICE_TEMPLATE" ]]; then
     echo "Service template not found: $SERVICE_TEMPLATE" >&2
     exit 2
@@ -81,19 +87,14 @@ python3 -m venv "$APP_DIR/.venv"
 "$APP_DIR/.venv/bin/python" -m pip install "$APP_DIR"
 
 install -d -m 0755 "$CONFIG_DIR/profiles/raspberry"
-rsync -a --delete "$RASPBERRY_PROFILE/" "$CONFIG_DIR/profiles/raspberry/"
+rsync -a --delete --exclude bdx.env "$RASPBERRY_PROFILE/" "$CONFIG_DIR/profiles/raspberry/"
 
-if [[ ! -f "$CONFIG_DIR/bdx.env" ]]; then
-    cat > "$CONFIG_DIR/bdx.env" <<'EOF'
-# Optional Channel Access server interface override.
-# Set this to the Raspberry Pi interface address when the host has multiple interfaces.
-# Example:
-# BDX_EPICS_INTERFACE=10.0.2.133
-
-BDX_LOG_LEVEL=INFO
-EOF
-    chmod 0644 "$CONFIG_DIR/bdx.env"
+if [[ -f "$CONFIG_DIR/bdx.env" ]] && ! cmp -s "$RASPBERRY_ENV" "$CONFIG_DIR/bdx.env"; then
+    backup_path="$CONFIG_DIR/bdx.env.previous.$(date -u +%Y%m%dT%H%M%SZ)"
+    cp -p "$CONFIG_DIR/bdx.env" "$backup_path"
+    echo "Previous IOC environment file preserved as: $backup_path"
 fi
+install -m 0644 "$RASPBERRY_ENV" "$CONFIG_DIR/bdx.env"
 
 sed \
     -e "s|@BDX_RUNTIME_USER@|$runtime_user|g" \
@@ -117,7 +118,15 @@ Installed service:
   $SERVICE_PATH
 
 The service has not been enabled or started.
-Review the configuration, set BDX_EPICS_INTERFACE in $CONFIG_DIR/bdx.env if needed, then run:
+The IOC environment is installed from the repository-controlled Raspberry profile.
+It binds Channel Access to 172.22.50.10 through BDX_EPICS_INTERFACE.
+
+NetworkManager is not configured by this installer. Configure the dedicated Ethernet
+profile explicitly when needed:
+
+  sudo ./scripts/configure_raspberry_network.sh
+
+Then run:
 
   # Ensure /boot/firmware/config.txt contains:
   # dtoverlay=i2c6,pins_22_23,baudrate=10000

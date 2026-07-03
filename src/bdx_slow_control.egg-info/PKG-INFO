@@ -38,6 +38,7 @@ The initial hardware backends are simulations. Hardware implementations can be a
 ```text
 bdx-slow-control/
 ├── config/
+│   ├── deployment/         Host deployment configuration
 │   ├── profiles/           Installable IOC configuration profiles
 │   └── examples/           Non-installed configuration examples
 ├── docs/                   Architecture and deployment notes
@@ -113,6 +114,23 @@ BDX:ENV:TEMP:T03:VALUE
 Do not run another environment IOC on the main server when the Raspberry is active.
 Two Channel Access servers must never expose the same PV names.
 
+The Raspberry uses a dedicated slow-control Ethernet address, `172.22.50.10/24`,
+on `eth0`. This Ethernet profile has no gateway, no DNS, and no default route;
+Wi-Fi remains available for administration, Internet access, and the default route.
+Wi-Fi credentials are intentionally not stored in this repository.
+
+Deploy the Raspberry network and IOC from the repository:
+
+```bash
+sudo ./scripts/configure_raspberry_network.sh
+sudo ./scripts/install_raspberry.sh pi
+```
+
+Network configuration is a separate explicit step because changing NetworkManager
+profiles can affect connectivity. The IOC binds to `172.22.50.10` through the
+repository-controlled `config/profiles/raspberry/bdx.env`, installed as
+`/etc/bdx-slow-control/bdx.env`.
+
 On the Raspberry, check the installed hardware configuration before starting the IOC:
 
 ```bash
@@ -138,7 +156,7 @@ When EPICS Base is configured in the shell, `caget`, `caput`, `cainfo`, and `cam
 For the Raspberry temperature IOC, point Channel Access clients at the Raspberry:
 
 ```bash
-export EPICS_CA_ADDR_LIST=10.0.2.133
+export EPICS_CA_ADDR_LIST=172.22.50.10
 export EPICS_CA_AUTO_ADDR_LIST=NO
 caproto-get BDX:ENV:TEMP:T00:VALUE
 ```

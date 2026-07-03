@@ -66,8 +66,8 @@ def test_main_server_psu_profile_uses_two_cpx400dp_lv_supplies():
     ]
     assert [device["driver"] for device in devices] == ["cpx400dp", "cpx400dp"]
     assert [device["host"] for device in devices] == [
-        "192.168.1.100",
-        "169.254.23.187",
+        "172.22.50.20",
+        "172.22.50.21",
     ]
     assert all(device["channels"] == [1, 2] for device in devices)
 
@@ -80,7 +80,7 @@ def test_main_server_chiller_profile_uses_ecosilver_hardware():
     assert device["prefix"] == "BDX:CHILLER:CHILLER1:"
     assert device["mode"] == "hardware"
     assert device["driver"] == "ecosilver_re_1225s"
-    assert device["host"] == "192.168.1.2"
+    assert device["host"] == "172.22.50.60"
     assert device["port"] == 54321
     assert device["bath_temperature_command"] == "IN_PV_00"
     assert device["controlled_temperature_command"] == "IN_PV_01"

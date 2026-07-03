@@ -4,38 +4,66 @@ This deployment runs only the environmental MCP9808 IOC on a Raspberry Pi. The I
 command is `bdx-environment-ioc`, and the installed configuration is
 `/etc/bdx-slow-control/profiles/raspberry/environment.json`.
 
-The repository source configuration is `config/profiles/raspberry/environment.json`. It uses:
+The repository is the canonical source for both the Raspberry IOC runtime
+environment and the dedicated slow-control Ethernet profile:
+
+- IOC configuration: `config/profiles/raspberry/environment.json`;
+- IOC runtime environment: `config/profiles/raspberry/bdx.env`;
+- Ethernet configuration: `config/deployment/raspberry-network.env`.
+
+The Raspberry environment profile uses:
 
 - Raspberry Pi 4B BSC6 on GPIO22/GPIO23;
 - I2C device `/dev/i2c-6`;
 - MCP9808 addresses `0x18`, `0x19`, `0x1A`, and `0x1B`;
 - a 5 second polling interval;
-- `BDX_EPICS_INTERFACE` as the optional server interface override.
+- `BDX_EPICS_INTERFACE=172.22.50.10`.
 
-## Install
+## Network Model
 
-Copy or clone the repository on the Raspberry Pi, then run the installer with sudo.
-Pass the runtime user explicitly, or omit it to use `SUDO_USER`.
+The Raspberry uses Wi-Fi for administration, Internet access, and the default
+route. Wi-Fi credentials, SSIDs, passwords, DNS servers, and gateways are
+intentionally not stored in this repository.
+
+The dedicated slow-control Ethernet interface is configured separately through
+NetworkManager:
+
+```text
+interface: eth0
+address:   172.22.50.10/24
+gateway:   none
+DNS:       none
+default route through eth0: disabled
+```
+
+Network configuration is intentionally separate from software installation because
+changing an active network profile can affect connectivity. The software installer
+does not modify NetworkManager.
+
+## Deployment Order
+
+On the Raspberry, clone or copy the repository, then run:
 
 ```bash
 cd /path/to/bdx-slow-control
-sudo ./scripts/install_raspberry.sh <runtime-user>
+sudo ./scripts/configure_raspberry_network.sh
+sudo ./scripts/install_raspberry.sh pi
 ```
 
-Example when logged in as the runtime user:
+`configure_raspberry_network.sh` creates or updates a NetworkManager Ethernet
+profile named `bdx-slow-control`, binds it to `eth0`, assigns
+`172.22.50.10/24`, disables default routing through `eth0`, and leaves Wi-Fi
+profiles untouched.
 
-```bash
-cd /path/to/bdx-slow-control
-sudo ./scripts/install_raspberry.sh
-```
+`install_raspberry.sh` copies the application to `/opt/bdx-slow-control`, creates
+`/opt/bdx-slow-control/.venv`, installs the Python package, installs only the
+Raspberry IOC JSON profile under `/etc/bdx-slow-control/profiles/raspberry/`,
+installs `config/profiles/raspberry/bdx.env` as `/etc/bdx-slow-control/bdx.env`,
+and renders `/etc/systemd/system/bdx-environment-ioc.service`.
 
-The installer copies the application to `/opt/bdx-slow-control`, creates
-`/opt/bdx-slow-control/.venv`, installs the Python package, installs only the Raspberry
-profile as `/etc/bdx-slow-control/profiles/raspberry/`, and renders
-`/etc/systemd/system/bdx-environment-ioc.service`.
-
-It does not enable or start the service automatically. It also does not modify
-`/boot/firmware/config.txt`; update the boot overlay manually as described below.
+The installer does not enable or start the service automatically. It also does not
+modify `/boot/firmware/config.txt`; update the boot overlay manually as described
+below.
 
 ## Check I2C
 
@@ -71,30 +99,12 @@ The expected addresses are `0x18`, `0x19`, `0x1A`, and `0x1B`. `i2cdetect` is a
 low-level bus check only; the IOC diagnostic below reads the same JSON configuration
 used by the service.
 
-## Configure Interface
-
-Edit `/etc/bdx-slow-control/bdx.env` if the Raspberry has multiple network interfaces.
-For Raspberry address `10.0.2.133`:
-
-```bash
-sudo nano /etc/bdx-slow-control/bdx.env
-```
-
-Set:
-
-```text
-BDX_EPICS_INTERFACE=10.0.2.133
-BDX_LOG_LEVEL=INFO
-```
-
-If `BDX_EPICS_INTERFACE` is not set, the JSON default binds the IOC to `0.0.0.0`.
-
 ## Diagnostic Check
 
 Run the environment diagnostic as the same runtime user used by the systemd service:
 
 ```bash
-sudo -u <runtime-user> /opt/bdx-slow-control/.venv/bin/bdx-environment-check \
+sudo -u pi /opt/bdx-slow-control/.venv/bin/bdx-environment-check \
   --config /etc/bdx-slow-control/profiles/raspberry/environment.json
 ```
 
@@ -111,19 +121,19 @@ sensor=T01 bus=/dev/i2c-6 address=0x19 connectivity=OK temperature_c=22.6250
 
 Do not start the IOC service until this command exits with status code 0.
 
-## Manual Test
+## Manual IOC Test
 
 After diagnostics succeed, test the IOC directly:
 
 ```bash
-sudo -u <runtime-user> /opt/bdx-slow-control/.venv/bin/bdx-environment-ioc \
+sudo -u pi /opt/bdx-slow-control/.venv/bin/bdx-environment-ioc \
   --config /etc/bdx-slow-control/profiles/raspberry/environment.json
 ```
 
 From another terminal or client host:
 
 ```bash
-export EPICS_CA_ADDR_LIST=10.0.2.133
+export EPICS_CA_ADDR_LIST=172.22.50.10
 export EPICS_CA_AUTO_ADDR_LIST=NO
 caproto-get BDX:ENV:TEMP:T00:VALUE
 ```
@@ -150,4 +160,29 @@ For recent logs without following:
 
 ```bash
 journalctl -u bdx-environment-ioc --since "1 hour ago"
+```
+
+## Replacement Host Procedure
+
+To restore a fresh Raspberry Pi from the repository:
+
+1. Clone or copy the repository to the Raspberry.
+2. Configure `/boot/firmware/config.txt` with `dtoverlay=i2c6,pins_22_23,baudrate=10000`.
+3. Reboot if the boot overlay was added or changed.
+4. Run `sudo ./scripts/configure_raspberry_network.sh`.
+5. Run `sudo ./scripts/install_raspberry.sh pi`.
+6. Run the environment sensor diagnostic.
+7. Enable and start `bdx-environment-ioc`.
+8. Verify Channel Access from another host.
+
+Client verification:
+
+```bash
+export EPICS_CA_ADDR_LIST=172.22.50.10
+export EPICS_CA_AUTO_ADDR_LIST=NO
+
+caproto-get BDX:ENV:TEMP:T00:VALUE
+caproto-get BDX:ENV:TEMP:T01:VALUE
+caproto-get BDX:ENV:TEMP:T02:VALUE
+caproto-get BDX:ENV:TEMP:T03:VALUE
 ```
