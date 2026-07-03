@@ -11,7 +11,7 @@
     "prefix": "BDX:CHILLER:CHILLER1:",
     "mode": "hardware",
     "driver": "ecosilver_re_1225s",
-    "host": "192.168.1.2",
+    "host": "172.22.50.60",
     "port": 54321,
     "timeout": 5.0,
     "bath_temperature_command": "IN_PV_00",
