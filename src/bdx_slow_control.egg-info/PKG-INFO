@@ -8,6 +8,7 @@ Requires-Python: >=3.10
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: caproto<2,>=1.1
+Requires-Dist: pyserial<4,>=3.5
 Provides-Extra: dev
 Requires-Dist: pytest>=7; extra == "dev"
 Requires-Dist: ruff>=0.4; extra == "dev"
@@ -128,8 +129,8 @@ source .venv/bin/activate
 
 caproto-get BDX:GLOBAL:SYSTEM_STATE
 caproto-get BDX:ENV:TEMP:T01:VALUE
-caproto-put BDX:PSU:PSU1:CH1:VOLTAGE_SET 5
-caproto-put BDX:PSU:PSU1:CH1:OUTPUT_SET 1
+caproto-put BDX:PSU:LV1:CH1:VOLTAGE_SET 5
+caproto-put BDX:PSU:LV1:CH1:OUTPUT_SET 1
 ```
 
 When EPICS Base is configured in the shell, `caget`, `caput`, `cainfo`, and `camonitor` can be used instead.
@@ -151,6 +152,7 @@ phoebus/displays/overview.bob
 phoebus/displays/psu.bob
 phoebus/displays/chiller.bob
 phoebus/displays/environment.bob
+phoebus/displays/environment_expert.bob
 phoebus/displays/hv.bob
 phoebus/displays/daq.bob
 phoebus/displays/global.bob
@@ -169,7 +171,7 @@ The global and overview displays provide:
 - live update-period selection;
 - update-frequency readback.
 
-The trend widgets subscribe to live Channel Access updates. Their sampling cadence follows `BDX:GLOBAL:UPDATE_PERIOD_SET`. Their time range can be adjusted from the plot toolbar or by setting `BDX_TREND_RANGE` before launching Phoebus.
+The trend widgets subscribe to live Channel Access updates. Generated Data Browser plots use a moving time window ending at `now`; set `BDX_TREND_RANGE` and `BDX_TREND_SCAN_PERIOD` when regenerating displays to change the default range and live scan period. The launcher disables Phoebus default Data Browser archive sources so these plots remain live-only.
 
 ## Configure the Phoebus launcher
 

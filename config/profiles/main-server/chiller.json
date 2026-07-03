@@ -9,9 +9,25 @@
   "device": {
     "name": "CHILLER1",
     "prefix": "BDX:CHILLER:CHILLER1:",
-    "mode": "simulation",
-    "initial_setpoint_c": 20.0,
-    "initial_temperature_c": 21.0,
-    "initial_pressure_bar": 0.5
+    "mode": "hardware",
+    "driver": "ecosilver_re_1225s",
+    "host": "192.168.1.2",
+    "port": 54321,
+    "timeout": 5.0,
+    "bath_temperature_command": "IN_PV_00",
+    "controlled_temperature_command": "IN_PV_01",
+    "pressure_command": "IN_PV_02",
+    "external_temperature_command": "IN_PV_03",
+    "pump_stage_command": "IN_SP_01",
+    "cooling_mode_command": "IN_SP_02",
+    "safe_mode_command": "IN_MODE_06",
+    "setpoint_read_command": "IN_SP_00",
+    "setpoint_write_prefix": "OUT_SP_00",
+    "standby_command": "IN_MODE_02",
+    "device_status_command": "STATUS",
+    "fault_command": "STAT",
+    "pressure_required": false,
+    "external_temperature_required": false,
+    "safe_mode_on_stop": false
   }
 }

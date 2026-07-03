@@ -23,6 +23,9 @@ src/bdx_slow_control/drivers/base.py
 src/bdx_slow_control/drivers/factory.py
 src/bdx_slow_control/drivers/simulated.py
 src/bdx_slow_control/drivers/hardware/__init__.py
+src/bdx_slow_control/drivers/hardware/cpx400dp.py
+src/bdx_slow_control/drivers/hardware/ecosilver_re_1225s.py
+src/bdx_slow_control/drivers/hardware/genh600.py
 src/bdx_slow_control/drivers/hardware/mcp9808.py
 src/bdx_slow_control/iocs/__init__.py
 src/bdx_slow_control/iocs/chiller.py
@@ -32,9 +35,12 @@ src/bdx_slow_control/iocs/environment.py
 src/bdx_slow_control/iocs/global_system.py
 src/bdx_slow_control/iocs/power.py
 tests/test_config.py
+tests/test_cpx400dp_driver.py
 tests/test_deployment_profiles.py
+tests/test_ecosilver_re_1225s_driver.py
 tests/test_environment_check.py
 tests/test_environment_ioc.py
+tests/test_genh600_driver.py
 tests/test_mcp9808_driver.py
 tests/test_phoebus_displays.py
 tests/test_prototype.py

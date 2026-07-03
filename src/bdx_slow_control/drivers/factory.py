@@ -21,9 +21,15 @@ def _mode(config: dict[str, Any]) -> str:
     return value
 
 
-def build_psu_driver(config: dict[str, Any]) -> SimulatedPowerSupplyDriver:
-    if _mode(config) != "simulation":
-        raise NotImplementedError("Hardware PSU driver is not implemented")
+def build_psu_driver(config: dict[str, Any]):
+    if _mode(config) == "hardware":
+        driver = str(config.get("driver", "")).strip().lower()
+        if driver in {"cpx400dp", "tti_cpx400dp"}:
+            from .hardware.cpx400dp import build_cpx400dp_driver
+
+            return build_cpx400dp_driver(config)
+        raise NotImplementedError("Hardware PSU driver requires driver='cpx400dp'")
+
     channels = [int(value) for value in config.get("channels", [])]
     if not channels:
         raise ConfigurationError("PSU configuration requires at least one channel")
@@ -36,9 +42,15 @@ def build_psu_driver(config: dict[str, Any]) -> SimulatedPowerSupplyDriver:
     )
 
 
-def build_hv_driver(config: dict[str, Any]) -> SimulatedHighVoltageDriver:
-    if _mode(config) != "simulation":
-        raise NotImplementedError("Hardware HV driver is not implemented")
+def build_hv_driver(config: dict[str, Any]):
+    if _mode(config) == "hardware":
+        driver = str(config.get("driver", "")).strip().lower()
+        if driver == "genh600":
+            from .hardware.genh600 import build_genh600_driver
+
+            return build_genh600_driver(config)
+        raise NotImplementedError("Hardware HV driver requires driver='genh600'")
+
     channels = [int(value) for value in config.get("channels", [])]
     if not channels:
         raise ConfigurationError("HV configuration requires at least one channel")
@@ -51,9 +63,17 @@ def build_hv_driver(config: dict[str, Any]) -> SimulatedHighVoltageDriver:
     )
 
 
-def build_chiller_driver(config: dict[str, Any]) -> SimulatedChillerDriver:
-    if _mode(config) != "simulation":
-        raise NotImplementedError("Hardware chiller driver is not implemented")
+def build_chiller_driver(config: dict[str, Any]):
+    if _mode(config) == "hardware":
+        driver = str(config.get("driver", "")).strip().lower()
+        if driver in {"ecosilver_re_1225s", "lauda_ecosilver_re_1225s", "lauda"}:
+            from .hardware.ecosilver_re_1225s import build_ecosilver_re_1225s_driver
+
+            return build_ecosilver_re_1225s_driver(config)
+        raise NotImplementedError(
+            "Hardware chiller driver requires driver='ecosilver_re_1225s'"
+        )
+
     return SimulatedChillerDriver(
         initial_setpoint_c=float(config.get("initial_setpoint_c", 20.0)),
         initial_temperature_c=float(config.get("initial_temperature_c", 21.0)),

@@ -6,17 +6,32 @@
     "poll_interval": 5.0,
     "log_pv_names": false
   },
-  "device": {
-    "name": "PSU1",
-    "prefix": "BDX:PSU:PSU1:",
-    "mode": "simulation",
-    "channels": [
-      1,
-      2
-    ],
-    "initial_voltage": 0.0,
-    "initial_current_limit": 0.5,
-    "initial_ovp": 10.0,
-    "initial_ocp": 1.0
-  }
+  "devices": [
+    {
+      "name": "LV1",
+      "prefix": "BDX:PSU:LV1:",
+      "mode": "simulation",
+      "channels": [
+        1,
+        2
+      ],
+      "initial_voltage": 0.0,
+      "initial_current_limit": 0.5,
+      "initial_ovp": 10.0,
+      "initial_ocp": 1.0
+    },
+    {
+      "name": "LV2",
+      "prefix": "BDX:PSU:LV2:",
+      "mode": "simulation",
+      "channels": [
+        1,
+        2
+      ],
+      "initial_voltage": 0.0,
+      "initial_current_limit": 0.5,
+      "initial_ovp": 10.0,
+      "initial_ocp": 1.0
+    }
+  ]
 }

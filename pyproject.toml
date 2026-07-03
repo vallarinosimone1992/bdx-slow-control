@@ -13,7 +13,8 @@ authors = [
   {name = "BDX Collaboration"}
 ]
 dependencies = [
-  "caproto>=1.1,<2"
+  "caproto>=1.1,<2",
+  "pyserial>=3.5,<4"
 ]
 
 [project.optional-dependencies]

@@ -130,6 +130,15 @@ class SimulatedChillerDriver(ChillerDriver):
             pressure_bar=self._pressure if self._running else 0.0,
             running=self._running,
             fault=self._fault,
+            bath_temperature_c=self._temperature,
+            controlled_temperature_c=self._temperature,
+            external_temperature_c=0.0,
+            pump_stage="SIM",
+            cooling_mode="SIM",
+            safe_mode_status="0",
+            standby_status="0" if self._running else "1",
+            device_status="SIMULATION",
+            fault_diagnosis="",
         )
 
     def set_setpoint(self, value_c: float) -> None:

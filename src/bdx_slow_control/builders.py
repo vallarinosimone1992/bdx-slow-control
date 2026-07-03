@@ -43,52 +43,69 @@ def _context_or_default(
 def build_psu(config: dict[str, Any], context: PrototypeContext | None = None):
     settings = server_settings(config)
     context = _context_or_default(context, settings.poll_interval)
-    device = require_mapping(config, "device")
-    prefix = normalized_prefix(device.get("prefix"))
-    driver = build_psu_driver(device)
-    context.register_all_off(driver.all_off)
-    groups = [
-        PowerDeviceIOC(
-            prefix=prefix,
-            driver=driver,
-            runtime_settings=context.runtime,
-        )
-    ]
-    for channel in device.get("channels", []):
+    groups = []
+    for device in _power_devices(config, subsystem="PSU"):
+        prefix = normalized_prefix(device.get("prefix"))
+        driver = build_psu_driver(device)
+        context.register_all_off(driver.all_off)
         groups.append(
-            PowerChannelIOC(
-                prefix=f"{prefix}CH{int(channel)}:",
+            PowerDeviceIOC(
+                prefix=prefix,
                 driver=driver,
-                channel=int(channel),
                 runtime_settings=context.runtime,
             )
         )
+        for channel in device.get("channels", []):
+            groups.append(
+                PowerChannelIOC(
+                    prefix=f"{prefix}CH{int(channel)}:",
+                    driver=driver,
+                    channel=int(channel),
+                    runtime_settings=context.runtime,
+                )
+            )
     return merge_pvdb(groups), settings
+
+
+def _power_devices(config: dict[str, Any], *, subsystem: str) -> list[dict[str, Any]]:
+    if "device" in config and "devices" in config:
+        raise ConfigurationError(
+            f"{subsystem} configuration must use either device or devices, not both"
+        )
+    if "devices" in config:
+        devices = require_list(config, "devices")
+        if not devices:
+            raise ConfigurationError(f"{subsystem} devices list must not be empty")
+        if not all(isinstance(device, dict) for device in devices):
+            raise ConfigurationError(f"Each {subsystem} device entry must be an object")
+        return devices
+    return [require_mapping(config, "device")]
 
 
 def build_hv(config: dict[str, Any], context: PrototypeContext | None = None):
     settings = server_settings(config)
     context = _context_or_default(context, settings.poll_interval)
-    device = require_mapping(config, "device")
-    prefix = normalized_prefix(device.get("prefix"))
-    driver = build_hv_driver(device)
-    context.register_all_off(driver.all_off)
-    groups = [
-        PowerDeviceIOC(
-            prefix=prefix,
-            driver=driver,
-            runtime_settings=context.runtime,
-        )
-    ]
-    for channel in device.get("channels", []):
+    groups = []
+    for device in _power_devices(config, subsystem="HV"):
+        prefix = normalized_prefix(device.get("prefix"))
+        driver = build_hv_driver(device)
+        context.register_all_off(driver.all_off)
         groups.append(
-            PowerChannelIOC(
-                prefix=f"{prefix}CH{int(channel)}:",
+            PowerDeviceIOC(
+                prefix=prefix,
                 driver=driver,
-                channel=int(channel),
                 runtime_settings=context.runtime,
             )
         )
+        for channel in device.get("channels", []):
+            groups.append(
+                PowerChannelIOC(
+                    prefix=f"{prefix}CH{int(channel)}:",
+                    driver=driver,
+                    channel=int(channel),
+                    runtime_settings=context.runtime,
+                )
+            )
     return merge_pvdb(groups), settings
 
 

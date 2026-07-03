@@ -113,8 +113,8 @@ source .venv/bin/activate
 
 caproto-get BDX:GLOBAL:SYSTEM_STATE
 caproto-get BDX:ENV:TEMP:T01:VALUE
-caproto-put BDX:PSU:PSU1:CH1:VOLTAGE_SET 5
-caproto-put BDX:PSU:PSU1:CH1:OUTPUT_SET 1
+caproto-put BDX:PSU:LV1:CH1:VOLTAGE_SET 5
+caproto-put BDX:PSU:LV1:CH1:OUTPUT_SET 1
 ```
 
 When EPICS Base is configured in the shell, `caget`, `caput`, `cainfo`, and `camonitor` can be used instead.

@@ -16,7 +16,9 @@ def test_main_server_profile_excludes_environment_ioc():
 
     pvdb, _ = build_prototype(profile)
     assert "BDX:GLOBAL:SYSTEM_STATE" in pvdb
-    assert "BDX:PSU:PSU1:COMM_STATUS" in pvdb
+    assert "BDX:PSU:LV1:COMM_STATUS" in pvdb
+    assert "BDX:PSU:LV2:COMM_STATUS" in pvdb
+    assert "BDX:HV:HV1:COMM_STATUS" in pvdb
     assert "BDX:ENV:TEMP:T00:VALUE" not in pvdb
     assert "BDX:ENV:TEMP:T01:VALUE" not in pvdb
 
@@ -32,7 +34,7 @@ def test_duplicate_pv_names_are_rejected_across_local_subsystems(tmp_path: Path)
 
     psu = load_json(PROFILES / "prototype" / "psu.json")
     hv = load_json(PROFILES / "prototype" / "hv.json")
-    hv["device"]["prefix"] = psu["device"]["prefix"]
+    hv["device"]["prefix"] = psu["devices"][0]["prefix"]
 
     (config_dir / "psu.json").write_text(json.dumps(psu), encoding="utf-8")
     (config_dir / "hv.json").write_text(json.dumps(hv), encoding="utf-8")
@@ -51,6 +53,51 @@ def test_main_server_service_uses_main_server_profile():
     ) in text
     assert "bdx-environment-ioc" not in text
     assert "streamdaq" not in text
+
+
+def test_main_server_psu_profile_uses_two_cpx400dp_lv_supplies():
+    psu = load_json(PROFILES / "main-server" / "psu.json")
+    devices = psu["devices"]
+
+    assert [device["name"] for device in devices] == ["LV1", "LV2"]
+    assert [device["prefix"] for device in devices] == [
+        "BDX:PSU:LV1:",
+        "BDX:PSU:LV2:",
+    ]
+    assert [device["driver"] for device in devices] == ["cpx400dp", "cpx400dp"]
+    assert [device["host"] for device in devices] == [
+        "192.168.1.100",
+        "169.254.23.187",
+    ]
+    assert all(device["channels"] == [1, 2] for device in devices)
+
+
+def test_main_server_chiller_profile_uses_ecosilver_hardware():
+    chiller = load_json(PROFILES / "main-server" / "chiller.json")
+    device = chiller["device"]
+
+    assert device["name"] == "CHILLER1"
+    assert device["prefix"] == "BDX:CHILLER:CHILLER1:"
+    assert device["mode"] == "hardware"
+    assert device["driver"] == "ecosilver_re_1225s"
+    assert device["host"] == "192.168.1.2"
+    assert device["port"] == 54321
+    assert device["bath_temperature_command"] == "IN_PV_00"
+    assert device["controlled_temperature_command"] == "IN_PV_01"
+
+
+def test_main_server_hv_profile_uses_genh600():
+    hv = load_json(PROFILES / "main-server" / "hv.json")
+    device = hv["device"]
+
+    assert device["name"] == "HV1"
+    assert device["prefix"] == "BDX:HV:HV1:"
+    assert device["mode"] == "hardware"
+    assert device["driver"] == "genh600"
+    assert device["port"] == "/dev/ttyUSB0"
+    assert device["baudrate"] == 9600
+    assert device["address"] == 6
+    assert device["channels"] == [1]
 
 
 def test_systemd_installer_installs_selected_profile_only():

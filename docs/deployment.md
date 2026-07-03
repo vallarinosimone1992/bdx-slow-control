@@ -95,9 +95,9 @@ bdx-prototype-ioc --config-dir /etc/bdx-slow-control/profiles/main-server
 From a client:
 
 ```bash
-cainfo BDX:PSU:PSU1:COMM_STATUS
-caget BDX:PSU:PSU1:CH1:VOLTAGE_RBV
-caput BDX:PSU:PSU1:CH1:VOLTAGE_SET 5.0
+cainfo BDX:PSU:LV1:COMM_STATUS
+caget BDX:PSU:LV1:CH1:VOLTAGE_RBV
+caput BDX:PSU:LV1:CH1:VOLTAGE_SET 5.0
 ```
 
 ## Hardware migration

@@ -23,6 +23,15 @@ class ChillerState:
     pressure_bar: float
     running: bool
     fault: bool
+    bath_temperature_c: float = 0.0
+    controlled_temperature_c: float = 0.0
+    external_temperature_c: float = 0.0
+    pump_stage: str = ""
+    cooling_mode: str = ""
+    safe_mode_status: str = ""
+    standby_status: str = ""
+    device_status: str = ""
+    fault_diagnosis: str = ""
 
 
 @dataclass(frozen=True)

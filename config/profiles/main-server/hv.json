@@ -9,12 +9,20 @@
   "device": {
     "name": "HV1",
     "prefix": "BDX:HV:HV1:",
-    "mode": "simulation",
+    "mode": "hardware",
+    "driver": "genh600",
+    "port": "/dev/ttyUSB0",
+    "baudrate": 9600,
+    "address": 6,
+    "timeout": 2.0,
     "channels": [
-      1,
-      2
+      1
     ],
-    "initial_voltage": 0.0,
-    "initial_current_limit": 0.001
+    "clear_status": true,
+    "remote_control": true,
+    "identify_on_connect": true,
+    "initial_current_limit": 0.001,
+    "initial_ovp": 2500.0,
+    "initial_ocp": 0.01
   }
 }
