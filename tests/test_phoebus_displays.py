@@ -3,10 +3,11 @@ import os
 import subprocess
 import xml.etree.ElementTree as ET
 
-from bdx_slow_control.phoebus_generator import generate
+from bdx_slow_control.phoebus_generator import archiver_pbraw_url, generate
 
 
 PROTOTYPE_PROFILE = Path("config/profiles/prototype")
+MAIN_SERVER_PROFILE = Path("config/profiles/main-server")
 RASPBERRY_PROFILE = Path("config/profiles/raspberry")
 RASPBERRY_TEMPERATURE_PVS = {
     "BDX:ENV:TEMP:T00:VALUE",
@@ -66,6 +67,14 @@ def _plt_trace_labels(plt_root: ET.Element) -> set[str]:
     }
 
 
+def _plt_archive_urls(plt_root: ET.Element) -> set[str]:
+    return {
+        element.text
+        for element in plt_root.findall("pvlist/pv/archive/url")
+        if element.text
+    }
+
+
 def _text_updates(path: Path) -> list[ET.Element]:
     root = ET.parse(path).getroot()
     return [
@@ -90,6 +99,36 @@ def _labels(path: Path) -> set[str]:
         element.text
         for element in root.findall("widget/text")
         if element.text
+    }
+
+
+def _action_buttons(path: Path) -> list[ET.Element]:
+    return _widgets(path, "action_button")
+
+
+def _open_file_targets(path: Path) -> set[str]:
+    root = ET.parse(path).getroot()
+    return {
+        element.text
+        for element in root.findall(".//action[@type='open_file']/file")
+        if element.text
+    }
+
+
+def _button_texts_for_pv(path: Path, pv_name: str) -> set[str]:
+    return {
+        widget.findtext("text")
+        for widget in _action_buttons(path)
+        if widget.findtext("pv_name") == pv_name
+    }
+
+
+def _confirmed_button_texts_for_pv(path: Path, pv_name: str) -> set[str]:
+    return {
+        widget.findtext("text")
+        for widget in _action_buttons(path)
+        if widget.findtext("pv_name") == pv_name
+        and widget.findtext("confirm_dialog") == "true"
     }
 
 
@@ -132,11 +171,26 @@ def test_all_display_pv_references_and_navigation_targets_exist(tmp_path: Path):
                 assert (tmp_path / file_element.text).exists()
 
 
-def test_generated_databrowser_plt_files_do_not_configure_archive_data_sources(
+def test_generated_navigation_actions_open_new_tabs(tmp_path: Path):
+    generate(PROTOTYPE_PROFILE, tmp_path)
+
+    for path in tmp_path.glob("*.bob"):
+        root = ET.parse(path).getroot()
+        targets = [
+            element.text
+            for element in root.findall(".//action[@type='open_display']/target")
+        ]
+        assert targets
+        assert set(targets) == {"tab"}
+
+
+def test_generated_databrowser_plt_files_are_live_only_when_archiver_is_disabled(
     tmp_path: Path,
+    monkeypatch,
 ):
-    """No archive appliance is deployed; a configured-but-unreachable archive
-    data source can stall a Data Browser plot's live samples."""
+    monkeypatch.delenv("BDX_ARCHIVER_ENABLED", raising=False)
+    monkeypatch.delenv("BDX_ARCHIVER_URL", raising=False)
+
     generate(PROTOTYPE_PROFILE, tmp_path)
     for path in tmp_path.glob("*.plt"):
         assert _plt(path).find("pvlist/pv/archive") is None
@@ -148,6 +202,61 @@ def test_generated_databrowser_plt_files_do_not_configure_archive_data_sources(
             request.text
             for request in _plt(path).findall("pvlist/pv/request")
         } == {"RAW"}
+
+
+def test_generated_databrowser_plt_files_include_archive_source_when_enabled(
+    tmp_path: Path,
+    monkeypatch,
+):
+    monkeypatch.setenv("BDX_ARCHIVER_ENABLED", "true")
+    monkeypatch.setenv(
+        "BDX_ARCHIVER_URL",
+        "http://operator:secret@archiver.example:17668/retrieval",
+    )
+    monkeypatch.setenv("BDX_ARCHIVER_NAME", "BDX Prototype")
+
+    generate(MAIN_SERVER_PROFILE, tmp_path, only="psu")
+
+    for path in tmp_path.glob("psu_*.plt"):
+        root = _plt(path)
+        assert _plt_archive_urls(root) == {
+            "pbraw://archiver.example:17668/retrieval"
+        }
+        assert {
+            element.text
+            for element in root.findall("pvlist/pv/archive/name")
+        } == {"BDX Prototype"}
+        assert "secret" not in path.read_text(encoding="utf-8")
+
+
+def test_archiver_url_is_converted_to_valid_pbraw_endpoint():
+    assert (
+        archiver_pbraw_url("http://archiver.example:17668/retrieval")
+        == "pbraw://archiver.example:17668/retrieval"
+    )
+    assert (
+        archiver_pbraw_url("https://archiver.example:17668/retrieval/")
+        == "pbraw://archiver.example:17668/retrieval"
+    )
+    assert (
+        archiver_pbraw_url("operator:secret@archiver.example:17668/retrieval")
+        == "pbraw://archiver.example:17668/retrieval"
+    )
+    assert archiver_pbraw_url("") is None
+
+
+def test_enabled_archiver_with_empty_url_does_not_insert_invalid_archive_source(
+    tmp_path: Path,
+    monkeypatch,
+):
+    monkeypatch.setenv("BDX_ARCHIVER_ENABLED", "true")
+    monkeypatch.setenv("BDX_ARCHIVER_URL", "")
+    monkeypatch.delenv("BDX_ARCHIVER_STRICT_CHECK", raising=False)
+
+    generate(MAIN_SERVER_PROFILE, tmp_path, only="chiller")
+
+    for path in tmp_path.glob("chiller_*.plt"):
+        assert _plt(path).find("pvlist/pv/archive") is None
 
 
 def test_raspberry_environment_display_groups_all_temperatures_in_one_databrowser_chart(
@@ -245,6 +354,16 @@ def test_raspberry_environment_display_contains_no_humidity_or_pressure_traces(
     assert not any(reference.startswith("BDX:ENV:PRESSURE:") for reference in references)
 
 
+def test_raspberry_environment_operator_links_to_full_temperature_history(
+    tmp_path: Path,
+):
+    generate(RASPBERRY_PROFILE, tmp_path, only="environment")
+
+    targets = _open_file_targets(tmp_path / "environment.bob")
+    assert targets == {"environment_0_environment_temperatures.plt"}
+    assert (tmp_path / "environment_0_environment_temperatures.plt").exists()
+
+
 def test_generate_only_environment_does_not_overwrite_unrelated_displays(tmp_path: Path):
     psu_display = tmp_path / "psu.bob"
     overview_display = tmp_path / "overview.bob"
@@ -258,7 +377,157 @@ def test_generate_only_environment_does_not_overwrite_unrelated_displays(tmp_pat
     assert overview_display.read_text(encoding="utf-8") == "keep overview"
 
 
-def test_phoebus_launcher_disables_default_databrowser_archives(tmp_path: Path):
+def test_psu_operator_and_expert_displays_from_main_server_profile(tmp_path: Path):
+    pvs = generate(MAIN_SERVER_PROFILE, tmp_path, only="psu")
+
+    operator = tmp_path / "psu.bob"
+    expert = tmp_path / "psu_expert.bob"
+    assert ET.parse(operator).getroot().tag == "display"
+    assert ET.parse(expert).getroot().tag == "display"
+    assert "PV name" not in _labels(operator)
+    assert "PV name" in _labels(expert)
+    assert {pv.name for pv in pvs if pv.subsystem == "psu"}.issubset(_pv_references(expert))
+    assert "BDX:PSU:LV1:CH1:VOLTAGE_REQUEST" in _pv_references(operator)
+    assert "BDX:PSU:LV1:CH1:CURRENT_LIMIT_REQUEST" in _pv_references(operator)
+    assert "BDX:PSU:LV1:CH1:APPLY_CMD" in _pv_references(operator)
+    assert "BDX:PSU:LV1:CH1:OVP_SET" not in _pv_references(operator)
+    assert "BDX:PSU:LV1:CH1:OCP_SET" not in _pv_references(operator)
+
+
+def test_psu_operator_output_and_all_off_actions_are_confirmed(tmp_path: Path):
+    generate(MAIN_SERVER_PROFILE, tmp_path, only="psu")
+    operator = tmp_path / "psu.bob"
+
+    assert _confirmed_button_texts_for_pv(
+        operator,
+        "BDX:PSU:LV1:CH1:OUTPUT_SET",
+    ) == {"ON", "OFF"}
+    assert _confirmed_button_texts_for_pv(
+        operator,
+        "BDX:PSU:LV2:CH2:OUTPUT_SET",
+    ) == {"ON", "OFF"}
+    assert _confirmed_button_texts_for_pv(operator, "BDX:PSU:LV1:ALLOFF_CMD") == {
+        "ALL OFF"
+    }
+    assert _confirmed_button_texts_for_pv(operator, "BDX:PSU:LV2:ALLOFF_CMD") == {
+        "ALL OFF"
+    }
+
+
+def test_psu_generates_one_dual_axis_actual_readback_plot_per_supply(tmp_path: Path):
+    generate(MAIN_SERVER_PROFILE, tmp_path, only="psu")
+
+    plot_files = sorted(tmp_path.glob("psu_*.plt"))
+    assert len(plot_files) == 2
+    for path in plot_files:
+        root = _plt(path)
+        assert [axis.text for axis in root.findall("axes/axis/name")] == [
+            "Voltage [V]",
+            "Current [A]",
+        ]
+        assert [axis.text for axis in root.findall("axes/axis/right")] == [
+            "false",
+            "true",
+        ]
+        trace_names = _plt_traces(root)
+        assert all(name.endswith(("VOLTAGE_RBV", "CURRENT_RBV")) for name in trace_names)
+        assert len(trace_names) == 4
+        assert {element.text for element in root.findall("pvlist/pv/axis")} == {"0", "1"}
+
+
+def test_psu_operator_links_to_full_historical_databrowser_resources(tmp_path: Path):
+    generate(MAIN_SERVER_PROFILE, tmp_path, only="psu")
+
+    targets = _open_file_targets(tmp_path / "psu.bob")
+    assert targets == {
+        "psu_0_lv1_actual_voltage_and_current.plt",
+        "psu_1_lv2_actual_voltage_and_current.plt",
+    }
+    for target in targets:
+        assert (tmp_path / target).exists()
+
+
+def test_generate_only_psu_does_not_overwrite_unrelated_displays(tmp_path: Path):
+    chiller_display = tmp_path / "chiller.bob"
+    environment_display = tmp_path / "environment.bob"
+    chiller_display.write_text("keep chiller", encoding="utf-8")
+    environment_display.write_text("keep environment", encoding="utf-8")
+
+    generate(MAIN_SERVER_PROFILE, tmp_path, only="psu")
+
+    assert ET.parse(tmp_path / "psu.bob").getroot().tag == "display"
+    assert ET.parse(tmp_path / "psu_expert.bob").getroot().tag == "display"
+    assert chiller_display.read_text(encoding="utf-8") == "keep chiller"
+    assert environment_display.read_text(encoding="utf-8") == "keep environment"
+
+
+def test_chiller_operator_and_expert_displays_from_main_server_profile(tmp_path: Path):
+    pvs = generate(MAIN_SERVER_PROFILE, tmp_path, only="chiller")
+
+    operator = tmp_path / "chiller.bob"
+    expert = tmp_path / "chiller_expert.bob"
+    assert ET.parse(operator).getroot().tag == "display"
+    assert ET.parse(expert).getroot().tag == "display"
+    assert "PV name" not in _labels(operator)
+    assert "PV name" in _labels(expert)
+    assert {pv.name for pv in pvs if pv.subsystem == "chiller"}.issubset(
+        _pv_references(expert)
+    )
+    assert "BDX:CHILLER:CHILLER1:SETPOINT_REQUEST" in _pv_references(operator)
+    assert "BDX:CHILLER:CHILLER1:APPLY_SETPOINT_CMD" in _pv_references(operator)
+    assert "BDX:CHILLER:CHILLER1:PRESSURE_RBV" not in _pv_references(operator)
+    assert "BDX:CHILLER:CHILLER1:EXTERNAL_TEMPERATURE_RBV" not in _pv_references(operator)
+
+
+def test_chiller_operator_start_stop_actions_are_confirmed(tmp_path: Path):
+    generate(MAIN_SERVER_PROFILE, tmp_path, only="chiller")
+
+    assert _confirmed_button_texts_for_pv(
+        tmp_path / "chiller.bob",
+        "BDX:CHILLER:CHILLER1:RUN_SET",
+    ) == {"START", "STOP"}
+
+
+def test_chiller_temperature_plot_excludes_duplicate_and_disabled_measurements(
+    tmp_path: Path,
+):
+    generate(MAIN_SERVER_PROFILE, tmp_path, only="chiller")
+
+    plot_files = sorted(tmp_path.glob("chiller_*.plt"))
+    assert len(plot_files) == 1
+    traces = _plt_traces(_plt(plot_files[0]))
+    assert traces == {
+        "BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV",
+        "BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV",
+        "BDX:CHILLER:CHILLER1:SETPOINT_RBV",
+    }
+
+
+def test_chiller_operator_links_to_full_historical_databrowser_resource(tmp_path: Path):
+    generate(MAIN_SERVER_PROFILE, tmp_path, only="chiller")
+
+    targets = _open_file_targets(tmp_path / "chiller.bob")
+    assert targets == {"chiller_0_chiller_temperature.plt"}
+    assert (tmp_path / "chiller_0_chiller_temperature.plt").exists()
+
+
+def test_generate_only_chiller_does_not_overwrite_unrelated_displays(tmp_path: Path):
+    psu_display = tmp_path / "psu.bob"
+    environment_display = tmp_path / "environment.bob"
+    psu_display.write_text("keep psu", encoding="utf-8")
+    environment_display.write_text("keep environment", encoding="utf-8")
+
+    generate(MAIN_SERVER_PROFILE, tmp_path, only="chiller")
+
+    assert ET.parse(tmp_path / "chiller.bob").getroot().tag == "display"
+    assert ET.parse(tmp_path / "chiller_expert.bob").getroot().tag == "display"
+    assert psu_display.read_text(encoding="utf-8") == "keep psu"
+    assert environment_display.read_text(encoding="utf-8") == "keep environment"
+
+
+def test_phoebus_launcher_uses_live_only_databrowser_settings_when_archive_disabled(
+    tmp_path: Path,
+):
     launcher = tmp_path / "fake_phoebus.sh"
     launcher.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
     launcher.chmod(0o755)
@@ -267,9 +536,10 @@ def test_phoebus_launcher_disables_default_databrowser_archives(tmp_path: Path):
         **os.environ,
         "BDX_PHOEBUS_CMD": str(launcher),
         "BDX_PHOEBUS_ENV": str(tmp_path / "missing.env"),
+        "BDX_ARCHIVER_ENABLED": "false",
         "XDG_RUNTIME_DIR": str(tmp_path),
     }
-    subprocess.run(
+    completed = subprocess.run(
         ["bash", "scripts/launch_phoebus.sh", "environment"],
         check=True,
         env=env,
@@ -283,8 +553,78 @@ def test_phoebus_launcher_disables_default_databrowser_archives(tmp_path: Path):
     )
     assert "org.csstudio.trends.databrowser3/urls=\n" in settings
     assert "org.csstudio.trends.databrowser3/archives=\n" in settings
-    assert "org.csstudio.trends.databrowser3/use_default_archives=false\n" in settings
+    assert "org.csstudio.trends.databrowser3/use_default_archives=true\n" in settings
+    assert "org.csstudio.trends.databrowser3/drop_failed_archives=true\n" in settings
+    assert "pbraw://" not in settings
+    assert "Archiver enabled: false" in completed.stdout
     assert not (tmp_path / "all_pvs.bob").exists()
+
+
+def test_phoebus_launcher_configures_archive_settings_when_enabled(tmp_path: Path):
+    launcher = tmp_path / "fake_phoebus.sh"
+    launcher.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+    launcher.chmod(0o755)
+
+    env = {
+        **os.environ,
+        "BDX_PHOEBUS_CMD": str(launcher),
+        "BDX_PHOEBUS_ENV": str(tmp_path / "missing.env"),
+        "BDX_ARCHIVER_ENABLED": "true",
+        "BDX_ARCHIVER_URL": "http://operator:secret@archiver.example:17668/retrieval",
+        "BDX_ARCHIVER_NAME": "BDX Prototype",
+        "BDX_ARCHIVER_STRICT_CHECK": "false",
+        "XDG_RUNTIME_DIR": str(tmp_path),
+    }
+    completed = subprocess.run(
+        ["bash", "scripts/launch_phoebus.sh", "psu"],
+        check=True,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+    settings = (tmp_path / "bdx-phoebus" / "settings.ini").read_text(
+        encoding="utf-8"
+    )
+    expected = "pbraw://archiver.example:17668/retrieval|BDX Prototype"
+    assert f"org.csstudio.trends.databrowser3/urls={expected}\n" in settings
+    assert f"org.csstudio.trends.databrowser3/archives={expected}\n" in settings
+    assert "org.phoebus.archive.reader.appliance/useHttps=false\n" in settings
+    assert "secret" not in settings
+    assert "secret" not in completed.stdout
+    assert "Archiver enabled: true" in completed.stdout
+    assert "Archiver retrieval: pbraw://archiver.example:17668/retrieval" in completed.stdout
+
+
+def test_phoebus_launcher_keeps_live_fallback_when_archive_preflight_fails(
+    tmp_path: Path,
+):
+    launcher = tmp_path / "fake_phoebus.sh"
+    launcher.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+    launcher.chmod(0o755)
+
+    env = {
+        **os.environ,
+        "BDX_PHOEBUS_CMD": str(launcher),
+        "BDX_PHOEBUS_ENV": str(tmp_path / "missing.env"),
+        "BDX_ARCHIVER_ENABLED": "true",
+        "BDX_ARCHIVER_URL": "http://127.0.0.1:9/retrieval",
+        "BDX_ARCHIVER_STRICT_CHECK": "false",
+        "BDX_ARCHIVER_PREFLIGHT_PV": "BDX:ENV:TEMP:T00:VALUE",
+        "XDG_RUNTIME_DIR": str(tmp_path),
+    }
+    completed = subprocess.run(
+        ["bash", "scripts/launch_phoebus.sh", "environment"],
+        check=True,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+    assert "Archiver enabled: true" in completed.stdout
+    assert "live Channel Access fallback" in completed.stderr
 
 
 def test_raspberry_overview_environment_chart_uses_configured_temperature_pvs(

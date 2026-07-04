@@ -19,6 +19,7 @@ class ManagedIOC(PVGroup):
     HEARTBEAT = pvproperty(value=0, dtype=int, read_only=True)
     IOC_STATE = pvproperty(value="STARTING", dtype=ChannelType.STRING, read_only=True)
     COMM_STATUS = pvproperty(value="STARTING", dtype=ChannelType.STRING, read_only=True)
+    COMM_OK = pvproperty(value=False, dtype=bool, read_only=True)
     LAST_UPDATE = pvproperty(value="", dtype=ChannelType.STRING, read_only=True)
     ERROR_CODE = pvproperty(value=0, dtype=int, read_only=True)
     ERROR_MESSAGE = pvproperty(value="", dtype=ChannelType.STRING, read_only=True)
@@ -49,6 +50,7 @@ class ManagedIOC(PVGroup):
     async def mark_success(self) -> None:
         status = "SIMULATION" if bool(getattr(self.driver, "simulation", False)) else "OK"
         await self.COMM_STATUS.write(value=status)
+        await self.COMM_OK.write(value=True)
         await self.LAST_UPDATE.write(value=utc_timestamp())
         await self.ERROR_CODE.write(value=0)
         await self.ERROR_MESSAGE.write(value="")
@@ -60,6 +62,7 @@ class ManagedIOC(PVGroup):
     async def mark_failure(self, exc: Exception) -> None:
         message = str(exc) or exc.__class__.__name__
         await self.COMM_STATUS.write(value="DEVICE_ERROR")
+        await self.COMM_OK.write(value=False)
         await self.ERROR_CODE.write(value=1)
         await self.ERROR_MESSAGE.write(value=message)
         should_log = not self._poll_failed or message != self._last_failure_message

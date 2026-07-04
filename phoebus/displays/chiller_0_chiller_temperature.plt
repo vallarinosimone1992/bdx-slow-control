@@ -5,7 +5,7 @@
     <show_legend>true</show_legend>
     <show_toolbar>true</show_toolbar>
     <grid>true</grid>
-    <update_period>3.0</update_period>
+    <update_period>1.0</update_period>
     <scroll_step>5</scroll_step>
     <scroll>true</scroll>
     <start>-10 minutes</start>
@@ -14,7 +14,7 @@
     <axes>
         <axis>
             <visible>true</visible>
-            <name>Value</name>
+            <name>Temperature [degC]</name>
             <use_axis_name>true</use_axis_name>
             <use_trace_names>false</use_trace_names>
             <right>false</right>
@@ -29,9 +29,9 @@
     </annotations>
     <pvlist>
         <pv>
-            <display_name>BDX:CHILLER:CHILLER1:SETPOINT_RBV</display_name>
+            <display_name>BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV</display_name>
             <visible>true</visible>
-            <name>BDX:CHILLER:CHILLER1:SETPOINT_RBV</name>
+            <name>BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV</name>
             <axis>0</axis>
             <color>
                 <red>33</red>
@@ -44,14 +44,14 @@
             <point_type>NONE</point_type>
             <point_size>6</point_size>
             <waveform_index>0</waveform_index>
-            <period>0.0</period>
+            <period>5.0</period>
             <ring_size>5000</ring_size>
-            <request>OPTIMIZED</request>
+            <request>RAW</request>
         </pv>
         <pv>
-            <display_name>BDX:CHILLER:CHILLER1:TEMPERATURE_RBV</display_name>
+            <display_name>BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV</display_name>
             <visible>true</visible>
-            <name>BDX:CHILLER:CHILLER1:TEMPERATURE_RBV</name>
+            <name>BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV</name>
             <axis>0</axis>
             <color>
                 <red>230</red>
@@ -64,9 +64,29 @@
             <point_type>NONE</point_type>
             <point_size>6</point_size>
             <waveform_index>0</waveform_index>
-            <period>0.0</period>
+            <period>5.0</period>
             <ring_size>5000</ring_size>
-            <request>OPTIMIZED</request>
+            <request>RAW</request>
+        </pv>
+        <pv>
+            <display_name>BDX:CHILLER:CHILLER1:SETPOINT_RBV</display_name>
+            <visible>true</visible>
+            <name>BDX:CHILLER:CHILLER1:SETPOINT_RBV</name>
+            <axis>0</axis>
+            <color>
+                <red>49</red>
+                <green>163</green>
+                <blue>84</blue>
+            </color>
+            <trace_type>SINGLE_LINE</trace_type>
+            <linewidth>2</linewidth>
+            <line_style>SOLID</line_style>
+            <point_type>NONE</point_type>
+            <point_size>6</point_size>
+            <waveform_index>0</waveform_index>
+            <period>5.0</period>
+            <ring_size>5000</ring_size>
+            <request>RAW</request>
         </pv>
     </pvlist>
 </databrowser>

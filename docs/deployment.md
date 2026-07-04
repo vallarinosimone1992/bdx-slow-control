@@ -57,6 +57,34 @@ on a Raspberry Pi. It installs `bdx-environment-ioc`, not the full prototype IOC
 
 See `docs/raspberry.md`.
 
+## EPICS Archiver Appliance deployment
+
+BDX-owned Archiver Appliance deployment infrastructure is under:
+
+```text
+deploy/archiver-appliance/
+```
+
+That tree pins the official Archiver Appliance release, records the release
+checksum, provides configuration templates, BDX PV lists, BDX policies, systemd
+examples, health checks, registration and retrieval tools, and offline tests. It
+does not contain downloaded Archiver Appliance artifacts, Tomcat runtimes, WAR or
+JAR files, credentials, logs, databases, or archive data.
+
+The final production host is not selected. The provisional persistent deployment
+model targets a configurable Linux server, such as Ubuntu 22.04 with sudo access,
+Java 21, Tomcat 11, persistent metadata storage, and dedicated archive storage.
+
+Start with:
+
+```bash
+deploy/archiver-appliance/scripts/install.sh --check-only
+```
+
+Then follow `deploy/archiver-appliance/README.md` for the local evaluation,
+provisional Ubuntu, PV registration, health-check, retrieval-test, backup,
+upgrade, and uninstall procedures.
+
 ## Channel Access interface
 
 Set the interface in `/etc/bdx-slow-control/bdx.env`:
@@ -96,8 +124,37 @@ From a client:
 
 ```bash
 cainfo BDX:PSU:LV1:COMM_STATUS
+cainfo BDX:PSU:LV1:COMM_OK
 caget BDX:PSU:LV1:CH1:VOLTAGE_RBV
-caput BDX:PSU:LV1:CH1:VOLTAGE_SET 5.0
+caput BDX:PSU:LV1:CH1:VOLTAGE_REQUEST 5.0
+caput BDX:PSU:LV1:CH1:CURRENT_LIMIT_REQUEST 0.5
+caput BDX:PSU:LV1:CH1:APPLY_CMD 1
+```
+
+After deploying backend changes on the main server:
+
+```bash
+cd /opt/bdx-slow-control
+git pull --ff-only
+sudo ./scripts/install_systemd.sh main-server <runtime-user>
+sudo systemctl restart bdx-main-server-ioc
+sudo systemctl --no-pager --full status bdx-main-server-ioc
+journalctl -u bdx-main-server-ioc -f
+```
+
+Regenerate only the main-server PSU and chiller operator displays when their
+profiles or PV contracts change:
+
+```bash
+bdx-generate-displays \
+  --config-dir config/profiles/main-server \
+  --output-dir phoebus/displays \
+  --only psu
+
+bdx-generate-displays \
+  --config-dir config/profiles/main-server \
+  --output-dir phoebus/displays \
+  --only chiller
 ```
 
 ## Hardware migration
@@ -111,6 +168,22 @@ For each subsystem:
 5. verify all setpoint/readback pairs;
 6. verify safe state after IOC restart;
 7. enable the corresponding service.
+
+## PSU and chiller operator model
+
+The PSU operator page uses `VOLTAGE_REQUEST`, `CURRENT_LIMIT_REQUEST`, and
+`APPLY_CMD`. The IOC validates the voltage/current pair and configured power
+envelope before sending hardware commands. Direct write PVs remain available
+only in expert displays for compatibility and diagnostics.
+
+The chiller operator page uses `SETPOINT_REQUEST` and `APPLY_SETPOINT_CMD`.
+`START` and `STOP` are separate confirmed actions. `STOP` sends only the LAUDA
+`STOP` command and places the unit in standby; Safe Mode configuration is a
+separate expert-only setpoint/communication-timeout mechanism.
+
+The main-server chiller profile sets `pressure_enabled=false` and
+`external_temperature_enabled=false`. Disabled optional measurements are not
+queried, plotted, archived, or shown as valid operator values.
 
 
 ## Split-host deployment

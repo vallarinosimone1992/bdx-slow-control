@@ -59,15 +59,22 @@ def test_ecosilver_read_state_and_setters():
             "IN_MODE_02": "0",
             "IN_SP_01": "3",
             "IN_SP_02": "1",
-            "IN_MODE_06": "0",
+            "IN_SP_07": "18.00",
+            "IN_SP_08": "10.00",
             "STATUS": "OK",
             "STAT": "0000",
             "OUT_SP_00_21.50": "OK",
+            "OUT_SP_07_18.50": "OK",
+            "OUT_SP_08_12.00": "OK",
             "START": "OK",
             "STOP": "OK",
         }
     )
-    driver = ECOSilverRE1225SDriver(connection=connection)
+    driver = ECOSilverRE1225SDriver(
+        connection=connection,
+        pressure_enabled=True,
+        external_temperature_enabled=True,
+    )
 
     state = driver.read_state()
     assert state.temperature_c == pytest.approx(23.10)
@@ -80,32 +87,42 @@ def test_ecosilver_read_state_and_setters():
     assert state.fault is False
     assert state.pump_stage == "3"
     assert state.cooling_mode == "1"
-    assert state.safe_mode_status == "0"
+    assert state.safe_mode_status == "AVAILABLE"
+    assert state.safe_setpoint_c == pytest.approx(18.0)
+    assert state.communication_timeout_s == pytest.approx(10.0)
     assert state.standby_status == "0"
     assert state.device_status == "OK"
     assert state.fault_diagnosis == "0000"
 
     driver.set_setpoint(21.5)
+    driver.set_safe_setpoint(18.5)
+    driver.set_communication_timeout(12.0)
     driver.set_running(True)
     driver.set_running(False)
 
     assert ("command", "OUT_SP_00_21.50", True) in connection.calls
+    assert ("command", "OUT_SP_07_18.50", True) in connection.calls
+    assert ("command", "OUT_SP_08_12.00", True) in connection.calls
     assert ("command", "START", False) in connection.calls
     assert ("command", "STOP", False) in connection.calls
+    assert not any(
+        call[1].startswith("OUT_MODE")
+        for call in connection.calls
+        if call[0] == "command"
+    )
 
 
-def test_ecosilver_optional_external_temperature_and_pressure_preserve_last_values():
+def test_ecosilver_disabled_external_temperature_and_pressure_are_not_queried():
     connection = FakeConnection(
         {
             "IN_SP_00": "20.00",
             "IN_PV_00": "19.90",
             "IN_PV_01": "20.10",
-            "IN_PV_02": OSError("pressure unavailable"),
-            "IN_PV_03": OSError("external probe unavailable"),
             "IN_MODE_02": "1",
             "IN_SP_01": "",
             "IN_SP_02": "",
-            "IN_MODE_06": "",
+            "IN_SP_07": "",
+            "IN_SP_08": "",
             "STATUS": "OK",
             "STAT": "0000",
         }
@@ -114,8 +131,12 @@ def test_ecosilver_optional_external_temperature_and_pressure_preserve_last_valu
 
     state = driver.read_state()
 
-    assert state.pressure_bar == pytest.approx(0.0)
-    assert state.external_temperature_c == pytest.approx(0.0)
+    assert state.pressure_enabled is False
+    assert state.pressure_valid is False
+    assert state.external_temperature_enabled is False
+    assert state.external_temperature_valid is False
+    assert ("query", "IN_PV_02") not in connection.calls
+    assert ("query", "IN_PV_03") not in connection.calls
     assert state.running is False
 
 

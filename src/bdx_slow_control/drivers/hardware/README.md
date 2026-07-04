@@ -25,21 +25,26 @@ configuration. See `config/profiles/raspberry/environment.json`.
 
 ## TTi CPX400DP power supplies
 
-`cpx400dp.py` controls one dual-channel CPX400DP low-voltage power supply through its
-TCP/IP ASCII interface. It uses the legacy command set found in
-`legacy_software/power_supply/python_script/CPX400DP.py`.
+`cpx400dp.py` controls one dual-channel CPX400DP low-voltage power supply
+through its TCP/IP ASCII interface. It uses the official CPX400DP command set
+for actual voltage/current readbacks, configured voltage/current readbacks,
+output state, OVP, and OCP.
 
 Use `mode: "hardware"` and `driver: "cpx400dp"` in a PSU device
 configuration. The main-server profile contains two hardware devices:
 
 ```text
-BDX:PSU:LV1: -> 192.168.1.100:9221
-BDX:PSU:LV2: -> 169.254.23.187:9221
+BDX:PSU:LV1: -> 172.22.50.20:9221
+BDX:PSU:LV2: -> 172.22.50.21:9221
 ```
 
 The driver does not disable outputs during IOC startup. The EPICS
 `ALLOFF_CMD` PV sends `OPALL 0` to the selected physical supply when an
 operator explicitly requests an all-off action.
+
+The IOC enforces configurable software limits before staged operator applies.
+The default CPX400DP limits are `0-60 V`, `0-20 A`, and `420 W` maximum
+requested voltage-current product.
 
 ## TDK-Lambda GENH600 high-voltage supplies
 
@@ -61,16 +66,26 @@ operator explicitly requests an all-off action.
 ## LAUDA ECO Silver RE 1225 S chiller
 
 `ecosilver_re_1225s.py` controls the LAUDA chiller through its TCP/IP ASCII
-interface. It uses the command set found in
-`legacy_software/chiller/python_script/ECOSILVER_RE_1225S.py`.
+interface.
 
 Use `mode: "hardware"` and `driver: "ecosilver_re_1225s"` in a chiller device
 configuration. The main-server profile contains one hardware device:
 
 ```text
-BDX:CHILLER:CHILLER1: -> 192.168.1.2:54321
+BDX:CHILLER:CHILLER1: -> 172.22.50.60:54321
 ```
 
 The driver does not start, stop, reset, or put the chiller into Safe Mode
 during IOC startup. `RUN_SET=1` sends `START`; `RUN_SET=0` sends `STOP`.
 `SETPOINT_SET` sends `OUT_SP_00_<value>`.
+
+Safe Mode is not treated as STOP. Expert Safe Mode configuration uses:
+
+```text
+OUT_SP_07 / IN_SP_07   safe setpoint
+OUT_SP_08 / IN_SP_08   communication timeout
+```
+
+Pressure and external temperature are optional measurements. When disabled in
+configuration, the driver does not query them and the IOC exposes them as
+invalid rather than presenting cached zero values.

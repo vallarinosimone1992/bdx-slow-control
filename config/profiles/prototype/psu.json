@@ -18,7 +18,14 @@
       "initial_voltage": 0.0,
       "initial_current_limit": 0.5,
       "initial_ovp": 10.0,
-      "initial_ocp": 1.0
+      "initial_ocp": 1.0,
+      "software_limits": {
+        "minimum_voltage": 0.0,
+        "maximum_voltage": 60.0,
+        "minimum_current_limit": 0.0,
+        "maximum_current_limit": 20.0,
+        "maximum_power": 420.0
+      }
     },
     {
       "name": "LV2",
@@ -31,7 +38,14 @@
       "initial_voltage": 0.0,
       "initial_current_limit": 0.5,
       "initial_ovp": 10.0,
-      "initial_ocp": 1.0
+      "initial_ocp": 1.0,
+      "software_limits": {
+        "minimum_voltage": 0.0,
+        "maximum_voltage": 60.0,
+        "minimum_current_limit": 0.0,
+        "maximum_current_limit": 20.0,
+        "maximum_power": 420.0
+      }
     }
   ]
 }

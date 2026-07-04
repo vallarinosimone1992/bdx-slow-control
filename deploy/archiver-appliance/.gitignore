@@ -1,0 +1,23 @@
+# Local downloads and extracted third-party software.
+/downloads/
+/cache/
+/archiver/
+/apache-tomcat*/
+*.tar.gz
+*.zip
+*.war
+*.jar
+
+# Runtime state must stay outside the repository.
+/runtime/
+/state/
+/logs/
+/tmp/
+*.log
+*.pid
+*.db
+*.sqlite
+*.sqlite3
+*.pb
+*.pbraw
+*.parquet

@@ -1,15 +1,15 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <display version="2.0.0">
-  <name>BDX CHILLER</name>
+  <name>BDX Chiller</name>
   <width>1400</width>
-  <height>973</height>
+  <height>980</height>
   <widget type="label" version="2.0.0">
     <name>Label_1</name>
     <x>20</x>
     <y>12</y>
     <width>650</width>
     <height>38</height>
-    <text>BDX CHILLER</text>
+    <text>BDX chiller</text>
     <font>
       <font name="Default" family="Liberation Sans" style="BOLD" size="24.0" />
     </font>
@@ -23,7 +23,7 @@
     <actions>
       <action type="open_display">
         <file>overview.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open Overview</description>
       </action>
     </actions>
@@ -39,7 +39,7 @@
     <actions>
       <action type="open_display">
         <file>psu.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open PSU</description>
       </action>
     </actions>
@@ -55,7 +55,7 @@
     <actions>
       <action type="open_display">
         <file>chiller.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open Chiller</description>
       </action>
     </actions>
@@ -71,7 +71,7 @@
     <actions>
       <action type="open_display">
         <file>environment.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open Environment</description>
       </action>
     </actions>
@@ -87,7 +87,7 @@
     <actions>
       <action type="open_display">
         <file>hv.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open HV</description>
       </action>
     </actions>
@@ -103,7 +103,7 @@
     <actions>
       <action type="open_display">
         <file>daq.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open DAQ</description>
       </action>
     </actions>
@@ -119,7 +119,7 @@
     <actions>
       <action type="open_display">
         <file>global.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open Global</description>
       </action>
     </actions>
@@ -135,7 +135,7 @@
     <actions>
       <action type="open_display">
         <file>trends.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open Trends</description>
       </action>
     </actions>
@@ -151,454 +151,611 @@
     <actions>
       <action type="open_display">
         <file>all_pvs.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open All PVs</description>
       </action>
     </actions>
     <text>All PVs</text>
     <tooltip>$(actions)</tooltip>
   </widget>
-  <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_11</name>
-    <x>20</x>
-    <y>105</y>
-    <width>670</width>
-    <height>310</height>
-    <file>chiller_0_chiller_temperature.plt</file>
-    <show_toolbar>true</show_toolbar>
-  </widget>
-  <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_12</name>
-    <x>710</x>
-    <y>105</y>
-    <width>670</width>
-    <height>310</height>
-    <file>chiller_1_chiller_pressure.plt</file>
-    <show_toolbar>true</show_toolbar>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_13</name>
-    <x>20</x>
-    <y>445</y>
-    <width>570</width>
-    <height>26</height>
-    <text>PV name</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="14.0" />
-    </font>
-    <background_color>
-      <color red="220" green="228" blue="236" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_14</name>
-    <x>600</x>
-    <y>445</y>
-    <width>250</width>
-    <height>26</height>
-    <text>Current value</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="14.0" />
-    </font>
-    <background_color>
-      <color red="220" green="228" blue="236" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_15</name>
-    <x>870</x>
-    <y>445</y>
-    <width>270</width>
-    <height>26</height>
-    <text>Control</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="14.0" />
-    </font>
-    <background_color>
-      <color red="220" green="228" blue="236" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_16</name>
-    <x>20</x>
-    <y>477</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:CLEAR_ERROR_CMD</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
-    </font>
-    <background_color>
-      <color red="247" green="249" blue="251" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_17</name>
-    <x>600</x>
-    <y>477</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:CLEAR_ERROR_CMD</pv_name>
-  </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_18</name>
-    <x>870</x>
-    <y>477</y>
-    <width>135</width>
-    <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:CLEAR_ERROR_CMD</pv_name>
+    <name>Navigation_11</name>
+    <x>1220</x>
+    <y>12</y>
+    <width>140</width>
+    <height>32</height>
     <actions>
-      <action type="write_pv">
-        <pv_name>BDX:CHILLER:CHILLER1:CLEAR_ERROR_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:CHILLER:CHILLER1:CLEAR_ERROR_CMD</description>
+      <action type="open_display">
+        <file>chiller_expert.bob</file>
+        <target>tab</target>
+        <description>Open Expert</description>
       </action>
     </actions>
-    <text>EXECUTE</text>
+    <text>Expert</text>
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_19</name>
+    <name>Label_12</name>
     <x>20</x>
-    <y>506</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:COMM_STATUS</text>
+    <y>105</y>
+    <width>1360</width>
+    <height>78</height>
+    <text />
     <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0" />
     </font>
     <background_color>
-      <color red="235" green="240" blue="244" />
+      <color red="238" green="243" blue="247" />
     </background_color>
     <transparent>false</transparent>
   </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_13</name>
+    <x>36</x>
+    <y>115</y>
+    <width>120</width>
+    <height>22</height>
+    <text>Communication</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="11.0" />
+    </font>
+  </widget>
+  <widget type="led" version="2.0.0">
+    <name>StatusLED_14</name>
+    <x>160</x>
+    <y>113</y>
+    <width>28</width>
+    <height>28</height>
+    <pv_name>BDX:CHILLER:CHILLER1:COMM_OK</pv_name>
+    <off_color>
+      <color red="180" green="40" blue="40" />
+    </off_color>
+    <on_color>
+      <color red="40" green="170" blue="80" />
+    </on_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+  </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_20</name>
-    <x>600</x>
-    <y>506</y>
-    <width>250</width>
-    <height>25</height>
+    <name>Readback_15</name>
+    <x>198</x>
+    <y>113</y>
+    <width>125</width>
+    <height>28</height>
     <pv_name>BDX:CHILLER:CHILLER1:COMM_STATUS</pv_name>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0" />
+    </font>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_16</name>
+    <x>350</x>
+    <y>115</y>
+    <width>76</width>
+    <height>22</height>
+    <text>Run state</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="11.0" />
+    </font>
+  </widget>
+  <widget type="led" version="2.0.0">
+    <name>StatusLED_17</name>
+    <x>430</x>
+    <y>113</y>
+    <width>28</width>
+    <height>28</height>
+    <pv_name>BDX:CHILLER:CHILLER1:RUN_RBV</pv_name>
+    <off_color>
+      <color red="180" green="40" blue="40" />
+    </off_color>
+    <on_color>
+      <color red="40" green="170" blue="80" />
+    </on_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_18</name>
+    <x>468</x>
+    <y>113</y>
+    <width>120</width>
+    <height>28</height>
+    <pv_name>BDX:CHILLER:CHILLER1:RUN_STATE</pv_name>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="12.0" />
+    </font>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_19</name>
+    <x>620</x>
+    <y>115</y>
+    <width>48</width>
+    <height>22</height>
+    <text>Fault</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="11.0" />
+    </font>
+  </widget>
+  <widget type="led" version="2.0.0">
+    <name>StatusLED_20</name>
+    <x>672</x>
+    <y>113</y>
+    <width>28</width>
+    <height>28</height>
+    <pv_name>BDX:CHILLER:CHILLER1:FAULT</pv_name>
+    <off_color>
+      <color red="40" green="170" blue="80" />
+    </off_color>
+    <on_color>
+      <color red="190" green="40" blue="40" />
+    </on_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_21</name>
-    <x>20</x>
-    <y>535</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:ERROR_CODE</text>
+    <x>735</x>
+    <y>115</y>
+    <width>92</width>
+    <height>22</height>
+    <text>Last update</text>
     <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+      <font name="Default" family="Liberation Sans" style="BOLD" size="11.0" />
     </font>
-    <background_color>
-      <color red="247" green="249" blue="251" />
-    </background_color>
-    <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>Readback_22</name>
-    <x>600</x>
-    <y>535</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:ERROR_CODE</pv_name>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_23</name>
-    <x>20</x>
-    <y>564</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:ERROR_MESSAGE</text>
+    <x>830</x>
+    <y>113</y>
+    <width>230</width>
+    <height>28</height>
+    <pv_name>BDX:CHILLER:CHILLER1:LAST_UPDATE</pv_name>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
-    <background_color>
-      <color red="235" green="240" blue="244" />
-    </background_color>
-    <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_24</name>
-    <x>600</x>
-    <y>564</y>
-    <width>250</width>
-    <height>25</height>
+    <name>Readback_23</name>
+    <x>36</x>
+    <y>149</y>
+    <width>1300</width>
+    <height>24</height>
     <pv_name>BDX:CHILLER:CHILLER1:ERROR_MESSAGE</pv_name>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="10.0" />
+    </font>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_24</name>
+    <x>20</x>
+    <y>210</y>
+    <width>430</width>
+    <height>240</height>
+    <text />
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0" />
+    </font>
+    <background_color>
+      <color red="245" green="248" blue="250" />
+    </background_color>
+    <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_25</name>
-    <x>20</x>
-    <y>593</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:FAULT</text>
+    <x>36</x>
+    <y>222</y>
+    <width>180</width>
+    <height>28</height>
+    <text>Temperatures</text>
     <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+      <font name="Default" family="Liberation Sans" style="BOLD" size="18.0" />
     </font>
-    <background_color>
-      <color red="247" green="249" blue="251" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_26</name>
-    <x>600</x>
-    <y>593</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:FAULT</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_27</name>
-    <x>20</x>
-    <y>622</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:HEARTBEAT</text>
+    <name>Label_26</name>
+    <x>36</x>
+    <y>268</y>
+    <width>151</width>
+    <height>20</height>
+    <text>Controlled</text>
     <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+      <font name="Default" family="Liberation Sans" style="BOLD" size="11.0" />
     </font>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_27</name>
+    <x>36</x>
+    <y>290</y>
+    <width>126</width>
+    <height>40</height>
+    <pv_name>BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV</pv_name>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="24.0" />
+    </font>
+    <format>1</format>
+    <precision>2</precision>
+    <show_units>false</show_units>
     <background_color>
-      <color red="235" green="240" blue="244" />
+      <color red="238" green="244" blue="248" />
     </background_color>
     <transparent>false</transparent>
   </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_28</name>
-    <x>600</x>
-    <y>622</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:HEARTBEAT</pv_name>
+  <widget type="label" version="2.0.0">
+    <name>Label_28</name>
+    <x>168</x>
+    <y>298</y>
+    <width>34</width>
+    <height>24</height>
+    <text>degC</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="13.0" />
+    </font>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_29</name>
-    <x>20</x>
-    <y>651</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:IOC_STATE</text>
+    <x>220</x>
+    <y>268</y>
+    <width>151</width>
+    <height>20</height>
+    <text>Bath</text>
     <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+      <font name="Default" family="Liberation Sans" style="BOLD" size="11.0" />
     </font>
-    <background_color>
-      <color red="247" green="249" blue="251" />
-    </background_color>
-    <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>Readback_30</name>
-    <x>600</x>
-    <y>651</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:IOC_STATE</pv_name>
+    <x>220</x>
+    <y>290</y>
+    <width>126</width>
+    <height>40</height>
+    <pv_name>BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV</pv_name>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="24.0" />
+    </font>
+    <format>1</format>
+    <precision>2</precision>
+    <show_units>false</show_units>
+    <background_color>
+      <color red="238" green="244" blue="248" />
+    </background_color>
+    <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_31</name>
-    <x>20</x>
-    <y>680</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:LAST_UPDATE</text>
+    <x>352</x>
+    <y>298</y>
+    <width>34</width>
+    <height>24</height>
+    <text>degC</text>
     <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+      <font name="Default" family="Liberation Sans" style="BOLD" size="13.0" />
     </font>
-    <background_color>
-      <color red="235" green="240" blue="244" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_32</name>
-    <x>600</x>
-    <y>680</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:LAST_UPDATE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_33</name>
-    <x>20</x>
-    <y>709</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:PRESSURE_RBV</text>
+    <name>Label_32</name>
+    <x>36</x>
+    <y>358</y>
+    <width>151</width>
+    <height>20</height>
+    <text>Applied setpoint</text>
     <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+      <font name="Default" family="Liberation Sans" style="BOLD" size="11.0" />
     </font>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_33</name>
+    <x>36</x>
+    <y>380</y>
+    <width>126</width>
+    <height>40</height>
+    <pv_name>BDX:CHILLER:CHILLER1:SETPOINT_RBV</pv_name>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="22.0" />
+    </font>
+    <format>1</format>
+    <precision>2</precision>
+    <show_units>false</show_units>
     <background_color>
-      <color red="247" green="249" blue="251" />
+      <color red="238" green="244" blue="248" />
     </background_color>
     <transparent>false</transparent>
   </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_34</name>
-    <x>600</x>
-    <y>709</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:PRESSURE_RBV</pv_name>
+  <widget type="label" version="2.0.0">
+    <name>Label_34</name>
+    <x>168</x>
+    <y>388</y>
+    <width>34</width>
+    <height>24</height>
+    <text>degC</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="13.0" />
+    </font>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_35</name>
-    <x>20</x>
-    <y>738</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:RUN_RBV</text>
+    <x>470</x>
+    <y>210</y>
+    <width>430</width>
+    <height>240</height>
+    <text />
     <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0" />
     </font>
     <background_color>
-      <color red="235" green="240" blue="244" />
+      <color red="245" green="248" blue="250" />
     </background_color>
     <transparent>false</transparent>
   </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_36</name>
-    <x>600</x>
-    <y>738</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:RUN_RBV</pv_name>
+  <widget type="label" version="2.0.0">
+    <name>Label_36</name>
+    <x>486</x>
+    <y>222</y>
+    <width>220</width>
+    <height>28</height>
+    <text>Setpoint request</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="18.0" />
+    </font>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_37</name>
-    <x>20</x>
-    <y>767</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:RUN_SET</text>
+    <x>486</x>
+    <y>268</y>
+    <width>150</width>
+    <height>22</height>
+    <text>Requested setpoint</text>
     <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+      <font name="Default" family="Liberation Sans" style="BOLD" size="11.0" />
     </font>
-    <background_color>
-      <color red="247" green="249" blue="251" />
-    </background_color>
-    <transparent>false</transparent>
   </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_38</name>
-    <x>600</x>
-    <y>767</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:RUN_SET</pv_name>
-  </widget>
-  <widget type="bool_button" version="2.0.0">
-    <name>Boolean_39</name>
-    <x>870</x>
-    <y>767</y>
-    <width>135</width>
-    <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:RUN_SET</pv_name>
-    <off_label>OFF</off_label>
-    <on_label>ON</on_label>
+  <widget type="textentry" version="2.0.0">
+    <name>Setpoint_38</name>
+    <x>486</x>
+    <y>294</y>
+    <width>126</width>
+    <height>30</height>
+    <pv_name>BDX:CHILLER:CHILLER1:SETPOINT_REQUEST</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_40</name>
-    <x>20</x>
-    <y>796</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:SETPOINT_RBV</text>
+    <name>Label_39</name>
+    <x>620</x>
+    <y>298</y>
+    <width>45</width>
+    <height>24</height>
+    <text>degC</text>
     <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+      <font name="Default" family="Liberation Sans" style="BOLD" size="12.0" />
     </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_40</name>
+    <x>680</x>
+    <y>292</y>
+    <width>90</width>
+    <height>32</height>
+    <pv_name>BDX:CHILLER:CHILLER1:APPLY_SETPOINT_CMD</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:CHILLER:CHILLER1:APPLY_SETPOINT_CMD</pv_name>
+        <value>1</value>
+        <description>Write 1 to BDX:CHILLER:CHILLER1:APPLY_SETPOINT_CMD</description>
+      </action>
+    </actions>
+    <text>APPLY</text>
+    <tooltip>$(actions)</tooltip>
     <background_color>
-      <color red="235" green="240" blue="244" />
+      <color red="190" green="215" blue="245" />
     </background_color>
-    <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>Readback_41</name>
-    <x>600</x>
-    <y>796</y>
+    <x>486</x>
+    <y>340</y>
+    <width>120</width>
+    <height>26</height>
+    <pv_name>BDX:CHILLER:CHILLER1:APPLY_STATUS</pv_name>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0" />
+    </font>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_42</name>
+    <x>616</x>
+    <y>340</y>
     <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:SETPOINT_RBV</pv_name>
+    <height>26</height>
+    <pv_name>BDX:CHILLER:CHILLER1:APPLY_MESSAGE</pv_name>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="10.0" />
+    </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_42</name>
-    <x>20</x>
-    <y>825</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:SETPOINT_SET</text>
+    <name>Label_43</name>
+    <x>486</x>
+    <y>384</y>
+    <width>260</width>
+    <height>24</height>
+    <text>Allowed setpoint: 5 to 40 degC</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_44</name>
+    <x>920</x>
+    <y>210</y>
+    <width>460</width>
+    <height>240</height>
+    <text />
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0" />
+    </font>
     <background_color>
-      <color red="247" green="249" blue="251" />
+      <color red="245" green="248" blue="250" />
     </background_color>
     <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_43</name>
-    <x>600</x>
-    <y>825</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:SETPOINT_SET</pv_name>
-  </widget>
-  <widget type="textentry" version="2.0.0">
-    <name>Setpoint_44</name>
-    <x>870</x>
-    <y>825</y>
-    <width>270</width>
-    <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:SETPOINT_SET</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_45</name>
-    <x>20</x>
-    <y>854</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:SIMULATION</text>
+    <x>936</x>
+    <y>222</y>
+    <width>160</width>
+    <height>28</height>
+    <text>Operation</text>
     <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+      <font name="Default" family="Liberation Sans" style="BOLD" size="18.0" />
     </font>
-    <background_color>
-      <color red="235" green="240" blue="244" />
-    </background_color>
-    <transparent>false</transparent>
   </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_46</name>
-    <x>600</x>
-    <y>854</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:SIMULATION</pv_name>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_46</name>
+    <x>936</x>
+    <y>268</y>
+    <width>100</width>
+    <height>34</height>
+    <pv_name>BDX:CHILLER:CHILLER1:RUN_SET</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:CHILLER:CHILLER1:RUN_SET</pv_name>
+        <value>1</value>
+        <description>Write 1 to BDX:CHILLER:CHILLER1:RUN_SET</description>
+      </action>
+    </actions>
+    <text>START</text>
+    <tooltip>$(actions)</tooltip>
+    <confirm_dialog>true</confirm_dialog>
+    <confirm_message>Start the chiller?</confirm_message>
+    <background_color>
+      <color red="170" green="225" blue="180" />
+    </background_color>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_47</name>
+    <x>1050</x>
+    <y>268</y>
+    <width>100</width>
+    <height>34</height>
+    <pv_name>BDX:CHILLER:CHILLER1:RUN_SET</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:CHILLER:CHILLER1:RUN_SET</pv_name>
+        <value>0</value>
+        <description>Write 0 to BDX:CHILLER:CHILLER1:RUN_SET</description>
+      </action>
+    </actions>
+    <text>STOP</text>
+    <tooltip>$(actions)</tooltip>
+    <confirm_dialog>true</confirm_dialog>
+    <confirm_message>Stop the chiller and place it in standby?</confirm_message>
+    <background_color>
+      <color red="255" green="190" blue="190" />
+    </background_color>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_47</name>
-    <x>20</x>
-    <y>883</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:TEMPERATURE_RBV</text>
+    <name>Label_48</name>
+    <x>936</x>
+    <y>322</y>
+    <width>90</width>
+    <height>22</height>
+    <text>Pump stage</text>
     <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+      <font name="Default" family="Liberation Sans" style="BOLD" size="11.0" />
     </font>
-    <background_color>
-      <color red="247" green="249" blue="251" />
-    </background_color>
-    <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_48</name>
-    <x>600</x>
-    <y>883</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:TEMPERATURE_RBV</pv_name>
+    <name>Readback_49</name>
+    <x>1030</x>
+    <y>318</y>
+    <width>110</width>
+    <height>26</height>
+    <pv_name>BDX:CHILLER:CHILLER1:PUMP_STAGE</pv_name>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0" />
+    </font>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_50</name>
+    <x>936</x>
+    <y>356</y>
+    <width>100</width>
+    <height>22</height>
+    <text>Cooling mode</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="11.0" />
+    </font>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_51</name>
+    <x>1042</x>
+    <y>352</y>
+    <width>110</width>
+    <height>26</height>
+    <pv_name>BDX:CHILLER:CHILLER1:COOLING_MODE</pv_name>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0" />
+    </font>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_52</name>
+    <x>936</x>
+    <y>390</y>
+    <width>80</width>
+    <height>22</height>
+    <text>Deviation</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="11.0" />
+    </font>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_53</name>
+    <x>1020</x>
+    <y>386</y>
+    <width>86</width>
+    <height>26</height>
+    <pv_name>BDX:CHILLER:CHILLER1:TEMPERATURE_DEVIATION_RBV</pv_name>
+    <format>1</format>
+    <precision>2</precision>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_54</name>
+    <x>1116</x>
+    <y>386</y>
+    <width>120</width>
+    <height>26</height>
+    <pv_name>BDX:CHILLER:CHILLER1:DEVIATION_STATUS</pv_name>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="12.0" />
+    </font>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_55</name>
+    <x>20</x>
+    <y>480</y>
+    <width>420</width>
+    <height>28</height>
+    <text>Chiller temperature</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
+    </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>OpenFile_56</name>
+    <x>1230</x>
+    <y>480</y>
+    <width>150</width>
+    <height>30</height>
+    <actions>
+      <action type="open_file">
+        <file>chiller_0_chiller_temperature.plt</file>
+        <description>Open Full history</description>
+      </action>
+    </actions>
+    <text>Full history</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="databrowser" version="2.0.0">
+    <name>DataBrowser_57</name>
+    <x>20</x>
+    <y>518</y>
+    <width>1360</width>
+    <height>310</height>
+    <file>chiller_0_chiller_temperature.plt</file>
+    <show_toolbar>true</show_toolbar>
   </widget>
 </display>

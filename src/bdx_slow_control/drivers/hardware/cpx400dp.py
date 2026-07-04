@@ -15,6 +15,14 @@ from ..base import PowerChannelState, PowerSupplyDriver
 DEFAULT_PORT = 9221
 DEFAULT_TIMEOUT = 3.0
 SUPPORTED_CHANNELS = {1, 2}
+MIN_VOLTAGE = 0.0
+MAX_VOLTAGE = 60.0
+MIN_CURRENT = 0.0
+MAX_CURRENT = 20.0
+MIN_OVP = 1.0
+MAX_OVP = 66.0
+MIN_OCP = 0.0
+MAX_OCP = 20.0
 
 _NUMBER_RE = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?")
 
@@ -25,6 +33,14 @@ def parse_numeric_reply(reply: str) -> float:
     if not matches:
         raise ValueError(f"Cannot parse numeric value from CPX400DP reply: {reply!r}")
     return float(matches[-1])
+
+
+def parse_output_state_reply(reply: str) -> bool:
+    """Parse an OP<N>? reply into an output-enabled boolean."""
+    value = parse_numeric_reply(reply)
+    if value in {0.0, 1.0}:
+        return bool(int(value))
+    raise ValueError(f"Cannot parse CPX400DP output state from reply: {reply!r}")
 
 
 class CPX400DPConnection:
@@ -173,7 +189,11 @@ class CPX400DPDriver(PowerSupplyDriver):
                 self._ensure_initialized()
                 voltage = self._query_numeric(f"V{channel}O?")
                 current = self._query_numeric(f"I{channel}O?")
+                voltage_setpoint = self._query_numeric(f"V{channel}?")
                 current_limit = self._query_numeric(f"I{channel}?")
+                output_enabled = self._query_output_enabled(channel)
+                ovp = self._query_numeric(f"OVP{channel}?")
+                ocp = self._query_numeric(f"OCP{channel}?")
             except Exception as exc:
                 self._initialized = False
                 self.last_error = exc
@@ -181,29 +201,36 @@ class CPX400DPDriver(PowerSupplyDriver):
                 raise
 
             cached = self._cache[channel]
+            cached.voltage_setpoint = voltage_setpoint
             cached.current_limit = current_limit
+            cached.output_enabled = output_enabled
+            cached.ovp = ovp
+            cached.ocp = ocp
             self.last_error = None
             return PowerChannelState(
                 voltage=voltage,
                 current=current,
                 current_limit=current_limit,
-                output_enabled=cached.output_enabled,
-                ovp=cached.ovp,
-                ocp=cached.ocp,
+                output_enabled=output_enabled,
+                voltage_setpoint=voltage_setpoint,
+                ovp=ovp,
+                ocp=ocp,
             )
 
     def set_voltage(self, channel: int, value: float) -> None:
         channel = self._require_channel(channel)
-        if value < 0:
-            raise ValueError("Voltage must be non-negative")
+        if value < MIN_VOLTAGE or value > MAX_VOLTAGE:
+            raise ValueError(f"Voltage must be between {MIN_VOLTAGE:g} and {MAX_VOLTAGE:g} V")
         with self._lock:
             self._command(f"V{channel} {float(value):.6g}")
             self._cache[channel].voltage_setpoint = float(value)
 
     def set_current_limit(self, channel: int, value: float) -> None:
         channel = self._require_channel(channel)
-        if value < 0:
-            raise ValueError("Current limit must be non-negative")
+        if value < MIN_CURRENT or value > MAX_CURRENT:
+            raise ValueError(
+                f"Current limit must be between {MIN_CURRENT:g} and {MAX_CURRENT:g} A"
+            )
         with self._lock:
             self._command(f"I{channel} {float(value):.6g}")
             self._cache[channel].current_limit = float(value)
@@ -216,15 +243,19 @@ class CPX400DPDriver(PowerSupplyDriver):
 
     def set_ovp(self, channel: int, value: float) -> None:
         channel = self._require_channel(channel)
-        if value <= 0:
-            raise ValueError("OVP must be positive")
-        self._cache[channel].ovp = float(value)
+        if value < MIN_OVP or value > MAX_OVP:
+            raise ValueError(f"OVP must be between {MIN_OVP:g} and {MAX_OVP:g} V")
+        with self._lock:
+            self._command(f"OVP{channel} {float(value):.6g}")
+            self._cache[channel].ovp = float(value)
 
     def set_ocp(self, channel: int, value: float) -> None:
         channel = self._require_channel(channel)
-        if value <= 0:
-            raise ValueError("OCP must be positive")
-        self._cache[channel].ocp = float(value)
+        if value < MIN_OCP or value > MAX_OCP:
+            raise ValueError(f"OCP must be between {MIN_OCP:g} and {MAX_OCP:g} A")
+        with self._lock:
+            self._command(f"OCP{channel} {float(value):.6g}")
+            self._cache[channel].ocp = float(value)
 
     def all_off(self) -> None:
         with self._lock:
@@ -233,7 +264,22 @@ class CPX400DPDriver(PowerSupplyDriver):
                 state.output_enabled = False
 
     def all_outputs_off(self) -> bool:
-        return all(not state.output_enabled for state in self._cache.values())
+        with self._lock:
+            try:
+                self._ensure_initialized()
+                states = {
+                    channel: self._query_output_enabled(channel)
+                    for channel in self.channels
+                }
+            except Exception as exc:
+                self._initialized = False
+                self.last_error = exc
+                self.connection.close()
+                raise
+        for channel, enabled in states.items():
+            self._cache[channel].output_enabled = enabled
+        self.last_error = None
+        return all(not enabled for enabled in states.values())
 
     def _require_channel(self, channel: int) -> int:
         channel = int(channel)
@@ -258,6 +304,9 @@ class CPX400DPDriver(PowerSupplyDriver):
 
     def _query_numeric(self, command: str) -> float:
         return parse_numeric_reply(self.connection.query(command))
+
+    def _query_output_enabled(self, channel: int) -> bool:
+        return parse_output_state_reply(self.connection.query(f"OP{channel}?"))
 
 
 def build_cpx400dp_driver(config: dict[str, Any]) -> CPX400DPDriver:

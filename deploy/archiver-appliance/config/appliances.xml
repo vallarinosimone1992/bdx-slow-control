@@ -1,0 +1,11 @@
+<appliances>
+  <appliance>
+    <identity>@BDX_ARCHIVER_APPLIANCE_ID@</identity>
+    <cluster_inetport>@BDX_ARCHIVER_CLUSTER_HOST@:@BDX_ARCHIVER_CLUSTER_PORT@</cluster_inetport>
+    <mgmt_url>@BDX_ARCHIVER_MGMT_URL@</mgmt_url>
+    <engine_url>@BDX_ARCHIVER_ENGINE_URL@</engine_url>
+    <etl_url>@BDX_ARCHIVER_ETL_URL@</etl_url>
+    <retrieval_url>@BDX_ARCHIVER_RETRIEVAL_BPL_URL@</retrieval_url>
+    <data_retrieval_url>@BDX_ARCHIVER_DATA_RETRIEVAL_URL@</data_retrieval_url>
+  </appliance>
+</appliances>

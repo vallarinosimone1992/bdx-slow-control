@@ -78,6 +78,10 @@ def build_chiller_driver(config: dict[str, Any]):
         initial_setpoint_c=float(config.get("initial_setpoint_c", 20.0)),
         initial_temperature_c=float(config.get("initial_temperature_c", 21.0)),
         initial_pressure_bar=float(config.get("initial_pressure_bar", 0.5)),
+        pressure_enabled=bool(config.get("pressure_enabled", False)),
+        external_temperature_enabled=bool(config.get("external_temperature_enabled", False)),
+        minimum_setpoint_c=float(config.get("minimum_setpoint_c", 5.0)),
+        maximum_setpoint_c=float(config.get("maximum_setpoint_c", 40.0)),
     )
 
 

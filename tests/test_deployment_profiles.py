@@ -70,6 +70,9 @@ def test_main_server_psu_profile_uses_two_cpx400dp_lv_supplies():
         "172.22.50.21",
     ]
     assert all(device["channels"] == [1, 2] for device in devices)
+    assert all(device["software_limits"]["maximum_voltage"] == 60.0 for device in devices)
+    assert all(device["software_limits"]["maximum_current_limit"] == 20.0 for device in devices)
+    assert all(device["software_limits"]["maximum_power"] == 420.0 for device in devices)
 
 
 def test_main_server_chiller_profile_uses_ecosilver_hardware():
@@ -84,6 +87,14 @@ def test_main_server_chiller_profile_uses_ecosilver_hardware():
     assert device["port"] == 54321
     assert device["bath_temperature_command"] == "IN_PV_00"
     assert device["controlled_temperature_command"] == "IN_PV_01"
+    assert device["pressure_enabled"] is False
+    assert device["external_temperature_enabled"] is False
+    assert device["safe_setpoint_read_command"] == "IN_SP_07"
+    assert device["safe_setpoint_write_prefix"] == "OUT_SP_07"
+    assert device["communication_timeout_read_command"] == "IN_SP_08"
+    assert device["communication_timeout_write_prefix"] == "OUT_SP_08"
+    assert "safe_mode_command" not in device
+    assert "safe_mode_on_stop" not in device
 
 
 def test_main_server_hv_profile_uses_genh600():

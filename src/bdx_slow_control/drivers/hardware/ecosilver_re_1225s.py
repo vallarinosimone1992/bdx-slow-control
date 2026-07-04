@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import math
 import socket
 import threading
 from typing import Any
@@ -97,15 +98,19 @@ class ECOSilverRE1225SDriver(ChillerDriver):
     external_temperature_command: str = "IN_PV_03"
     pump_stage_command: str = "IN_SP_01"
     cooling_mode_command: str = "IN_SP_02"
-    safe_mode_command: str = "IN_MODE_06"
+    safe_setpoint_read_command: str = "IN_SP_07"
+    safe_setpoint_write_prefix: str = "OUT_SP_07"
+    communication_timeout_read_command: str = "IN_SP_08"
+    communication_timeout_write_prefix: str = "OUT_SP_08"
     setpoint_read_command: str = "IN_SP_00"
     setpoint_write_prefix: str = "OUT_SP_00"
     standby_command: str = "IN_MODE_02"
     device_status_command: str = "STATUS"
     fault_command: str = "STAT"
+    pressure_enabled: bool = False
+    external_temperature_enabled: bool = False
     pressure_required: bool = False
     external_temperature_required: bool = False
-    safe_mode_on_stop: bool = False
     minimum_setpoint_c: float | None = None
     maximum_setpoint_c: float | None = None
     last_error: Exception | None = field(init=False, default=None)
@@ -137,13 +142,24 @@ class ECOSilverRE1225SDriver(ChillerDriver):
                 setpoint_c = self._read_float(self.setpoint_read_command)
                 bath_temperature_c = self._read_float(self.bath_temperature_command)
                 controlled_temperature_c = self._read_float(self.controlled_temperature_command)
-                external_temperature_c = self._read_external_temperature()
-                pressure_bar = self._read_pressure()
+                external_temperature_c, external_temperature_valid = (
+                    self._read_external_temperature()
+                )
+                pressure_bar, pressure_valid = self._read_pressure()
                 standby_status = self.connection.query(self.standby_command)
                 running = standby_reply_to_running(standby_status, fallback=self._last_running)
                 pump_stage = self._query_optional(self.pump_stage_command)
                 cooling_mode = self._query_optional(self.cooling_mode_command)
-                safe_mode_status = self._query_optional(self.safe_mode_command)
+                safe_setpoint_c = self._read_optional_float(self.safe_setpoint_read_command)
+                communication_timeout_s = self._read_optional_float(
+                    self.communication_timeout_read_command
+                )
+                safe_mode_status = (
+                    "AVAILABLE"
+                    if math.isfinite(safe_setpoint_c)
+                    and math.isfinite(communication_timeout_s)
+                    else "UNAVAILABLE"
+                )
                 device_status = self._query_optional(self.device_status_command)
                 fault_diagnosis = self._query_optional(self.fault_command)
                 fault = fault_reply_to_bool(fault_diagnosis)
@@ -170,6 +186,12 @@ class ECOSilverRE1225SDriver(ChillerDriver):
                 standby_status=standby_status,
                 device_status=device_status,
                 fault_diagnosis=fault_diagnosis,
+                pressure_enabled=self.pressure_enabled,
+                pressure_valid=pressure_valid,
+                external_temperature_enabled=self.external_temperature_enabled,
+                external_temperature_valid=external_temperature_valid,
+                safe_setpoint_c=safe_setpoint_c,
+                communication_timeout_s=communication_timeout_s,
             )
 
     def set_setpoint(self, value_c: float) -> None:
@@ -196,8 +218,6 @@ class ECOSilverRE1225SDriver(ChillerDriver):
                 if running:
                     self.connection.command("START")
                 else:
-                    if self.safe_mode_on_stop:
-                        self.connection.command("OUT_MODE_06_1")
                     self.connection.command("STOP")
             except Exception as exc:
                 self.last_error = exc
@@ -205,24 +225,56 @@ class ECOSilverRE1225SDriver(ChillerDriver):
             self._last_running = bool(running)
             self.last_error = None
 
+    def set_safe_setpoint(self, value_c: float) -> None:
+        value_c = float(value_c)
+        with self._lock:
+            try:
+                self.connection.command(
+                    f"{self.safe_setpoint_write_prefix}_{value_c:.2f}",
+                    require_ok=True,
+                )
+            except Exception as exc:
+                self.last_error = exc
+                raise
+            self.last_error = None
+
+    def set_communication_timeout(self, value_s: float) -> None:
+        value_s = float(value_s)
+        if value_s < 0:
+            raise ValueError("Communication timeout must be non-negative")
+        with self._lock:
+            try:
+                self.connection.command(
+                    f"{self.communication_timeout_write_prefix}_{value_s:.2f}",
+                    require_ok=True,
+                )
+            except Exception as exc:
+                self.last_error = exc
+                raise
+            self.last_error = None
+
     def _read_float(self, command: str) -> float:
         return parse_float_reply(self.connection.query(command))
 
-    def _read_pressure(self) -> float:
+    def _read_pressure(self) -> tuple[float, bool]:
+        if not self.pressure_enabled:
+            return math.nan, False
         try:
-            return self._read_float(self.pressure_command)
+            return self._read_float(self.pressure_command), True
         except Exception:
             if self.pressure_required:
                 raise
-            return self._last_pressure_bar
+            return math.nan, False
 
-    def _read_external_temperature(self) -> float:
+    def _read_external_temperature(self) -> tuple[float, bool]:
+        if not self.external_temperature_enabled:
+            return math.nan, False
         try:
-            return self._read_float(self.external_temperature_command)
+            return self._read_float(self.external_temperature_command), True
         except Exception:
             if self.external_temperature_required:
                 raise
-            return self._last_external_temperature_c
+            return math.nan, False
 
     def _query_optional(self, command: str) -> str:
         if not command.strip():
@@ -232,6 +284,14 @@ class ECOSilverRE1225SDriver(ChillerDriver):
         except Exception:
             return ""
 
+    def _read_optional_float(self, command: str) -> float:
+        if not command.strip():
+            return math.nan
+        try:
+            return self._read_float(command)
+        except Exception:
+            return math.nan
+
 
 def build_ecosilver_re_1225s_driver(config: dict[str, Any]) -> ECOSilverRE1225SDriver:
     """Build a LAUDA ECO Silver RE 1225 S driver from one chiller JSON object."""
@@ -239,8 +299,8 @@ def build_ecosilver_re_1225s_driver(config: dict[str, Any]) -> ECOSilverRE1225SD
     if not host:
         raise ConfigurationError("LAUDA chiller hardware configuration requires host")
 
-    minimum = config.get("minimum_setpoint_c")
-    maximum = config.get("maximum_setpoint_c")
+    minimum = config.get("minimum_setpoint_c", 5.0)
+    maximum = config.get("maximum_setpoint_c", 40.0)
     return ECOSilverRE1225SDriver(
         connection=LAUDAConnection(
             host=host,
@@ -255,15 +315,23 @@ def build_ecosilver_re_1225s_driver(config: dict[str, Any]) -> ECOSilverRE1225SD
         external_temperature_command=str(config.get("external_temperature_command", "IN_PV_03")),
         pump_stage_command=str(config.get("pump_stage_command", "IN_SP_01")),
         cooling_mode_command=str(config.get("cooling_mode_command", "IN_SP_02")),
-        safe_mode_command=str(config.get("safe_mode_command", "IN_MODE_06")),
+        safe_setpoint_read_command=str(config.get("safe_setpoint_read_command", "IN_SP_07")),
+        safe_setpoint_write_prefix=str(config.get("safe_setpoint_write_prefix", "OUT_SP_07")),
+        communication_timeout_read_command=str(
+            config.get("communication_timeout_read_command", "IN_SP_08")
+        ),
+        communication_timeout_write_prefix=str(
+            config.get("communication_timeout_write_prefix", "OUT_SP_08")
+        ),
         setpoint_read_command=str(config.get("setpoint_read_command", "IN_SP_00")),
         setpoint_write_prefix=str(config.get("setpoint_write_prefix", "OUT_SP_00")),
         standby_command=str(config.get("standby_command", "IN_MODE_02")),
         device_status_command=str(config.get("device_status_command", "STATUS")),
         fault_command=str(config.get("fault_command", "STAT")),
+        pressure_enabled=bool(config.get("pressure_enabled", False)),
+        external_temperature_enabled=bool(config.get("external_temperature_enabled", False)),
         pressure_required=bool(config.get("pressure_required", False)),
         external_temperature_required=bool(config.get("external_temperature_required", False)),
-        safe_mode_on_stop=bool(config.get("safe_mode_on_stop", False)),
         minimum_setpoint_c=None if minimum is None else float(minimum),
         maximum_setpoint_c=None if maximum is None else float(maximum),
     )

@@ -1,0 +1,18 @@
+# BDX EPICS Archiver Appliance persistence template.
+#
+# Do not store database credentials in Git. Copy this file to a private
+# location such as /etc/bdx-archiver/persistence.env or configure the Tomcat
+# jdbc/archappl resource directly in the local Tomcat context.
+#
+# The official install guide documents a Tomcat JDBC resource named
+# jdbc/archappl for persistent metadata. A quick evaluation deployment may use
+# org.epics.archiverappliance.config.persistence.InMemoryPersistence, but that
+# does not persist PV registration across restarts.
+
+BDX_ARCHIVER_PERSISTENCE_MODE=external-database
+BDX_ARCHIVER_PERSISTENCE_BACKUP_DIR=/var/lib/bdx-archiver/persistence-backups
+
+# Example placeholders only:
+# BDX_ARCHIVER_JDBC_RESOURCE=jdbc/archappl
+# BDX_ARCHIVER_DATABASE_HOST=localhost
+# BDX_ARCHIVER_DATABASE_NAME=archappl

@@ -23,7 +23,7 @@
     <actions>
       <action type="open_display">
         <file>overview.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open Overview</description>
       </action>
     </actions>
@@ -39,7 +39,7 @@
     <actions>
       <action type="open_display">
         <file>psu.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open PSU</description>
       </action>
     </actions>
@@ -55,7 +55,7 @@
     <actions>
       <action type="open_display">
         <file>chiller.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open Chiller</description>
       </action>
     </actions>
@@ -71,7 +71,7 @@
     <actions>
       <action type="open_display">
         <file>environment.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open Environment</description>
       </action>
     </actions>
@@ -87,7 +87,7 @@
     <actions>
       <action type="open_display">
         <file>hv.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open HV</description>
       </action>
     </actions>
@@ -103,7 +103,7 @@
     <actions>
       <action type="open_display">
         <file>daq.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open DAQ</description>
       </action>
     </actions>
@@ -119,7 +119,7 @@
     <actions>
       <action type="open_display">
         <file>global.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open Global</description>
       </action>
     </actions>
@@ -135,7 +135,7 @@
     <actions>
       <action type="open_display">
         <file>trends.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open Trends</description>
       </action>
     </actions>
@@ -151,7 +151,7 @@
     <actions>
       <action type="open_display">
         <file>all_pvs.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open All PVs</description>
       </action>
     </actions>
@@ -222,7 +222,7 @@
     <actions>
       <action type="open_display">
         <file>environment_expert.bob</file>
-        <target>replace</target>
+        <target>tab</target>
         <description>Open Expert PVs</description>
       </action>
     </actions>
@@ -592,10 +592,36 @@
       <font name="Default" family="Liberation Sans" style="BOLD" size="11.0" />
     </font>
   </widget>
-  <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_42</name>
+  <widget type="label" version="2.0.0">
+    <name>Label_42</name>
     <x>20</x>
     <y>312</y>
+    <width>420</width>
+    <height>28</height>
+    <text>Environment temperatures</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
+    </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>OpenFile_43</name>
+    <x>540</x>
+    <y>312</y>
+    <width>150</width>
+    <height>30</height>
+    <actions>
+      <action type="open_file">
+        <file>environment_0_environment_temperatures.plt</file>
+        <description>Open Full history</description>
+      </action>
+    </actions>
+    <text>Full history</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="databrowser" version="2.0.0">
+    <name>DataBrowser_44</name>
+    <x>20</x>
+    <y>350</y>
     <width>670</width>
     <height>310</height>
     <file>environment_0_environment_temperatures.plt</file>

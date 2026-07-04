@@ -23,7 +23,7 @@ from .iocs.chiller import ChillerIOC
 from .iocs.daq import DaqCrateIOC
 from .iocs.environment import EnvironmentalSensorIOC, EnvironmentSummaryIOC
 from .iocs.global_system import GlobalIOC
-from .iocs.power import PowerChannelIOC, PowerDeviceIOC
+from .iocs.power import LowVoltagePowerChannelIOC, PowerChannelIOC, PowerChannelLimits, PowerDeviceIOC
 from .runtime import RuntimeSettings
 from .util import merge_pvdb
 
@@ -56,11 +56,13 @@ def build_psu(config: dict[str, Any], context: PrototypeContext | None = None):
             )
         )
         for channel in device.get("channels", []):
+            channel_number = int(channel)
             groups.append(
-                PowerChannelIOC(
-                    prefix=f"{prefix}CH{int(channel)}:",
+                LowVoltagePowerChannelIOC(
+                    prefix=f"{prefix}CH{channel_number}:",
                     driver=driver,
-                    channel=int(channel),
+                    channel=channel_number,
+                    limits=_power_channel_limits(device, channel_number),
                     runtime_settings=context.runtime,
                 )
             )
@@ -80,6 +82,26 @@ def _power_devices(config: dict[str, Any], *, subsystem: str) -> list[dict[str, 
             raise ConfigurationError(f"Each {subsystem} device entry must be an object")
         return devices
     return [require_mapping(config, "device")]
+
+
+def _power_channel_limits(device: dict[str, Any], channel: int) -> PowerChannelLimits:
+    raw_limits: dict[str, Any] = {}
+    device_limits = device.get("software_limits", {})
+    if isinstance(device_limits, dict):
+        raw_limits.update(device_limits)
+    channel_limits = device.get("channel_limits", {})
+    if isinstance(channel_limits, dict):
+        specific = channel_limits.get(str(channel), channel_limits.get(channel, {}))
+        if isinstance(specific, dict):
+            raw_limits.update(specific)
+
+    return PowerChannelLimits(
+        minimum_voltage=float(raw_limits.get("minimum_voltage", 0.0)),
+        maximum_voltage=float(raw_limits.get("maximum_voltage", 60.0)),
+        minimum_current_limit=float(raw_limits.get("minimum_current_limit", 0.0)),
+        maximum_current_limit=float(raw_limits.get("maximum_current_limit", 20.0)),
+        maximum_power=float(raw_limits.get("maximum_power", 420.0)),
+    )
 
 
 def build_hv(config: dict[str, Any], context: PrototypeContext | None = None):
@@ -117,6 +139,10 @@ def build_chiller(config: dict[str, Any], context: PrototypeContext | None = Non
         prefix=normalized_prefix(device.get("prefix")),
         driver=build_chiller_driver(device),
         runtime_settings=context.runtime,
+        minimum_setpoint_c=float(device.get("minimum_setpoint_c", 5.0)),
+        maximum_setpoint_c=float(device.get("maximum_setpoint_c", 40.0)),
+        warning_deviation_c=float(device.get("warning_deviation_c", 0.2)),
+        alarm_deviation_c=float(device.get("alarm_deviation_c", 0.5)),
     )
     return group.pvdb, settings
 

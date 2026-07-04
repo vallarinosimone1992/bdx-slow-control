@@ -110,11 +110,21 @@ class SimulatedChillerDriver(ChillerDriver):
         initial_setpoint_c: float,
         initial_temperature_c: float,
         initial_pressure_bar: float,
+        pressure_enabled: bool = False,
+        external_temperature_enabled: bool = False,
+        minimum_setpoint_c: float = 5.0,
+        maximum_setpoint_c: float = 40.0,
     ) -> None:
         self._connected = True
         self._setpoint = float(initial_setpoint_c)
         self._temperature = float(initial_temperature_c)
         self._pressure = float(initial_pressure_bar)
+        self._pressure_enabled = bool(pressure_enabled)
+        self._external_temperature_enabled = bool(external_temperature_enabled)
+        self._minimum_setpoint_c = float(minimum_setpoint_c)
+        self._maximum_setpoint_c = float(maximum_setpoint_c)
+        self._safe_setpoint = float(initial_setpoint_c)
+        self._communication_timeout = 10.0
         self._running = False
         self._fault = False
 
@@ -127,27 +137,43 @@ class SimulatedChillerDriver(ChillerDriver):
         return ChillerState(
             temperature_c=self._temperature,
             setpoint_c=self._setpoint,
-            pressure_bar=self._pressure if self._running else 0.0,
+            pressure_bar=self._pressure if self._running and self._pressure_enabled else math.nan,
             running=self._running,
             fault=self._fault,
             bath_temperature_c=self._temperature,
             controlled_temperature_c=self._temperature,
-            external_temperature_c=0.0,
+            external_temperature_c=self._temperature if self._external_temperature_enabled else math.nan,
             pump_stage="SIM",
             cooling_mode="SIM",
-            safe_mode_status="0",
+            safe_mode_status="SIMULATION",
             standby_status="0" if self._running else "1",
             device_status="SIMULATION",
             fault_diagnosis="",
+            pressure_enabled=self._pressure_enabled,
+            pressure_valid=self._pressure_enabled and self._running,
+            external_temperature_enabled=self._external_temperature_enabled,
+            external_temperature_valid=self._external_temperature_enabled,
+            safe_setpoint_c=self._safe_setpoint,
+            communication_timeout_s=self._communication_timeout,
         )
 
     def set_setpoint(self, value_c: float) -> None:
-        if not 0.0 <= value_c <= 40.0:
-            raise ValueError("Chiller setpoint is outside the simulated range")
+        if not self._minimum_setpoint_c <= value_c <= self._maximum_setpoint_c:
+            raise ValueError(
+                "Chiller setpoint is outside the configured simulated range"
+            )
         self._setpoint = float(value_c)
 
     def set_running(self, running: bool) -> None:
         self._running = bool(running)
+
+    def set_safe_setpoint(self, value_c: float) -> None:
+        self._safe_setpoint = float(value_c)
+
+    def set_communication_timeout(self, value_s: float) -> None:
+        if value_s < 0:
+            raise ValueError("Communication timeout must be non-negative")
+        self._communication_timeout = float(value_s)
 
 
 class SimulatedSensorDriver(SensorDriver):

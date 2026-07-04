@@ -1,0 +1,17 @@
+[Unit]
+Description=BDX EPICS Archiver Appliance user service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=%h/.config/bdx-archiver/archappl.env
+ExecStart=/bin/bash -lc 'exec "${BDX_ARCHIVER_SCRIPT_DIR:-%h/.local/share/bdx-archiver/app/scripts}/start.sh" --env "${BDX_ARCHIVER_ENV_FILE:-%h/.config/bdx-archiver/archappl.env}" --foreground --user-local'
+ExecStop=/bin/bash -lc 'exec "${BDX_ARCHIVER_SCRIPT_DIR:-%h/.local/share/bdx-archiver/app/scripts}/stop.sh" --env "${BDX_ARCHIVER_ENV_FILE:-%h/.config/bdx-archiver/archappl.env}" --user-local'
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=90
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=default.target

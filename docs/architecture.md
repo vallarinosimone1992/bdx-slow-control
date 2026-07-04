@@ -94,11 +94,17 @@ BDX:DAQ:CRATE01:READY
 BDX:GLOBAL:INTERLOCK_ACTIVE
 ```
 
-Command PVs use `_CMD`. Requested setpoints use `_SET`. Device readbacks use `_RBV`.
+Command PVs use `_CMD`. Direct compatibility setpoint writes use `_SET`.
+Operator-staged values use `_REQUEST` and are applied through an explicit
+command PV. Device readbacks use `_RBV`.
 
 ## Setpoint/readback rule
 
 A successful write to a setpoint PV means that the command was accepted by the IOC. The corresponding readback is updated only after the driver reports the device state.
+
+Operator displays should prefer staged request/apply PVs when changing hardware
+settings. Direct write PVs may remain available in expert displays for
+compatibility, but they must not be displayed as hardware readbacks.
 
 ## Error model
 
@@ -108,12 +114,17 @@ Every managed IOC exposes:
 HEARTBEAT
 IOC_STATE
 COMM_STATUS
+COMM_OK
 LAST_UPDATE
 ERROR_CODE
 ERROR_MESSAGE
 SIMULATION
 CLEAR_ERROR_CMD
 ```
+
+`COMM_OK` is a read-only boolean suitable for Phoebus LEDs. It is false before
+the first successful communication, true after successful polling, and false
+after communication or device failures.
 
 The baseline communication states are:
 
@@ -161,3 +172,7 @@ The prototype build context registers the PSU and HV `all_off` callbacks before 
 ## Phoebus display generation
 
 `bdx_slow_control.phoebus_generator` reads the actual configured caproto PV database and generates the complete Display Builder set. This keeps controls synchronized with future additions to the PV contract.
+
+Generated subsystem navigation opens displays in a new Phoebus tab. PSU and
+chiller operator pages are intentionally not complete PV tables; their expert
+pages contain the full subsystem PV tables and direct compatibility controls.

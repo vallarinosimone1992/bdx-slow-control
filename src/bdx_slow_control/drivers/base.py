@@ -12,6 +12,7 @@ class PowerChannelState:
     current: float
     current_limit: float
     output_enabled: bool
+    voltage_setpoint: float = 0.0
     ovp: float = 0.0
     ocp: float = 0.0
 
@@ -32,6 +33,12 @@ class ChillerState:
     standby_status: str = ""
     device_status: str = ""
     fault_diagnosis: str = ""
+    pressure_enabled: bool = True
+    pressure_valid: bool = True
+    external_temperature_enabled: bool = True
+    external_temperature_valid: bool = True
+    safe_setpoint_c: float = 0.0
+    communication_timeout_s: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -64,6 +71,16 @@ class PowerSupplyDriver(BaseDriver, ABC):
     @abstractmethod
     def set_current_limit(self, channel: int, value: float) -> None:
         pass
+
+    def set_voltage_and_current_limit(
+        self,
+        channel: int,
+        voltage: float,
+        current_limit: float,
+    ) -> None:
+        """Apply a voltage/current request after caller-side validation."""
+        self.set_current_limit(channel, current_limit)
+        self.set_voltage(channel, voltage)
 
     @abstractmethod
     def set_output(self, channel: int, enabled: bool) -> None:
@@ -98,6 +115,12 @@ class ChillerDriver(BaseDriver, ABC):
     @abstractmethod
     def set_running(self, running: bool) -> None:
         pass
+
+    def set_safe_setpoint(self, value_c: float) -> None:
+        raise NotImplementedError("Safe Mode setpoint control is not implemented")
+
+    def set_communication_timeout(self, value_s: float) -> None:
+        raise NotImplementedError("Safe Mode communication timeout control is not implemented")
 
 
 class SensorDriver(BaseDriver, ABC):

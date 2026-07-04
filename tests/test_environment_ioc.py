@@ -45,6 +45,7 @@ def test_environment_ioc_preserves_last_value_and_recovers_status(caplog):
         assert group.VALUE.value == pytest.approx(21.5)
         assert group.STATUS.value == "VALID"
         assert group.STATUS_OK.value == 1
+        assert group.COMM_OK.value == "On"
         assert summary.LAST_TEMPERATURE_UPDATE.value
 
         with pytest.raises(OSError) as exc_info:
@@ -55,6 +56,7 @@ def test_environment_ioc_preserves_last_value_and_recovers_status(caplog):
         assert group.STATUS.value == "DISCONNECTED"
         assert group.STATUS_OK.value == 0
         assert group.COMM_STATUS.value == "DEVICE_ERROR"
+        assert group.COMM_OK.value == "Off"
         assert group.ERROR_MESSAGE.value == "temporary I2C failure"
 
         await group.poll_device()
@@ -64,6 +66,7 @@ def test_environment_ioc_preserves_last_value_and_recovers_status(caplog):
         assert group.STATUS.value == "VALID"
         assert group.STATUS_OK.value == 1
         assert group.COMM_STATUS.value == "OK"
+        assert group.COMM_OK.value == "On"
         assert group.ERROR_MESSAGE.value == ""
 
     caplog.set_level(logging.INFO)

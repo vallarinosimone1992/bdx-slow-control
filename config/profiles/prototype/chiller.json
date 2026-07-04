@@ -12,6 +12,13 @@
     "mode": "simulation",
     "initial_setpoint_c": 20.0,
     "initial_temperature_c": 21.0,
-    "initial_pressure_bar": 0.5
+    "initial_pressure_bar": 0.5,
+    "pressure_enabled": true,
+    "external_temperature_enabled": false,
+    "minimum_setpoint_c": 5.0,
+    "maximum_setpoint_c": 40.0,
+    "nominal_setpoint_c": 20.0,
+    "warning_deviation_c": 0.2,
+    "alarm_deviation_c": 0.5
   }
 }
