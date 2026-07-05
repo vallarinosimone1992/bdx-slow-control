@@ -70,8 +70,8 @@ lts          long-term store
 persistence  local persistence metadata if used
 ```
 
-Final BDX retention is not yet defined. The default policy values are prototype
-testing defaults and must be reviewed before production.
+BDX archiving is continuous, 24 hours per day. It is not gated by run state:
+archive sampling continues before, during, and after data-taking runs.
 
 ## Prerequisites
 
@@ -111,6 +111,81 @@ EPICS_CA_REPEATER_PORT=5065
 
 The example includes a future main IOC server and the Raspberry environment IOC.
 Do not hard-code prototype addresses in scripts or PV lists.
+
+## Archive Policies
+
+BDX uses deterministic policy assignment. The registration script passes an
+explicit policy for every PV, and `config/policies.py` contains the same
+PV-name classification for deployments that use server-side policy selection.
+
+Policy names:
+
+```text
+BDX_Physical_5s       MONITOR, nominal 5 s
+BDX_State_Change      MONITOR, nominal 1 s
+BDX_Diagnostic_Change MONITOR, nominal 5 s
+```
+
+`BDX_Physical_5s` is used for physical readbacks and applied setpoint readbacks,
+including temperature, voltage, current, current limit, OVP, OCP, and chiller
+setpoint values.
+
+`BDX_State_Change` is used for boolean and state-transition PVs, including
+communication OK/status, output state, run state, faults, warnings, alarms,
+sensor status, and IOC state.
+
+`BDX_Diagnostic_Change` is used for string and integer diagnostics, including
+error code, error message, last-update timestamps, pump stage, cooling mode,
+device status, and fault diagnosis.
+
+Heartbeat counters are not archived. Command PVs, staged request PVs, apply
+commands, clear-error commands, direct writable output/run controls, and
+temporary GUI state are not archived.
+
+## Retention
+
+Short-term storage keeps the existing hourly partition configuration.
+
+Medium-term storage uses daily partitions and keeps 60 days by default:
+
+```bash
+BDX_ARCHIVER_MEDIUM_TERM_HOLD_DAYS=60
+```
+
+The generated policy uses this value in the MTS storage plugin URL.
+
+Long-term storage uses yearly partitions and has no automatic deletion or hold
+limit. No expired LTS data is routed to a black-hole store. LTS growth must be
+monitored operationally through filesystem and appliance health checks.
+
+The previous `BDX_ARCHIVER_LONG_TERM_HOLD_YEARS` setting is intentionally not
+part of the repository configuration because it would imply an LTS deletion
+policy that BDX has not approved.
+
+## Archived PV Lists
+
+`pv-lists/environment.txt` archives Raspberry MCP9808 physical temperature
+values, sensor status/connectivity PVs, IOC state per sensor, error transitions,
+and the last successful temperature-update timestamp. The current environment
+IOC does not expose aggregate OK/failed sensor-count PVs; add them to this list
+when the IOC contract provides them.
+
+`pv-lists/psu.txt` archives LV1/LV2 physical readbacks, applied setpoint
+readbacks, output state, OVP/OCP readbacks, communication state, IOC state,
+all-outputs-off state, and error diagnostics.
+
+`pv-lists/chiller.txt` archives controlled temperature, bath temperature,
+applied setpoint, run/fault state, pump stage, cooling mode, deviation
+diagnostics, communication state, IOC state, and error diagnostics. Pressure and
+external-temperature PVs remain excluded while they are disabled in the
+main-server profile.
+
+`pv-lists/prototype.txt` is the duplicate-free union of the enabled subsystem
+lists. Validate the PV lists with:
+
+```bash
+python -m pytest -q tests/test_archiver_deployment.py
+```
 
 ## Local Evaluation
 
@@ -250,6 +325,119 @@ With retrieval of a known BDX PV:
 
 The script distinguishes endpoint failure, unknown PV, known PV without recent
 samples, and successful retrieval.
+
+## Batch Archive Validation
+
+`scripts/test-archive-batches.py` is a non-destructive validation tool for
+isolating Archiver registration, retrieval, and Channel Access protocol
+problems one small PV batch at a time. It never stops or restarts the IOC or
+Archiver, never truncates IOC logs, never changes IOC configuration, and never
+edits repository PV-list files.
+
+The current Python 3.13 prototype test setup uses:
+
+```text
+.venv313
+config/profiles/prototype
+/tmp/bdx-ioc-python313.log
+http://127.0.0.1:17665/mgmt/bpl
+http://127.0.0.1:17668/retrieval
+deploy/archiver-appliance/pv-lists/prototype.txt
+```
+
+The tool first runs:
+
+```bash
+bdx-pv-list --config-dir <config-dir>
+```
+
+It then tests only the intersection between the requested PV-list files and the
+PVs exposed by the selected IOC profile. Requested-but-absent PVs are written to
+`missing-pvs.txt` and reported, but they are not removed from production lists.
+For example, the prototype profile currently defines only one simulated
+environment temperature sensor. The Raspberry production archive list keeps
+`T00`, `T02`, and `T03` because the deployed Raspberry IOC exposes those PVs.
+Their absence from the prototype profile does not mean the production archive
+lists are wrong.
+
+Dry-run, no registration:
+
+```bash
+.venv313/bin/python deploy/archiver-appliance/scripts/test-archive-batches.py \
+  --config-dir config/profiles/prototype \
+  --pv-list deploy/archiver-appliance/pv-lists/prototype.txt \
+  --wait-seconds 0
+```
+
+Chiller-only validation:
+
+```bash
+.venv313/bin/python deploy/archiver-appliance/scripts/test-archive-batches.py \
+  --config-dir config/profiles/prototype \
+  --pv-list deploy/archiver-appliance/pv-lists/prototype.txt \
+  --subsystem chiller \
+  --batch-size 5 \
+  --wait-seconds 75
+```
+
+PSU-only validation:
+
+```bash
+.venv313/bin/python deploy/archiver-appliance/scripts/test-archive-batches.py \
+  --config-dir config/profiles/prototype \
+  --pv-list deploy/archiver-appliance/pv-lists/prototype.txt \
+  --subsystem psu \
+  --batch-size 5 \
+  --wait-seconds 75
+```
+
+Environment-only validation:
+
+```bash
+.venv313/bin/python deploy/archiver-appliance/scripts/test-archive-batches.py \
+  --config-dir config/profiles/prototype \
+  --pv-list deploy/archiver-appliance/pv-lists/prototype.txt \
+  --subsystem environment \
+  --batch-size 5 \
+  --wait-seconds 75
+```
+
+Complete prototype validation with actual registration of unknown PVs:
+
+```bash
+.venv313/bin/python deploy/archiver-appliance/scripts/test-archive-batches.py \
+  --config-dir config/profiles/prototype \
+  --pv-list deploy/archiver-appliance/pv-lists/prototype.txt \
+  --batch-size 5 \
+  --wait-seconds 75 \
+  --register
+```
+
+The batch order is deterministic: chiller physical, chiller state, chiller
+diagnostic, PSU physical, PSU state, PSU diagnostic, environment physical,
+environment state, environment diagnostic. This helps isolate which subsystem
+or policy category causes additional caproto protocol errors.
+
+Each output directory contains:
+
+```text
+ioc-pvs.txt                 all PVs generated from the selected IOC profile
+requested-pvs.txt           requested Archiver PVs after comment/duplicate removal
+present-pvs.txt             requested PVs present in the selected IOC profile
+missing-pvs.txt             requested PVs absent from the selected IOC profile
+batch-*.txt                 PVs tested in each batch
+batch-*-registration.log    dry-run or registration outcome per PV
+batch-*-caproto-errors.log  new protocol-error lines after the batch started
+summary.json                machine-readable result summary
+summary.csv                 tabular result summary
+final-report.txt            concise human-readable report
+```
+
+The protocol-error counter inspects only IOC log content appended after each
+batch begins. It counts new occurrences of `Unrecognized subscriptionid`,
+`Unknown Channel sid`, and `RemoteProtocolError`. By default, any new occurrence
+fails the batch. Use `--continue-on-protocol-errors` only when you want the tool
+to report those occurrences without stopping or failing solely because of them.
 
 ## Phoebus Integration
 

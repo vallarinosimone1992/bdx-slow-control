@@ -1,5 +1,7 @@
 # BDX Raspberry environmental archive PVs.
 # Command PVs and high-rate heartbeat counters are intentionally excluded.
+# Aggregate sensor-count PVs are not present in the current environment IOC
+# contract; add them here when the IOC exposes them.
 
 BDX:ENV:LAST_TEMPERATURE_UPDATE
 

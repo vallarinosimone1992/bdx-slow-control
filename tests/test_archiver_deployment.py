@@ -1,4 +1,5 @@
 import hashlib
+import importlib.util
 import stat
 import subprocess
 import sys
@@ -22,6 +23,15 @@ def _read_pvs(path: Path) -> list[str]:
     return pvs
 
 
+def _load_python_module(path: Path, name: str):
+    spec = importlib.util.spec_from_file_location(name, path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def test_archiver_deployment_tree_exists():
     expected = {
         "README.md",
@@ -42,7 +52,9 @@ def test_archiver_deployment_tree_exists():
         "scripts/stop.sh",
         "scripts/status.sh",
         "scripts/healthcheck.sh",
+        "scripts/archiver_common.py",
         "scripts/register-pvs.py",
+        "scripts/test-archive-batches.py",
         "scripts/verify-retrieval.py",
         "scripts/backup-config.sh",
         "scripts/uninstall.sh",
@@ -77,6 +89,7 @@ def test_archiver_operator_scripts_are_executable():
         "status.sh",
         "healthcheck.sh",
         "register-pvs.py",
+        "test-archive-batches.py",
         "verify-retrieval.py",
         "backup-config.sh",
         "uninstall.sh",
@@ -116,6 +129,7 @@ def test_archiver_env_path_generation_is_configurable(tmp_path: Path):
                 "BDX_ARCHIVER_ETL_URL=http://127.0.0.1:17667/etl/bpl",
                 "BDX_ARCHIVER_RETRIEVAL_BPL_URL=http://127.0.0.1:17668/retrieval/bpl",
                 "BDX_ARCHIVER_DATA_RETRIEVAL_URL=http://127.0.0.1:17668/retrieval",
+                "BDX_ARCHIVER_MEDIUM_TERM_HOLD_DAYS=60",
                 "ARCHAPPL_PERSISTENCE_LAYER=org.example.PersistentLayer",
             ]
         )
@@ -164,16 +178,21 @@ def test_archiver_pv_lists_match_current_profiles():
 def test_archiver_pv_lists_exclude_command_and_staging_pvs():
     disallowed_suffixes = (
         ":ALLOFF_CMD",
+        ":APPLY_MESSAGE",
+        ":APPLY_STATUS",
         ":CLEAR_ERROR_CMD",
+        ":COMM_TIMEOUT_SET",
         ":APPLY_CMD",
         ":APPLY_SETPOINT_CMD",
         ":OUTPUT_SET",
         ":RUN_SET",
+        ":SAFE_SETPOINT_SET",
         ":VOLTAGE_SET",
         ":CURRENT_LIMIT_SET",
         ":OVP_SET",
         ":OCP_SET",
         ":SETPOINT_SET",
+        ":HEARTBEAT",
         ":VOLTAGE_REQUEST",
         ":CURRENT_LIMIT_REQUEST",
         ":SETPOINT_REQUEST",
@@ -181,6 +200,22 @@ def test_archiver_pv_lists_exclude_command_and_staging_pvs():
     for path in PV_LISTS.glob("*.txt"):
         for pv in _read_pvs(path):
             assert not pv.endswith(disallowed_suffixes), f"{path} archives command PV {pv}"
+
+
+def test_archiver_pv_lists_include_required_psu_diagnostics():
+    psu_pvs = set(_read_pvs(PV_LISTS / "psu.txt"))
+
+    for device in ("LV1", "LV2"):
+        assert f"BDX:PSU:{device}:IOC_STATE" in psu_pvs
+        assert f"BDX:PSU:{device}:ERROR_CODE" in psu_pvs
+        assert f"BDX:PSU:{device}:ERROR_MESSAGE" in psu_pvs
+        assert f"BDX:PSU:{device}:ALL_OUTPUTS_OFF" in psu_pvs
+        for channel in ("CH1", "CH2"):
+            prefix = f"BDX:PSU:{device}:{channel}:"
+            assert f"{prefix}OVP_RBV" in psu_pvs
+            assert f"{prefix}OCP_RBV" in psu_pvs
+            assert f"{prefix}ERROR_CODE" in psu_pvs
+            assert f"{prefix}ERROR_MESSAGE" in psu_pvs
 
 
 def test_archiver_chiller_list_excludes_disabled_optional_measurements():
@@ -192,10 +227,53 @@ def test_archiver_chiller_list_excludes_disabled_optional_measurements():
     assert "BDX:CHILLER:CHILLER1:EXTERNAL_TEMPERATURE_VALID" not in chiller_pvs
 
 
+def test_archiver_chiller_list_includes_approved_operational_pvs():
+    chiller_pvs = set(_read_pvs(PV_LISTS / "chiller.txt"))
+
+    expected = {
+        "BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV",
+        "BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV",
+        "BDX:CHILLER:CHILLER1:SETPOINT_RBV",
+        "BDX:CHILLER:CHILLER1:RUN_RBV",
+        "BDX:CHILLER:CHILLER1:RUN_STATE",
+        "BDX:CHILLER:CHILLER1:FAULT",
+        "BDX:CHILLER:CHILLER1:COMM_OK",
+        "BDX:CHILLER:CHILLER1:COMM_STATUS",
+        "BDX:CHILLER:CHILLER1:IOC_STATE",
+        "BDX:CHILLER:CHILLER1:ERROR_CODE",
+        "BDX:CHILLER:CHILLER1:ERROR_MESSAGE",
+        "BDX:CHILLER:CHILLER1:PUMP_STAGE",
+        "BDX:CHILLER:CHILLER1:COOLING_MODE",
+        "BDX:CHILLER:CHILLER1:TEMPERATURE_DEVIATION_RBV",
+        "BDX:CHILLER:CHILLER1:DEVIATION_WARNING",
+        "BDX:CHILLER:CHILLER1:DEVIATION_ALARM",
+        "BDX:CHILLER:CHILLER1:DEVIATION_STATUS",
+    }
+    assert expected.issubset(chiller_pvs)
+
+
+def test_archiver_prototype_list_is_deduplicated_union_of_enabled_lists():
+    environment_pvs = _read_pvs(PV_LISTS / "environment.txt")
+    psu_pvs = _read_pvs(PV_LISTS / "psu.txt")
+    chiller_pvs = _read_pvs(PV_LISTS / "chiller.txt")
+    prototype_pvs = _read_pvs(PV_LISTS / "prototype.txt")
+
+    union = list(dict.fromkeys(environment_pvs + psu_pvs + chiller_pvs))
+    assert prototype_pvs == union
+    assert len(prototype_pvs) == len(set(prototype_pvs))
+
+
 def test_archiver_register_dry_run_reports_each_pv(tmp_path: Path):
     pv_file = tmp_path / "pvs.txt"
     pv_file.write_text(
-        "BDX:ENV:TEMP:T00:VALUE\nBDX:ENV:TEMP:T00:STATUS_OK\n",
+        "\n".join(
+            [
+                "BDX:ENV:TEMP:T00:VALUE",
+                "BDX:ENV:TEMP:T00:STATUS_OK",
+                "BDX:PSU:LV1:CH1:ERROR_MESSAGE",
+            ]
+        )
+        + "\n",
         encoding="utf-8",
     )
 
@@ -208,6 +286,34 @@ def test_archiver_register_dry_run_reports_each_pv(tmp_path: Path):
 
     assert "DRY-RUN register BDX:ENV:TEMP:T00:VALUE policy=BDX_Physical_5s" in result.stdout
     assert "DRY-RUN register BDX:ENV:TEMP:T00:STATUS_OK policy=BDX_State_Change" in result.stdout
+    assert "DRY-RUN register BDX:PSU:LV1:CH1:ERROR_MESSAGE policy=BDX_Diagnostic_Change" in result.stdout
+
+
+def test_archiver_register_rejects_unarchivable_pvs(tmp_path: Path):
+    pv_file = tmp_path / "pvs.txt"
+    pv_file.write_text(
+        "\n".join(
+            [
+                "BDX:ENV:HEARTBEAT",
+                "BDX:PSU:LV1:CH1:OUTPUT_SET",
+                "BDX:PSU:LV1:CH1:VOLTAGE_REQUEST",
+                "BDX:CHILLER:CHILLER1:APPLY_SETPOINT_CMD",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPTS / "register-pvs.py"), "--dry-run", str(pv_file)],
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode != 0
+    assert "rejected BDX:ENV:HEARTBEAT" in result.stderr
+    assert "rejected BDX:PSU:LV1:CH1:OUTPUT_SET" in result.stderr
 
 
 def test_archiver_verify_retrieval_fixtures(tmp_path: Path):
@@ -302,3 +408,41 @@ def test_archiver_policy_file_uses_official_policy_hooks():
     assert "BDX_Physical_5s" in text
     assert "BDX_State_Change" in text
     assert "BDX_Diagnostic_Change" in text
+    assert "BDX_Heartbeat_Slow" not in text
+
+
+def test_archiver_policies_use_approved_sampling_and_storage(monkeypatch):
+    monkeypatch.setenv("BDX_ARCHIVER_MEDIUM_TERM_HOLD_DAYS", "60")
+    policies = _load_python_module(ARCHIVER / "config" / "policies.py", "bdx_archiver_policies")
+
+    physical = policies.determinePolicy({"pvName": "BDX:PSU:LV1:CH1:VOLTAGE_RBV"})
+    state = policies.determinePolicy({"pvName": "BDX:PSU:LV1:CH1:OUTPUT_STATE"})
+    diagnostic = policies.determinePolicy({"pvName": "BDX:PSU:LV1:CH1:ERROR_MESSAGE"})
+
+    assert physical["policyName"] == "BDX_Physical_5s"
+    assert physical["samplingMethod"] == "MONITOR"
+    assert physical["samplingPeriod"] == 5.0
+    assert state["policyName"] == "BDX_State_Change"
+    assert state["samplingMethod"] == "MONITOR"
+    assert state["samplingPeriod"] == 1.0
+    assert diagnostic["policyName"] == "BDX_Diagnostic_Change"
+    assert diagnostic["samplingMethod"] == "MONITOR"
+    assert diagnostic["samplingPeriod"] == 5.0
+
+    data_stores = physical["dataStores"]
+    medium_term = next(store for store in data_stores if "name=MTS" in store)
+    long_term = next(store for store in data_stores if "name=LTS" in store)
+    assert "partitionGranularity=PARTITION_DAY" in medium_term
+    assert "hold=60" in medium_term
+    assert "partitionGranularity=PARTITION_YEAR" in long_term
+    assert "hold=" not in long_term
+    assert "black" not in long_term.lower()
+
+
+def test_archiver_env_documents_approved_retention_semantics():
+    text = (ARCHIVER / "config" / "archappl.env.example").read_text(encoding="utf-8")
+
+    assert "BDX_ARCHIVER_MEDIUM_TERM_HOLD_DAYS=60" in text
+    assert "BDX_ARCHIVER_LONG_TERM_HOLD_YEARS" not in text
+    assert "BDX_ARCHIVER_HEARTBEAT_POLICY" not in text
+    assert "Long-term storage intentionally has no automatic deletion" in text

@@ -33,6 +33,43 @@ All software-facing material in this repository is written in English.
 
 The initial hardware backends are simulations. Hardware implementations can be added without changing the IOC-facing interfaces or the Phoebus PV contract.
 
+## Operator control model
+
+Low-voltage PSU and chiller operator pages use staged request PVs plus explicit
+apply commands. Editing an operator text field does not immediately write
+hardware.
+
+For CPX400DP low-voltage PSU channels:
+
+```text
+BDX:PSU:LV1:CH1:VOLTAGE_REQUEST
+BDX:PSU:LV1:CH1:CURRENT_LIMIT_REQUEST
+BDX:PSU:LV1:CH1:APPLY_CMD
+```
+
+The IOC validates voltage and current together before writing either value.
+Default CPX400DP software limits are `0-60 V`, `0-20 A`, and `420 W` maximum
+requested voltage-current product. These defaults represent instrument
+capability limits and can be overridden in the JSON profile through
+`software_limits` and per-channel `channel_limits`.
+
+The direct compatibility PVs, such as `VOLTAGE_SET`, `CURRENT_LIMIT_SET`,
+`OVP_SET`, and `OCP_SET`, remain available in expert displays. Hardware
+readbacks use device queries and are not derived from writable command PVs.
+
+For the LAUDA chiller:
+
+```text
+BDX:CHILLER:CHILLER1:SETPOINT_REQUEST
+BDX:CHILLER:CHILLER1:APPLY_SETPOINT_CMD
+```
+
+The IOC enforces the configured setpoint range, currently `5-40 degC`, and
+exposes setpoint-deviation diagnostics. Pressure and external temperature are
+disabled in the main-server profile because those measurements are not
+available; disabled optional measurements are not queried or shown on the
+operator page.
+
 ## Repository layout
 
 ```text
@@ -41,6 +78,7 @@ bdx-slow-control/
 │   ├── deployment/         Host deployment configuration
 │   ├── profiles/           Installable IOC configuration profiles
 │   └── examples/           Non-installed configuration examples
+├── deploy/                 External deployment infrastructure
 ├── docs/                   Architecture and deployment notes
 ├── phoebus/
 │   ├── displays/           Generated .bob displays and PV table
@@ -147,8 +185,9 @@ source .venv/bin/activate
 
 caproto-get BDX:GLOBAL:SYSTEM_STATE
 caproto-get BDX:ENV:TEMP:T01:VALUE
-caproto-put BDX:PSU:LV1:CH1:VOLTAGE_SET 5
-caproto-put BDX:PSU:LV1:CH1:OUTPUT_SET 1
+caproto-put BDX:PSU:LV1:CH1:VOLTAGE_REQUEST 5
+caproto-put BDX:PSU:LV1:CH1:CURRENT_LIMIT_REQUEST 0.5
+caproto-put BDX:PSU:LV1:CH1:APPLY_CMD 1
 ```
 
 When EPICS Base is configured in the shell, `caget`, `caput`, `cainfo`, and `camonitor` can be used instead.
@@ -161,6 +200,18 @@ export EPICS_CA_AUTO_ADDR_LIST=NO
 caproto-get BDX:ENV:TEMP:T00:VALUE
 ```
 
+## EPICS Archiver Appliance
+
+BDX-specific Archiver Appliance deployment infrastructure lives in
+`deploy/archiver-appliance`. It contains only repository-owned scripts,
+templates, checksums, policies, PV lists, systemd examples, documentation, and
+offline tests. It does not store downloaded Archiver Appliance releases, Tomcat
+runtimes, WAR/JAR files, credentials, logs, databases, or archive data.
+
+See `deploy/archiver-appliance/README.md` for the pinned release, storage
+layout, local evaluation commands, provisional Ubuntu 22.04 deployment commands,
+PV registration, health checks, retrieval tests, and backup procedure.
+
 ## Phoebus displays
 
 The repository includes:
@@ -168,7 +219,9 @@ The repository includes:
 ```text
 phoebus/displays/overview.bob
 phoebus/displays/psu.bob
+phoebus/displays/psu_expert.bob
 phoebus/displays/chiller.bob
+phoebus/displays/chiller_expert.bob
 phoebus/displays/environment.bob
 phoebus/displays/environment_expert.bob
 phoebus/displays/hv.bob
@@ -179,7 +232,14 @@ phoebus/displays/all_pvs.bob
 phoebus/displays/pv_list.pvs
 ```
 
-`all_pvs.bob` contains every configured simulation PV. Every writable PV has an appropriate text entry, boolean button, or command button. The subsystem displays provide the same controls with subsystem-specific trends and quick actions.
+`psu.bob` and `chiller.bob` are operator-oriented pages. They show large live
+readbacks, communication LEDs, confirmed output/run commands, staged request
+fields, apply buttons, and the principal live Data Browser plots. Complete PV
+tables and direct compatibility controls live in `psu_expert.bob` and
+`chiller_expert.bob`.
+
+`all_pvs.bob` contains every configured PV for the selected generation profile.
+Every writable PV has an appropriate text entry or command button.
 
 The global and overview displays provide:
 
@@ -189,7 +249,25 @@ The global and overview displays provide:
 - live update-period selection;
 - update-frequency readback.
 
-The trend widgets subscribe to live Channel Access updates. Generated Data Browser plots use a moving time window ending at `now`; set `BDX_TREND_RANGE` and `BDX_TREND_SCAN_PERIOD` when regenerating displays to change the default range and live scan period. The launcher disables Phoebus default Data Browser archive sources so these plots remain live-only.
+The trend widgets subscribe to live Channel Access updates. Generated Data
+Browser plots use a moving time window ending at `now`; set `BDX_TREND_RANGE`,
+`BDX_TREND_SCAN_PERIOD`, and `BDX_TREND_RING_SIZE` when regenerating displays to
+change the default range, live scan period, and live buffer size. Set
+`BDX_TREND_ARCHIVE_REQUEST=OPTIMIZED` before regeneration when long historical
+ranges should prefer optimized Archiver Appliance retrieval.
+
+By default, plots are live-only and contain no archive source. When the EPICS
+Archiver Appliance is enabled, the same `.plt` resources combine historical
+pbraw retrieval with the live Channel Access buffer. Operator pages embed the
+principal plots and provide “Full history” actions that open the corresponding
+Data Browser `.plt` resource.
+
+PSU operator plots contain one dual-axis Data Browser plot per physical LV
+supply. Each plot shows actual channel voltage readbacks on the voltage axis
+and actual channel current readbacks on the current axis. Chiller operator
+plots show controlled temperature, bath temperature, and applied setpoint;
+optional pressure or external-temperature plots are generated only when those
+measurements are enabled in the selected profile.
 
 ## Configure the Phoebus launcher
 
@@ -222,7 +300,15 @@ BDX_CA_SERVER_PORT
 BDX_CA_REPEATER_PORT
 BDX_PHOEBUS_UPDATE_THROTTLE_MS
 BDX_TREND_RANGE
+BDX_TREND_SCAN_PERIOD
+BDX_TREND_RING_SIZE
+BDX_TREND_ARCHIVE_REQUEST
 BDX_PHOEBUS_DISPLAY
+BDX_ARCHIVER_ENABLED
+BDX_ARCHIVER_URL
+BDX_ARCHIVER_NAME
+BDX_ARCHIVER_STRICT_CHECK
+BDX_ARCHIVER_PREFLIGHT_PV
 ```
 
 Relative launcher paths are resolved first from the current working directory and then from the repository root.
@@ -258,6 +344,26 @@ Start the IOC when needed and launch Phoebus in one command:
 
 The launcher creates a runtime `settings.ini` containing the local Channel Access address list and Phoebus display update throttle. The default throttle is 2000 ms, or at most 0.5 Hz.
 
+Launch with live Channel Access plots only:
+
+```bash
+BDX_ARCHIVER_ENABLED=false ./scripts/launch_phoebus.sh overview
+```
+
+Launch with an EPICS Archiver Appliance retrieval endpoint:
+
+```bash
+BDX_ARCHIVER_ENABLED=true \
+BDX_ARCHIVER_URL=http://<ARCHIVER_HOST>:17668/retrieval \
+BDX_ARCHIVER_NAME="BDX Archiver" \
+./scripts/launch_phoebus.sh overview
+```
+
+The launcher writes Phoebus Data Browser archive preferences using pbraw syntax.
+It does not print credentials. If retrieval is temporarily unavailable, Phoebus
+continues to use live Channel Access data unless `BDX_ARCHIVER_STRICT_CHECK=true`
+and the optional preflight check fails.
+
 ## Regenerate displays after configuration changes
 
 ```bash
@@ -275,7 +381,43 @@ bdx-generate-displays \
   --only environment
 ```
 
+To update only the deployed main-server PSU or chiller displays:
+
+```bash
+bdx-generate-displays \
+  --config-dir config/profiles/main-server \
+  --output-dir phoebus/displays \
+  --only psu
+
+bdx-generate-displays \
+  --config-dir config/profiles/main-server \
+  --output-dir phoebus/displays \
+  --only chiller
+```
+
 The generator reads the actual caproto PV database. It also creates a valid Phoebus PV Table file using the `<pvtable version="3.0">` format.
+
+To generate plots with embedded Archiver Appliance sources:
+
+```bash
+BDX_ARCHIVER_ENABLED=true \
+BDX_ARCHIVER_URL=http://<ARCHIVER_HOST>:17668/retrieval \
+bdx-generate-displays \
+  --config-dir config/profiles/main-server \
+  --output-dir phoebus/displays \
+  --only psu
+```
+
+Register the same PVs through the deployment helper before relying on historical
+data:
+
+```bash
+deploy/archiver-appliance/scripts/register-pvs.py \
+  --mgmt-url http://<ARCHIVER_HOST>:17665/mgmt/bpl \
+  deploy/archiver-appliance/pv-lists/environment.txt \
+  deploy/archiver-appliance/pv-lists/psu.txt \
+  deploy/archiver-appliance/pv-lists/chiller.txt
+```
 
 ## Automated validation
 

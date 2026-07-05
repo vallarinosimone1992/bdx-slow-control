@@ -8,13 +8,61 @@
 # ARCHAPPL_* environment variables so that retention and paths remain deployment
 # configuration, not repository constants.
 
+import os
+
+
+PHYSICAL_POLICY = "BDX_Physical_5s"
+STATE_POLICY = "BDX_State_Change"
+DIAGNOSTIC_POLICY = "BDX_Diagnostic_Change"
+
+
+STATE_SUFFIXES = (
+    ":ALL_OUTPUTS_OFF",
+    ":COMM_OK",
+    ":COMM_STATUS",
+    ":DEVIATION_ALARM",
+    ":DEVIATION_STATUS",
+    ":DEVIATION_WARNING",
+    ":EXTERNAL_TEMPERATURE_VALID",
+    ":FAULT",
+    ":IOC_STATE",
+    ":OUTPUT_RBV",
+    ":OUTPUT_STATE",
+    ":PRESSURE_VALID",
+    ":RUN_RBV",
+    ":RUN_STATE",
+    ":STATUS",
+    ":STATUS_OK",
+)
+
+DIAGNOSTIC_SUFFIXES = (
+    ":COOLING_MODE",
+    ":DEVICE_STATUS",
+    ":ERROR_CODE",
+    ":ERROR_MESSAGE",
+    ":FAULT_DIAGNOSIS",
+    ":LAST_TEMPERATURE_UPDATE",
+    ":LAST_UPDATE",
+    ":PUMP_STAGE",
+)
+
+
+def _positive_int_env(name, default):
+    value = os.environ.get(name, default)
+    try:
+        parsed = int(value)
+    except ValueError:
+        parsed = int(default)
+    if parsed <= 0:
+        parsed = int(default)
+    return parsed
+
 
 def getPolicyList():
     pvPoliciesDict = {}
-    pvPoliciesDict["BDX_Physical_5s"] = "BDX physical readbacks updated around every 5 seconds"
-    pvPoliciesDict["BDX_State_Change"] = "BDX state and boolean transition PVs"
-    pvPoliciesDict["BDX_Diagnostic_Change"] = "BDX string and diagnostic transition PVs"
-    pvPoliciesDict["BDX_Heartbeat_Slow"] = "BDX heartbeat counters archived slowly when explicitly requested"
+    pvPoliciesDict[PHYSICAL_POLICY] = "BDX physical readbacks, MONITOR at nominal 5 seconds"
+    pvPoliciesDict[STATE_POLICY] = "BDX boolean, connection, output, warning, alarm, and fault states, MONITOR at nominal 1 second"
+    pvPoliciesDict[DIAGNOSTIC_POLICY] = "BDX string and integer diagnostics, MONITOR at nominal 5 seconds"
     return pvPoliciesDict
 
 
@@ -29,7 +77,7 @@ shorttermstore_plugin_url = (
 mediumtermstore_plugin_url = (
     "pb://localhost?name=MTS&rootFolder=${ARCHAPPL_MEDIUM_TERM_FOLDER}"
     "&partitionGranularity=PARTITION_DAY"
-    "&hold=${BDX_ARCHIVER_MEDIUM_TERM_HOLD_DAYS}&gather=1"
+    "&hold=%s&gather=1" % _positive_int_env("BDX_ARCHIVER_MEDIUM_TERM_HOLD_DAYS", "60")
 )
 longtermstore_plugin_url = (
     "pb://localhost?name=LTS&rootFolder=${ARCHAPPL_LONG_TERM_FOLDER}"
@@ -56,37 +104,17 @@ def determinePolicy(pvInfoDict):
     userPolicyOverride = pvInfoDict.get("policyName", "")
 
     if userPolicyOverride:
-        if userPolicyOverride == "BDX_Physical_5s":
-            return _policy("BDX_Physical_5s", 5.0, "MONITOR")
-        if userPolicyOverride == "BDX_State_Change":
-            return _policy("BDX_State_Change", 1.0, "MONITOR")
-        if userPolicyOverride == "BDX_Diagnostic_Change":
-            return _policy("BDX_Diagnostic_Change", 5.0, "MONITOR")
-        if userPolicyOverride == "BDX_Heartbeat_Slow":
-            return _policy("BDX_Heartbeat_Slow", 60.0, "SCAN")
+        if userPolicyOverride == PHYSICAL_POLICY:
+            return _policy(PHYSICAL_POLICY, 5.0, "MONITOR")
+        if userPolicyOverride == STATE_POLICY:
+            return _policy(STATE_POLICY, 1.0, "MONITOR")
+        if userPolicyOverride == DIAGNOSTIC_POLICY:
+            return _policy(DIAGNOSTIC_POLICY, 5.0, "MONITOR")
 
-    if (
-        pvName.endswith(":COMM_OK")
-        or pvName.endswith(":OUTPUT_RBV")
-        or pvName.endswith(":RUN_RBV")
-        or pvName.endswith(":FAULT")
-        or pvName.endswith(":DEVIATION_WARNING")
-        or pvName.endswith(":DEVIATION_ALARM")
-        or pvName.endswith(":STATUS_OK")
-    ):
-        return _policy("BDX_State_Change", 1.0, "MONITOR")
+    if pvName.endswith(STATE_SUFFIXES):
+        return _policy(STATE_POLICY, 1.0, "MONITOR")
 
-    if (
-        pvName.endswith(":COMM_STATUS")
-        or pvName.endswith(":ERROR_MESSAGE")
-        or pvName.endswith(":OUTPUT_STATE")
-        or pvName.endswith(":RUN_STATE")
-        or pvName.endswith(":DEVIATION_STATUS")
-        or pvName.endswith(":STATUS")
-    ):
-        return _policy("BDX_Diagnostic_Change", 5.0, "MONITOR")
+    if pvName.endswith(DIAGNOSTIC_SUFFIXES):
+        return _policy(DIAGNOSTIC_POLICY, 5.0, "MONITOR")
 
-    if pvName.endswith(":HEARTBEAT"):
-        return _policy("BDX_Heartbeat_Slow", 60.0, "SCAN")
-
-    return _policy("BDX_Physical_5s", 5.0, "MONITOR")
+    return _policy(PHYSICAL_POLICY, 5.0, "MONITOR")
