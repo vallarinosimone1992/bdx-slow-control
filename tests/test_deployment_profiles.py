@@ -3,7 +3,14 @@ from pathlib import Path
 
 import pytest
 
-from bdx_slow_control.config import ConfigurationError, load_json
+from bdx_slow_control import cli
+from bdx_slow_control.config import (
+    DEFAULT_PROFILE_DIR,
+    DEFAULT_PSU_CONFIG,
+    ConfigurationError,
+    ServerSettings,
+    load_json,
+)
 from bdx_slow_control.prototype import build_prototype
 
 
@@ -21,6 +28,84 @@ def test_main_server_profile_excludes_environment_ioc():
     assert "BDX:HV:HV1:COMM_STATUS" in pvdb
     assert "BDX:ENV:TEMP:T00:VALUE" not in pvdb
     assert "BDX:ENV:TEMP:T01:VALUE" not in pvdb
+
+
+def test_default_operational_profile_contains_only_global_and_psu():
+    profile = DEFAULT_PROFILE_DIR
+    assert {path.name for path in profile.glob("*.json")} == {
+        "global.json",
+        "psu.json",
+    }
+
+    pvdb, settings = build_prototype(profile)
+    assert settings.poll_interval == 1.0
+    assert "BDX:GLOBAL:SYSTEM_STATE" in pvdb
+    assert "BDX:PSU:LV1:COMM_STATUS" in pvdb
+    assert "BDX:PSU:LV2:COMM_STATUS" in pvdb
+    assert not any(name.startswith("BDX:CHILLER:") for name in pvdb)
+    assert not any(name.startswith("BDX:ENV:") for name in pvdb)
+    assert not any(name.startswith("BDX:HV:") for name in pvdb)
+    assert not any(name.startswith("BDX:DAQ:") for name in pvdb)
+
+
+def test_default_operational_psu_profile_uses_lv_hardware_without_startup_setpoints():
+    psu = load_json(DEFAULT_PSU_CONFIG)
+    devices = psu["devices"]
+
+    assert psu["server"]["poll_interval"] == 1.0
+    assert [device["name"] for device in devices] == ["LV1", "LV2"]
+    assert [device["prefix"] for device in devices] == [
+        "BDX:PSU:LV1:",
+        "BDX:PSU:LV2:",
+    ]
+    assert [device["mode"] for device in devices] == ["hardware", "hardware"]
+    assert [device["driver"] for device in devices] == ["cpx400dp", "cpx400dp"]
+    assert [device["host"] for device in devices] == [
+        "172.22.50.20",
+        "172.22.50.21",
+    ]
+    assert [device["port"] for device in devices] == [9221, 9221]
+    assert all(device["channels"] == [1, 2] for device in devices)
+    for device in devices:
+        assert "initial_voltage" not in device
+        assert "initial_current_limit" not in device
+        assert "initial_ovp" not in device
+        assert "initial_ocp" not in device
+        assert "OUTPUT_SET" not in device
+
+
+def test_operational_cli_defaults_use_default_profile(monkeypatch, capsys):
+    captured = []
+
+    def fake_build(config_dir: Path):
+        captured.append(config_dir)
+        return (
+            {"BDX:PSU:LV1:COMM_STATUS": object()},
+            ServerSettings(("127.0.0.1",), 1.0, False),
+        )
+
+    monkeypatch.setattr(cli, "build_prototype", fake_build)
+    monkeypatch.setattr(cli, "run", lambda *args, **kwargs: None)
+
+    cli.prototype_main([])
+    cli.pv_list_main([])
+    assert captured == [DEFAULT_PROFILE_DIR, DEFAULT_PROFILE_DIR]
+    assert "BDX:PSU:LV1:COMM_STATUS" in capsys.readouterr().out
+
+
+def test_psu_standalone_cli_default_uses_operational_psu_profile(monkeypatch):
+    captured = []
+    monkeypatch.setattr(
+        cli,
+        "_run",
+        lambda builder_name, default_config, argv=None: captured.append(
+            (builder_name, default_config, argv)
+        ),
+    )
+
+    cli.psu_main([])
+
+    assert captured == [("psu", str(DEFAULT_PSU_CONFIG), [])]
 
 
 def test_raspberry_profile_contains_only_environment_ioc():

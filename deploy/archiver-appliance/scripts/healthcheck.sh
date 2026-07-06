@@ -74,10 +74,10 @@ check_writable() {
     fi
 }
 
-check_url mgmt "$BDX_ARCHIVER_MGMT_URL"
-check_url engine "$BDX_ARCHIVER_ENGINE_URL"
-check_url etl "$BDX_ARCHIVER_ETL_URL"
-check_url retrieval "$BDX_ARCHIVER_RETRIEVAL_BPL_URL"
+check_url mgmt "$(bdx_component_ready_url mgmt)"
+check_url engine "$(bdx_component_ready_url engine)"
+check_url etl "$(bdx_component_ready_url etl)"
+check_url retrieval "$(bdx_component_ready_url retrieval)"
 
 check_writable short-term "$BDX_ARCHIVER_SHORT_TERM_DIR"
 check_writable medium-term "$BDX_ARCHIVER_MEDIUM_TERM_DIR"

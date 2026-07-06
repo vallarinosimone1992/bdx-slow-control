@@ -93,6 +93,40 @@ source .venv/bin/activate
 
 The bootstrap script installs the package in editable mode and regenerates the Phoebus displays from the configured PV database.
 
+## Run the default laboratory IOC
+
+The default operational profile is `config/profiles/default`. It contains only
+the subsystems currently ready for routine laboratory operation:
+
+- `global`;
+- `psu`.
+
+The PSU profile instantiates LV1 at `172.22.50.20:9221` and LV2 at
+`172.22.50.21:9221`, using the CPX400DP hardware driver, channels 1 and 2, and
+a 1.0 s polling period. The default profile does not include the chiller yet.
+Startup does not enable PSU outputs or write operator setpoints; outputs change
+only after explicit operator commands.
+
+Run the default aggregated IOC:
+
+```bash
+bdx-prototype-ioc
+```
+
+Run only the default PSU IOC:
+
+```bash
+bdx-psu-ioc
+```
+
+The default PV-list and display-generation commands also use
+`config/profiles/default` unless `--config-dir` is supplied:
+
+```bash
+bdx-pv-list
+bdx-generate-displays --output-dir phoebus/displays --only psu
+```
+
 ## Run the simulated IOC
 
 ```bash
@@ -236,17 +270,21 @@ The global and overview displays provide:
 The trend widgets subscribe to live Channel Access updates. Generated Data
 Browser plots use a moving time window ending at `now`; set `BDX_TREND_RANGE`,
 `BDX_TREND_SCAN_PERIOD`, and `BDX_TREND_RING_SIZE` when regenerating displays to
-change the default range, live scan period, and live buffer size. Set
-`BDX_TREND_ARCHIVE_REQUEST=OPTIMIZED` before regeneration when long historical
-ranges should prefer optimized Archiver Appliance retrieval.
+change the default range, live scan period, and live buffer size. The default
+trace scan period is 1.0 s. Set `BDX_TREND_ARCHIVE_REQUEST=OPTIMIZED` before
+regeneration when long historical ranges should prefer optimized Archiver
+Appliance retrieval.
 
-By default, plots are live-only and contain no archive source. When the EPICS
-Archiver Appliance is enabled, the same `.plt` resources combine historical
-pbraw retrieval with the live Channel Access buffer. Operator pages embed the
-principal plots and provide “Full history” actions that open the corresponding
-Data Browser `.plt` resource. “Full history” is available only for PVs that are
-registered and actively sampled by Archiver Appliance; history cannot be
-reconstructed retroactively for periods before a PV was archived.
+By default, generated plots include the local BDX Archiver Appliance retrieval
+source at `http://127.0.0.1:17668/retrieval`. Set
+`BDX_ARCHIVER_ENABLED=false` before generation when live-only `.plt` files are
+needed. Data Browser combines historical pbraw retrieval with the live Channel
+Access buffer when the PV is registered and the retrieval service is available.
+Operator pages embed the principal plots and provide “Full history” actions
+that open the corresponding Data Browser `.plt` resource. “Full history” is
+available only for PVs that are registered and actively sampled by Archiver
+Appliance; history cannot be reconstructed retroactively for periods before a
+PV was archived.
 
 PSU operator plots contain one dual-axis Data Browser plot per physical LV
 supply. Each plot shows actual channel voltage readbacks on the voltage axis
@@ -336,7 +374,13 @@ Launch with live Channel Access plots only:
 BDX_ARCHIVER_ENABLED=false ./scripts/launch_phoebus.sh overview
 ```
 
-Launch with an EPICS Archiver Appliance retrieval endpoint:
+Launch with the default local EPICS Archiver Appliance retrieval endpoint:
+
+```bash
+./scripts/launch_phoebus.sh overview
+```
+
+Launch with a non-default EPICS Archiver Appliance retrieval endpoint:
 
 ```bash
 BDX_ARCHIVER_ENABLED=true \
@@ -354,7 +398,16 @@ and the optional preflight check fails.
 
 ```bash
 source .venv/bin/activate
-bdx-generate-displays --config-dir config/profiles/prototype --output-dir phoebus/displays
+bdx-generate-displays --output-dir phoebus/displays
+```
+
+The command above uses `config/profiles/default`. Regenerate the full simulated
+prototype displays explicitly when needed:
+
+```bash
+bdx-generate-displays \
+  --config-dir config/profiles/prototype \
+  --output-dir phoebus/displays
 ```
 
 To update only the deployed Raspberry environment display on a laptop without
@@ -367,11 +420,12 @@ bdx-generate-displays \
   --only environment
 ```
 
-To update only the deployed main-server PSU or chiller displays:
+To update only the deployed PSU display or the not-yet-default main-server
+chiller display:
 
 ```bash
 bdx-generate-displays \
-  --config-dir config/profiles/main-server \
+  --config-dir config/profiles/default \
   --output-dir phoebus/displays \
   --only psu
 
@@ -383,13 +437,13 @@ bdx-generate-displays \
 
 The generator reads the actual caproto PV database. It also creates a valid Phoebus PV Table file using the `<pvtable version="3.0">` format.
 
-To generate plots with embedded Archiver Appliance sources:
+To override the embedded Archiver Appliance source:
 
 ```bash
 BDX_ARCHIVER_ENABLED=true \
 BDX_ARCHIVER_URL=http://<ARCHIVER_HOST>:17668/retrieval \
 bdx-generate-displays \
-  --config-dir config/profiles/main-server \
+  --config-dir config/profiles/default \
   --output-dir phoebus/displays \
   --only psu
 ```

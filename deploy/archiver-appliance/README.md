@@ -231,6 +231,14 @@ Start and stop manually:
   --user-local
 ```
 
+With the default configuration, `start.sh` also launches a background
+auto-registration helper after the four Archiver Appliance components start.
+For `--user-local`, the default PV list resolves to:
+
+```text
+~/.local/share/bdx-archiver/app/pv-lists/psu.txt
+```
+
 ## Provisional Ubuntu 22.04 Deployment
 
 The final production host is not selected. A provisional persistent deployment
@@ -276,6 +284,36 @@ sudo systemctl --no-pager --full status bdx-archiver
 ```
 
 ## PV Registration
+
+Automatic registration is enabled by default:
+
+```bash
+BDX_ARCHIVER_AUTO_REGISTER=true
+BDX_ARCHIVER_PV_LISTS=
+BDX_ARCHIVER_REGISTER_RETRY_SECONDS=30
+```
+
+When `BDX_ARCHIVER_PV_LISTS` is empty, the startup scripts use
+`$BDX_ARCHIVER_APP_DIR/pv-lists/psu.txt`, matching the current default
+laboratory IOC profile. After `mgmt`, `engine`, `etl`, and `retrieval` respond
+on component-specific BPL operations, the helper runs:
+
+```bash
+register-pvs.py --mgmt-url "$BDX_ARCHIVER_MGMT_URL" "$BDX_ARCHIVER_APP_DIR/pv-lists/psu.txt"
+```
+
+Registration is idempotent; PVs reported as already registered are treated as
+success. If the IOC is temporarily unavailable or a registration attempt fails,
+the helper logs the failure and retries every
+`BDX_ARCHIVER_REGISTER_RETRY_SECONDS` seconds. It writes a PID file under
+`$BDX_ARCHIVER_STATE_DIR/run`, repeated `start.sh` calls do not create duplicate
+helpers, and `stop.sh` stops the helper before stopping Tomcat.
+
+Disable automatic registration explicitly when manual registration is desired:
+
+```bash
+BDX_ARCHIVER_AUTO_REGISTER=false
+```
 
 Dry-run registration:
 
@@ -441,9 +479,10 @@ to report those occurrences without stopping or failing solely because of them.
 
 ## Phoebus Integration
 
-The Phoebus launcher can combine live Channel Access samples with Archiver
-Appliance history. Use the same retrieval endpoint configured for the
-appliance:
+The Phoebus launcher combines live Channel Access samples with Archiver
+Appliance history by default, using `http://127.0.0.1:17668/retrieval` unless
+overridden. Use the same retrieval endpoint configured for the appliance when
+launching from another host:
 
 ```bash
 BDX_ARCHIVER_ENABLED=true \
@@ -456,6 +495,12 @@ The launcher writes Phoebus Data Browser preferences with a `pbraw://` archive
 URL. If the retrieval service is temporarily unavailable, Data Browser keeps the
 live Channel Access traces unless `BDX_ARCHIVER_STRICT_CHECK=true` and the
 optional preflight check fails.
+
+Disable archive integration explicitly for live-only Phoebus operation:
+
+```bash
+BDX_ARCHIVER_ENABLED=false ./scripts/launch_phoebus.sh overview
+```
 
 ## Backup And Restore
 

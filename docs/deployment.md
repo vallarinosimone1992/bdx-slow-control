@@ -101,6 +101,7 @@ Do not bind production IOCs to unrelated VPN, container, or loopback interfaces.
 Deployment profiles live under `config/profiles/`:
 
 ```text
+config/profiles/default/       current lab operation: global and PSU only
 config/profiles/prototype/     all simulated subsystems
 config/profiles/main-server/   global, PSU, chiller, HV, DAQ; no environment IOC
 config/profiles/raspberry/     environment MCP9808 IOC only
@@ -147,7 +148,7 @@ profiles or PV contracts change:
 
 ```bash
 bdx-generate-displays \
-  --config-dir config/profiles/main-server \
+  --config-dir config/profiles/default \
   --output-dir phoebus/displays \
   --only psu
 

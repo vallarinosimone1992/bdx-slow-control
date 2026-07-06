@@ -12,6 +12,7 @@ from typing import Sequence
 import xml.etree.ElementTree as ET
 from xml.sax.saxutils import escape
 
+from .config import DEFAULT_PROFILE_DIR
 from .prototype import build_prototype
 
 DEFAULT_TREND_RANGE = "10 minutes"
@@ -19,6 +20,7 @@ DEFAULT_TREND_SCAN_PERIOD = 1.0
 DEFAULT_TREND_RING_SIZE = 5000
 DEFAULT_TREND_ARCHIVE_REQUEST = "RAW"
 DEFAULT_ARCHIVER_NAME = "BDX Archiver"
+DEFAULT_ARCHIVER_URL = "http://127.0.0.1:17668/retrieval"
 
 
 def trend_range() -> str:
@@ -84,10 +86,10 @@ class ArchiveSource:
 
 def archive_source_from_environment() -> ArchiveSource | None:
     """Return the configured Archiver Appliance source, or None for live-only plots."""
-    if not env_flag("BDX_ARCHIVER_ENABLED"):
+    if not env_flag("BDX_ARCHIVER_ENABLED", default=True):
         return None
 
-    raw_url = os.environ.get("BDX_ARCHIVER_URL", "")
+    raw_url = os.environ.get("BDX_ARCHIVER_URL", DEFAULT_ARCHIVER_URL)
     url = archiver_pbraw_url(raw_url)
     if url is None:
         if env_flag("BDX_ARCHIVER_STRICT_CHECK"):
@@ -1602,9 +1604,9 @@ def write_databrowser_plt(
 ) -> None:
     """Write a Data Browser *.plt file backing an embedded 'databrowser' widget.
 
-    Traces are live Channel Access by default. When BDX_ARCHIVER_ENABLED is
-    true and BDX_ARCHIVER_URL is set, each trace also gets an Archiver
-    Appliance pbraw data source.
+    Traces use live Channel Access and, by default, the configured BDX Archiver
+    Appliance pbraw data source. Set BDX_ARCHIVER_ENABLED=false for live-only
+    plots.
     """
     resolved_axes = tuple(axes or (AxisInfo(y_axis_title),))
     archive_source = archive_source_from_environment()
@@ -1748,7 +1750,7 @@ def generate(config_dir: Path, output: Path, only: str | None = None) -> list[PV
 
 def main(argv: Sequence[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="bdx-generate-displays")
-    parser.add_argument("--config-dir", default="config/profiles/prototype")
+    parser.add_argument("--config-dir", default=str(DEFAULT_PROFILE_DIR))
     parser.add_argument("--output-dir", default="phoebus/displays")
     parser.add_argument(
         "--only",

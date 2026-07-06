@@ -7,6 +7,7 @@ from bdx_slow_control.phoebus_generator import archiver_pbraw_url, generate
 
 
 PROTOTYPE_PROFILE = Path("config/profiles/prototype")
+DEFAULT_PROFILE = Path("config/profiles/default")
 MAIN_SERVER_PROFILE = Path("config/profiles/main-server")
 RASPBERRY_PROFILE = Path("config/profiles/raspberry")
 RASPBERRY_TEMPERATURE_PVS = {
@@ -209,7 +210,7 @@ def test_generated_databrowser_plt_files_are_live_only_when_archiver_is_disabled
     tmp_path: Path,
     monkeypatch,
 ):
-    monkeypatch.delenv("BDX_ARCHIVER_ENABLED", raising=False)
+    monkeypatch.setenv("BDX_ARCHIVER_ENABLED", "false")
     monkeypatch.delenv("BDX_ARCHIVER_URL", raising=False)
 
     generate(PROTOTYPE_PROFILE, tmp_path)
@@ -225,6 +226,26 @@ def test_generated_databrowser_plt_files_are_live_only_when_archiver_is_disabled
             request.text
             for request in root.findall("pvlist/pv/request")
         } == {"RAW"}
+
+
+def test_generated_databrowser_plt_files_include_default_archive_source(
+    tmp_path: Path,
+    monkeypatch,
+):
+    monkeypatch.delenv("BDX_ARCHIVER_ENABLED", raising=False)
+    monkeypatch.delenv("BDX_ARCHIVER_URL", raising=False)
+    monkeypatch.delenv("BDX_ARCHIVER_NAME", raising=False)
+
+    generate(DEFAULT_PROFILE, tmp_path, only="psu")
+
+    for path in tmp_path.glob("psu_*.plt"):
+        root = _plt(path)
+        assert _plt_archive_count(root) == _plt_trace_count(root)
+        assert _plt_archive_urls(root) == {"pbraw://127.0.0.1:17668/retrieval"}
+        assert {
+            element.text
+            for element in root.findall("pvlist/pv/archive/name")
+        } == {"BDX Archiver"}
 
 
 def test_generated_databrowser_plt_files_include_archive_source_when_enabled(
@@ -626,6 +647,42 @@ def test_phoebus_launcher_uses_live_only_databrowser_settings_when_archive_disab
     assert "pbraw://" not in settings
     assert "Archiver enabled: false" in completed.stdout
     assert not (tmp_path / "all_pvs.bob").exists()
+
+
+def test_phoebus_launcher_enables_local_archiver_by_default(tmp_path: Path):
+    launcher = tmp_path / "fake_phoebus.sh"
+    launcher.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+    launcher.chmod(0o755)
+
+    env = {
+        key: value
+        for key, value in os.environ.items()
+        if not key.startswith("BDX_ARCHIVER_")
+    }
+    env.update(
+        {
+            "BDX_PHOEBUS_CMD": str(launcher),
+            "BDX_PHOEBUS_ENV": str(tmp_path / "missing.env"),
+            "XDG_RUNTIME_DIR": str(tmp_path),
+        }
+    )
+    completed = subprocess.run(
+        ["bash", "scripts/launch_phoebus.sh", "psu"],
+        check=True,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+    settings = (tmp_path / "bdx-phoebus" / "settings.ini").read_text(
+        encoding="utf-8"
+    )
+    expected = "pbraw://127.0.0.1:17668/retrieval|BDX Archiver"
+    assert f"org.csstudio.trends.databrowser3/urls={expected}\n" in settings
+    assert f"org.csstudio.trends.databrowser3/archives={expected}\n" in settings
+    assert "Archiver enabled: true" in completed.stdout
+    assert "Archiver retrieval: pbraw://127.0.0.1:17668/retrieval" in completed.stdout
 
 
 def test_phoebus_launcher_rejects_update_throttle_below_one_second(tmp_path: Path):

@@ -108,6 +108,25 @@ def test_cpx400dp_setters_use_official_command_syntax():
     assert ("command", "OCP1 0.7") in connection.calls
 
 
+def test_cpx400dp_initialize_does_not_write_outputs_or_setpoints():
+    connection = FakeConnection(
+        {
+            "*IDN?": "THURLBY THANDAR,CPX400DP",
+            "IFLOCK": "1",
+        }
+    )
+    driver = CPX400DPDriver(connection=connection, channels=[1, 2])
+
+    driver.initialize()
+
+    commands = [command for call_type, command in connection.calls if call_type == "command"]
+    assert commands == ["*CLS"]
+    assert not any(
+        command.startswith(("OP", "V1 ", "V2 ", "I1 ", "I2 "))
+        for command in commands
+    )
+
+
 def test_cpx400dp_all_outputs_off_queries_output_state():
     connection = FakeConnection(
         {

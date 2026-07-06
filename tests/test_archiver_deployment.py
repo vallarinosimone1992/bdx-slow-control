@@ -1,5 +1,6 @@
 import hashlib
 import importlib.util
+import os
 import stat
 import subprocess
 import sys
@@ -32,6 +33,50 @@ def _load_python_module(path: Path, name: str):
     return module
 
 
+def _write_minimal_archiver_env(tmp_path: Path) -> Path:
+    env_file = tmp_path / "archappl.env"
+    env_file.write_text(
+        "\n".join(
+            [
+                "BDX_ARCHIVER_RELEASE_VERSION=2.3.1",
+                "BDX_ARCHIVER_RELEASE_ARTIFACT=archappl_v2.3.1.tar.gz",
+                "BDX_ARCHIVER_RELEASE_URL=https://example.invalid/archappl_v2.3.1.tar.gz",
+                "BDX_ARCHIVER_RELEASE_SHA256=ce2eabe57915a99bc9be22d29d400f112f63931b5d5af9394e8504702d16722f",
+                f"BDX_ARCHIVER_APP_DIR={tmp_path / 'app'}",
+                f"BDX_ARCHIVER_CONFIG_DIR={tmp_path / 'config'}",
+                f"BDX_ARCHIVER_STATE_DIR={tmp_path / 'state'}",
+                f"BDX_ARCHIVER_LOG_DIR={tmp_path / 'logs'}",
+                f"BDX_ARCHIVER_CACHE_DIR={tmp_path / 'cache'}",
+                f"BDX_ARCHIVER_TMP_DIR={tmp_path / 'state' / 'tmp'}",
+                f"BDX_ARCHIVER_SHORT_TERM_DIR={tmp_path / 'state' / 'sts'}",
+                f"BDX_ARCHIVER_MEDIUM_TERM_DIR={tmp_path / 'state' / 'mts'}",
+                f"BDX_ARCHIVER_LONG_TERM_DIR={tmp_path / 'state' / 'lts'}",
+                f"BDX_ARCHIVER_PERSISTENCE_DIR={tmp_path / 'state' / 'persistence'}",
+                f"BDX_ARCHIVER_TOMCAT_HOME={tmp_path / 'tomcat'}",
+                f"BDX_ARCHIVER_WAR_DIR={tmp_path / 'war'}",
+                f"BDX_ARCHIVER_TOMCAT_BASE_DIR={tmp_path / 'tomcat-bases'}",
+                "BDX_ARCHIVER_TOMCAT_TARBALL=",
+                "BDX_ARCHIVER_APPLIANCE_ID=test0",
+                "BDX_ARCHIVER_CLUSTER_HOST=127.0.0.1",
+                "BDX_ARCHIVER_CLUSTER_PORT=16670",
+                "BDX_ARCHIVER_MGMT_URL=http://127.0.0.1:17665/mgmt/bpl",
+                "BDX_ARCHIVER_ENGINE_URL=http://127.0.0.1:17666/engine/bpl",
+                "BDX_ARCHIVER_ETL_URL=http://127.0.0.1:17667/etl/bpl",
+                "BDX_ARCHIVER_RETRIEVAL_BPL_URL=http://127.0.0.1:17668/retrieval/bpl",
+                "BDX_ARCHIVER_DATA_RETRIEVAL_URL=http://127.0.0.1:17668/retrieval",
+                "BDX_ARCHIVER_MEDIUM_TERM_HOLD_DAYS=60",
+                "BDX_ARCHIVER_AUTO_REGISTER=true",
+                "BDX_ARCHIVER_PV_LISTS=",
+                "BDX_ARCHIVER_REGISTER_RETRY_SECONDS=30",
+                "ARCHAPPL_PERSISTENCE_LAYER=org.example.PersistentLayer",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return env_file
+
+
 def test_archiver_deployment_tree_exists():
     expected = {
         "README.md",
@@ -53,6 +98,7 @@ def test_archiver_deployment_tree_exists():
         "scripts/status.sh",
         "scripts/healthcheck.sh",
         "scripts/archiver_common.py",
+        "scripts/auto-register-pvs.sh",
         "scripts/register-pvs.py",
         "scripts/test-archive-batches.py",
         "scripts/verify-retrieval.py",
@@ -88,6 +134,7 @@ def test_archiver_operator_scripts_are_executable():
         "stop.sh",
         "status.sh",
         "healthcheck.sh",
+        "auto-register-pvs.sh",
         "register-pvs.py",
         "test-archive-batches.py",
         "verify-retrieval.py",
@@ -146,6 +193,86 @@ def test_archiver_env_path_generation_is_configurable(tmp_path: Path):
 
     assert f"ARCHAPPL_APPLIANCES={tmp_path / 'config' / 'appliances.xml'}" in result.stdout
     assert f"ARCHAPPL_SHORT_TERM_FOLDER={tmp_path / 'state' / 'sts'}" in result.stdout
+
+
+def test_archiver_auto_registration_command_defaults_to_deployed_psu_list(
+    tmp_path: Path,
+):
+    env_file = _write_minimal_archiver_env(tmp_path)
+
+    result = subprocess.run(
+        [
+            str(SCRIPTS / "auto-register-pvs.sh"),
+            "--env",
+            str(env_file),
+            "--print-command",
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    assert "register-pvs.py" in result.stdout
+    assert "--mgmt-url http://127.0.0.1:17665/mgmt/bpl" in result.stdout
+    assert f"{tmp_path / 'app' / 'pv-lists' / 'psu.txt'}" in result.stdout
+
+
+def test_archiver_auto_registration_duplicate_start_is_ignored(tmp_path: Path):
+    env_file = _write_minimal_archiver_env(tmp_path)
+    pid_file = tmp_path / "state" / "run" / "auto-register-pvs.pid"
+    pid_file.parent.mkdir(parents=True)
+    pid_file.write_text(f"{os.getpid()}\n", encoding="utf-8")
+
+    script = "\n".join(
+        [
+            "set -euo pipefail",
+            f'SCRIPT_DIR="{SCRIPTS.resolve()}"',
+            'source "$SCRIPT_DIR/common.sh"',
+            f'bdx_load_env "{env_file}"',
+            "bdx_export_archappl_env",
+            f'bdx_archiver_start_registration_retry "{env_file}" 0',
+        ]
+    )
+    result = subprocess.run(
+        ["bash", "-c", script],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    assert "already running" in result.stdout
+    assert pid_file.read_text(encoding="utf-8") == f"{os.getpid()}\n"
+
+
+def test_archiver_readiness_checks_use_functional_bpl_endpoints(tmp_path: Path):
+    env_file = _write_minimal_archiver_env(tmp_path)
+    script = "\n".join(
+        [
+            "set -euo pipefail",
+            f'SCRIPT_DIR="{SCRIPTS.resolve()}"',
+            'source "$SCRIPT_DIR/common.sh"',
+            f'bdx_load_env "{env_file}"',
+            "for component in mgmt engine etl retrieval; do",
+            '    bdx_component_ready_url "$component"',
+            "done",
+        ]
+    )
+
+    result = subprocess.run(
+        ["bash", "-c", script],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    urls = result.stdout.splitlines()
+    assert urls == [
+        "http://127.0.0.1:17665/mgmt/bpl/getApplianceInfo",
+        "http://127.0.0.1:17666/engine/bpl/getApplianceInfo",
+        "http://127.0.0.1:17667/etl/bpl/getApplianceInfo",
+        "http://127.0.0.1:17668/retrieval/bpl/getApplianceInfo",
+    ]
+    assert all(not url.endswith("/bpl") for url in urls)
 
 
 def test_archiver_checksum_verification_uses_sha256(tmp_path: Path):

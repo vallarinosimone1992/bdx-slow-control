@@ -73,6 +73,7 @@ foreground_pids=()
 
 stop_foreground_components() {
     local pid
+    bdx_archiver_stop_registration_retry
     for pid in "${foreground_pids[@]:-}"; do
         if kill -0 "$pid" >/dev/null 2>&1; then
             kill "$pid" >/dev/null 2>&1 || true
@@ -102,6 +103,7 @@ if [[ "$FOREGROUND" -eq 1 ]]; then
     for component in $(bdx_component_list); do
         start_component_foreground "$component"
     done
+    bdx_archiver_start_registration_retry "$ENV_FILE" "$USER_LOCAL"
     wait -n "${foreground_pids[@]}"
     status=$?
     stop_foreground_components
@@ -111,3 +113,5 @@ fi
 for component in $(bdx_component_list); do
     start_component_background "$component"
 done
+
+bdx_archiver_start_registration_retry "$ENV_FILE" "$USER_LOCAL"

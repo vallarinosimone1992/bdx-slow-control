@@ -34,6 +34,8 @@ if [[ "$USER_LOCAL" -eq 1 ]]; then
 fi
 bdx_export_archappl_env
 
+bdx_archiver_stop_registration_retry
+
 if [[ ! -x "$BDX_ARCHIVER_TOMCAT_HOME/bin/catalina.sh" ]]; then
     bdx_die "Tomcat catalina.sh not found or not executable: $BDX_ARCHIVER_TOMCAT_HOME/bin/catalina.sh"
 fi

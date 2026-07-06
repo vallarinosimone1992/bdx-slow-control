@@ -1,0 +1,57 @@
+{
+  "server": {
+    "interfaces": [
+      "0.0.0.0"
+    ],
+    "poll_interval": 1.0,
+    "log_pv_names": false
+  },
+  "devices": [
+    {
+      "name": "LV1",
+      "prefix": "BDX:PSU:LV1:",
+      "mode": "hardware",
+      "driver": "cpx400dp",
+      "host": "172.22.50.20",
+      "port": 9221,
+      "timeout": 3.0,
+      "channels": [
+        1,
+        2
+      ],
+      "lock_interface": true,
+      "clear_status": true,
+      "configure_independent": false,
+      "software_limits": {
+        "minimum_voltage": 0.0,
+        "maximum_voltage": 60.0,
+        "minimum_current_limit": 0.0,
+        "maximum_current_limit": 20.0,
+        "maximum_power": 420.0
+      }
+    },
+    {
+      "name": "LV2",
+      "prefix": "BDX:PSU:LV2:",
+      "mode": "hardware",
+      "driver": "cpx400dp",
+      "host": "172.22.50.21",
+      "port": 9221,
+      "timeout": 3.0,
+      "channels": [
+        1,
+        2
+      ],
+      "lock_interface": true,
+      "clear_status": true,
+      "configure_independent": false,
+      "software_limits": {
+        "minimum_voltage": 0.0,
+        "maximum_voltage": 60.0,
+        "minimum_current_limit": 0.0,
+        "maximum_current_limit": 20.0,
+        "maximum_power": 420.0
+      }
+    }
+  ]
+}

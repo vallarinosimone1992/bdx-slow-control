@@ -9,6 +9,11 @@ from pathlib import Path
 from typing import Any
 
 
+DEFAULT_PROFILE_DIR = Path("config/profiles/default")
+PROTOTYPE_PROFILE_DIR = Path("config/profiles/prototype")
+DEFAULT_PSU_CONFIG = DEFAULT_PROFILE_DIR / "psu.json"
+
+
 class ConfigurationError(ValueError):
     """Raised when an IOC configuration is invalid."""
 

@@ -8,7 +8,12 @@ from pathlib import Path
 from caproto.server import run
 
 from .builders import BUILDERS
-from .config import ConfigurationError, load_json
+from .config import (
+    DEFAULT_PROFILE_DIR,
+    DEFAULT_PSU_CONFIG,
+    ConfigurationError,
+    load_json,
+)
 from .logging_setup import configure_logging
 from .prototype import build_prototype
 
@@ -40,7 +45,7 @@ def _run(builder_name: str, default_config: str, argv=None) -> None:
 
 
 def psu_main(argv=None) -> None:
-    _run("psu", "config/profiles/prototype/psu.json", argv)
+    _run("psu", str(DEFAULT_PSU_CONFIG), argv)
 
 
 def chiller_main(argv=None) -> None:
@@ -67,7 +72,7 @@ def prototype_main(argv=None) -> None:
     """Run every configured subsystem in one Channel Access server process."""
     configure_logging()
     parser = argparse.ArgumentParser(prog="bdx-prototype-ioc")
-    parser.add_argument("--config-dir", default="config/profiles/prototype")
+    parser.add_argument("--config-dir", default=str(DEFAULT_PROFILE_DIR))
     args = parser.parse_args(argv)
 
     try:
@@ -85,7 +90,7 @@ def prototype_main(argv=None) -> None:
 def pv_list_main(argv=None) -> None:
     configure_logging()
     parser = argparse.ArgumentParser(prog="bdx-pv-list")
-    parser.add_argument("--config-dir", default="config/profiles/prototype")
+    parser.add_argument("--config-dir", default=str(DEFAULT_PROFILE_DIR))
     parser.add_argument("--output", help="Optional output file")
     args = parser.parse_args(argv)
 
