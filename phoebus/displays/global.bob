@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>BDX GLOBAL</name>
   <width>1400</width>
-  <height>1103</height>
+  <height>1133</height>
   <widget type="label" version="2.0.0">
     <name>Label_1</name>
     <x>20</x>
@@ -198,6 +198,23 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
+        <value>1</value>
+        <description>Write 1 to BDX:GLOBAL:UPDATE_PERIOD_SET</description>
+      </action>
+    </actions>
+    <text>1 s</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_15</name>
+    <x>472</x>
+    <y>105</y>
+    <width>75</width>
+    <height>28</height>
+    <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
         <value>2</value>
         <description>Write 2 to BDX:GLOBAL:UPDATE_PERIOD_SET</description>
       </action>
@@ -206,8 +223,8 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_15</name>
-    <x>472</x>
+    <name>Action_16</name>
+    <x>554</x>
     <y>105</y>
     <width>75</width>
     <height>28</height>
@@ -223,8 +240,8 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_16</name>
-    <x>554</x>
+    <name>Action_17</name>
+    <x>636</x>
     <y>105</y>
     <width>75</width>
     <height>28</height>
@@ -237,23 +254,6 @@
       </action>
     </actions>
     <text>10 s</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>Action_17</name>
-    <x>636</x>
-    <y>105</y>
-    <width>75</width>
-    <height>28</height>
-    <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
-    <actions>
-      <action type="write_pv">
-        <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
-        <value>30</value>
-        <description>Write 30 to BDX:GLOBAL:UPDATE_PERIOD_SET</description>
-      </action>
-    </actions>
-    <text>30 s</text>
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
@@ -290,9 +290,9 @@
     <name>Label_21</name>
     <x>995</x>
     <y>105</y>
-    <width>390</width>
+    <width>240</width>
     <height>28</height>
-    <text>Allowed period: 2–3600 s; all values remain below 1 Hz.</text>
+    <text>Allowed period: 1–3600 s.</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0" />
     </font>
@@ -307,8 +307,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:GLOBAL:INTERLOCK_TEST_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:GLOBAL:INTERLOCK_TEST_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:GLOBAL:INTERLOCK_TEST_CMD</description>
       </action>
     </actions>
     <text>TEST INTERLOCK</text>
@@ -329,8 +329,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:GLOBAL:INTERLOCK_RESET_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:GLOBAL:INTERLOCK_RESET_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:GLOBAL:INTERLOCK_RESET_CMD</description>
       </action>
     </actions>
     <text>RESET INTERLOCK</text>
@@ -346,8 +346,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:GLOBAL:ALLOFF_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:GLOBAL:ALLOFF_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:GLOBAL:ALLOFF_CMD</description>
       </action>
     </actions>
     <text>GLOBAL ALL OFF</text>
@@ -358,19 +358,45 @@
       <color red="255" green="150" blue="150" />
     </background_color>
   </widget>
-  <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_25</name>
+  <widget type="label" version="2.0.0">
+    <name>Label_25</name>
     <x>20</x>
     <y>197</y>
+    <width>420</width>
+    <height>28</height>
+    <text>Prototype update frequency</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
+    </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>OpenFile_26</name>
+    <x>540</x>
+    <y>197</y>
+    <width>150</width>
+    <height>30</height>
+    <actions>
+      <action type="open_file">
+        <file>global_0_prototype_update_frequency.plt</file>
+        <description>Open Full history</description>
+      </action>
+    </actions>
+    <text>Full history</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="databrowser" version="2.0.0">
+    <name>DataBrowser_27</name>
+    <x>20</x>
+    <y>235</y>
     <width>670</width>
     <height>310</height>
     <file>global_0_prototype_update_frequency.plt</file>
     <show_toolbar>true</show_toolbar>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_26</name>
+    <name>Label_28</name>
     <x>20</x>
-    <y>537</y>
+    <y>567</y>
     <width>570</width>
     <height>26</height>
     <text>PV name</text>
@@ -383,9 +409,9 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_27</name>
+    <name>Label_29</name>
     <x>600</x>
-    <y>537</y>
+    <y>567</y>
     <width>250</width>
     <height>26</height>
     <text>Current value</text>
@@ -398,9 +424,9 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_28</name>
+    <name>Label_30</name>
     <x>870</x>
-    <y>537</y>
+    <y>567</y>
     <width>270</width>
     <height>26</height>
     <text>Control</text>
@@ -413,9 +439,9 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_29</name>
+    <name>Label_31</name>
     <x>20</x>
-    <y>569</y>
+    <y>599</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:GLOBAL:ALLOFF_CMD</text>
@@ -428,25 +454,25 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_30</name>
+    <name>Readback_32</name>
     <x>600</x>
-    <y>569</y>
+    <y>599</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:ALLOFF_CMD</pv_name>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_31</name>
+    <name>Action_33</name>
     <x>870</x>
-    <y>569</y>
+    <y>599</y>
     <width>135</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:ALLOFF_CMD</pv_name>
     <actions>
       <action type="write_pv">
         <pv_name>BDX:GLOBAL:ALLOFF_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:GLOBAL:ALLOFF_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:GLOBAL:ALLOFF_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
@@ -458,9 +484,9 @@
     </background_color>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_32</name>
+    <name>Label_34</name>
     <x>20</x>
-    <y>598</y>
+    <y>628</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:GLOBAL:HEARTBEAT</text>
@@ -473,17 +499,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_33</name>
+    <name>Readback_35</name>
     <x>600</x>
-    <y>598</y>
+    <y>628</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:HEARTBEAT</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_34</name>
+    <name>Label_36</name>
     <x>20</x>
-    <y>627</y>
+    <y>657</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:GLOBAL:INTERLOCK_ACTIVE</text>
@@ -496,17 +522,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_35</name>
+    <name>Readback_37</name>
     <x>600</x>
-    <y>627</y>
+    <y>657</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:INTERLOCK_ACTIVE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_36</name>
+    <name>Label_38</name>
     <x>20</x>
-    <y>656</y>
+    <y>686</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:GLOBAL:INTERLOCK_REASON</text>
@@ -519,17 +545,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_37</name>
+    <name>Readback_39</name>
     <x>600</x>
-    <y>656</y>
+    <y>686</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:INTERLOCK_REASON</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_38</name>
+    <name>Label_40</name>
     <x>20</x>
-    <y>685</y>
+    <y>715</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:GLOBAL:INTERLOCK_RESET_CMD</text>
@@ -542,34 +568,34 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_39</name>
+    <name>Readback_41</name>
     <x>600</x>
-    <y>685</y>
+    <y>715</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:INTERLOCK_RESET_CMD</pv_name>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_40</name>
+    <name>Action_42</name>
     <x>870</x>
-    <y>685</y>
+    <y>715</y>
     <width>135</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:INTERLOCK_RESET_CMD</pv_name>
     <actions>
       <action type="write_pv">
         <pv_name>BDX:GLOBAL:INTERLOCK_RESET_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:GLOBAL:INTERLOCK_RESET_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:GLOBAL:INTERLOCK_RESET_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_41</name>
+    <name>Label_43</name>
     <x>20</x>
-    <y>714</y>
+    <y>744</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:GLOBAL:INTERLOCK_TEST_CMD</text>
@@ -582,25 +608,25 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_42</name>
+    <name>Readback_44</name>
     <x>600</x>
-    <y>714</y>
+    <y>744</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:INTERLOCK_TEST_CMD</pv_name>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_43</name>
+    <name>Action_45</name>
     <x>870</x>
-    <y>714</y>
+    <y>744</y>
     <width>135</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:INTERLOCK_TEST_CMD</pv_name>
     <actions>
       <action type="write_pv">
         <pv_name>BDX:GLOBAL:INTERLOCK_TEST_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:GLOBAL:INTERLOCK_TEST_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:GLOBAL:INTERLOCK_TEST_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
@@ -612,9 +638,9 @@
     </background_color>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_44</name>
+    <name>Label_46</name>
     <x>20</x>
-    <y>743</y>
+    <y>773</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:GLOBAL:LAST_ACTION</text>
@@ -627,17 +653,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_45</name>
+    <name>Readback_47</name>
     <x>600</x>
-    <y>743</y>
+    <y>773</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:LAST_ACTION</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_46</name>
+    <name>Label_48</name>
     <x>20</x>
-    <y>772</y>
+    <y>802</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:GLOBAL:MAX_UPDATE_PERIOD_RBV</text>
@@ -650,17 +676,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_47</name>
+    <name>Readback_49</name>
     <x>600</x>
-    <y>772</y>
+    <y>802</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:MAX_UPDATE_PERIOD_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_48</name>
+    <name>Label_50</name>
     <x>20</x>
-    <y>801</y>
+    <y>831</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:GLOBAL:MIN_UPDATE_PERIOD_RBV</text>
@@ -673,17 +699,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_49</name>
+    <name>Readback_51</name>
     <x>600</x>
-    <y>801</y>
+    <y>831</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:MIN_UPDATE_PERIOD_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_50</name>
+    <name>Label_52</name>
     <x>20</x>
-    <y>830</y>
+    <y>860</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:GLOBAL:READY</text>
@@ -696,17 +722,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_51</name>
+    <name>Readback_53</name>
     <x>600</x>
-    <y>830</y>
+    <y>860</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:READY</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_52</name>
+    <name>Label_54</name>
     <x>20</x>
-    <y>859</y>
+    <y>889</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:GLOBAL:SIMULATION</text>
@@ -719,17 +745,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_53</name>
+    <name>Readback_55</name>
     <x>600</x>
-    <y>859</y>
+    <y>889</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:SIMULATION</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_54</name>
+    <name>Label_56</name>
     <x>20</x>
-    <y>888</y>
+    <y>918</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:GLOBAL:SYSTEM_STATE</text>
@@ -742,17 +768,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_55</name>
+    <name>Readback_57</name>
     <x>600</x>
-    <y>888</y>
+    <y>918</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:SYSTEM_STATE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_56</name>
+    <name>Label_58</name>
     <x>20</x>
-    <y>917</y>
+    <y>947</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</text>
@@ -765,17 +791,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_57</name>
+    <name>Readback_59</name>
     <x>600</x>
-    <y>917</y>
+    <y>947</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_58</name>
+    <name>Label_60</name>
     <x>20</x>
-    <y>946</y>
+    <y>976</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:GLOBAL:UPDATE_PERIOD_RBV</text>
@@ -788,17 +814,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_59</name>
+    <name>Readback_61</name>
     <x>600</x>
-    <y>946</y>
+    <y>976</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:UPDATE_PERIOD_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_60</name>
+    <name>Label_62</name>
     <x>20</x>
-    <y>975</y>
+    <y>1005</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:GLOBAL:UPDATE_PERIOD_SET</text>
@@ -811,17 +837,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_61</name>
+    <name>Readback_63</name>
     <x>600</x>
-    <y>975</y>
+    <y>1005</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_62</name>
+    <name>Setpoint_64</name>
     <x>870</x>
-    <y>975</y>
+    <y>1005</y>
     <width>270</width>
     <height>25</height>
     <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>

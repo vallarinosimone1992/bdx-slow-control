@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <databrowser>
-    <title>Prototype update frequency</title>
+    <title>Environment pressure</title>
     <save_changes>false</save_changes>
     <show_legend>true</show_legend>
     <show_toolbar>true</show_toolbar>
@@ -14,7 +14,7 @@
     <axes>
         <axis>
             <visible>true</visible>
-            <name>Value</name>
+            <name>Pressure</name>
             <use_axis_name>true</use_axis_name>
             <use_trace_names>false</use_trace_names>
             <right>false</right>
@@ -29,9 +29,9 @@
     </annotations>
     <pvlist>
         <pv>
-            <display_name>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</display_name>
+            <display_name>P01</display_name>
             <visible>true</visible>
-            <name>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</name>
+            <name>BDX:ENV:PRESSURE:P01:VALUE</name>
             <axis>0</axis>
             <color>
                 <red>33</red>

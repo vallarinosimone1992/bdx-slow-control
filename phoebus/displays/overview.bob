@@ -233,8 +233,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:GLOBAL:INTERLOCK_TEST_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:GLOBAL:INTERLOCK_TEST_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:GLOBAL:INTERLOCK_TEST_CMD</description>
       </action>
     </actions>
     <text>TEST INTERLOCK</text>
@@ -255,8 +255,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:GLOBAL:INTERLOCK_RESET_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:GLOBAL:INTERLOCK_RESET_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:GLOBAL:INTERLOCK_RESET_CMD</description>
       </action>
     </actions>
     <text>RESET</text>
@@ -272,8 +272,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:GLOBAL:ALLOFF_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:GLOBAL:ALLOFF_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:GLOBAL:ALLOFF_CMD</description>
       </action>
     </actions>
     <text>ALL OFF</text>
@@ -324,6 +324,23 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
+        <value>1</value>
+        <description>Write 1 to BDX:GLOBAL:UPDATE_PERIOD_SET</description>
+      </action>
+    </actions>
+    <text>1 s</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_25</name>
+    <x>472</x>
+    <y>150</y>
+    <width>75</width>
+    <height>28</height>
+    <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
         <value>2</value>
         <description>Write 2 to BDX:GLOBAL:UPDATE_PERIOD_SET</description>
       </action>
@@ -332,8 +349,8 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_25</name>
-    <x>472</x>
+    <name>Action_26</name>
+    <x>554</x>
     <y>150</y>
     <width>75</width>
     <height>28</height>
@@ -349,8 +366,8 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_26</name>
-    <x>554</x>
+    <name>Action_27</name>
+    <x>636</x>
     <y>150</y>
     <width>75</width>
     <height>28</height>
@@ -363,23 +380,6 @@
       </action>
     </actions>
     <text>10 s</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>Action_27</name>
-    <x>636</x>
-    <y>150</y>
-    <width>75</width>
-    <height>28</height>
-    <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
-    <actions>
-      <action type="write_pv">
-        <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
-        <value>30</value>
-        <description>Write 30 to BDX:GLOBAL:UPDATE_PERIOD_SET</description>
-      </action>
-    </actions>
-    <text>30 s</text>
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
@@ -416,9 +416,9 @@
     <name>Label_31</name>
     <x>995</x>
     <y>150</y>
-    <width>390</width>
+    <width>240</width>
     <height>28</height>
-    <text>Allowed period: 2–3600 s; all values remain below 1 Hz.</text>
+    <text>Allowed period: 1–3600 s.</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0" />
     </font>
@@ -478,7 +478,7 @@
     <y>227</y>
     <width>160</width>
     <height>24</height>
-    <text>HV:HV1:CH1</text>
+    <text>ENV:HUMIDITY:H01</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -489,7 +489,7 @@
     <y>252</y>
     <width>160</width>
     <height>25</height>
-    <pv_name>BDX:HV:HV1:CH1:COMM_STATUS</pv_name>
+    <pv_name>BDX:ENV:HUMIDITY:H01:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_39</name>
@@ -497,7 +497,7 @@
     <y>227</y>
     <width>160</width>
     <height>24</height>
-    <text>HV:HV1</text>
+    <text>ENV:PRESSURE:P01</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -508,7 +508,7 @@
     <y>252</y>
     <width>160</width>
     <height>25</height>
-    <pv_name>BDX:HV:HV1:COMM_STATUS</pv_name>
+    <pv_name>BDX:ENV:PRESSURE:P01:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_41</name>
@@ -516,7 +516,7 @@
     <y>227</y>
     <width>160</width>
     <height>24</height>
-    <text>PSU:LV1:CH1</text>
+    <text>ENV:TEMP:T01</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -527,7 +527,7 @@
     <y>252</y>
     <width>160</width>
     <height>25</height>
-    <pv_name>BDX:PSU:LV1:CH1:COMM_STATUS</pv_name>
+    <pv_name>BDX:ENV:TEMP:T01:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_43</name>
@@ -535,7 +535,7 @@
     <y>227</y>
     <width>160</width>
     <height>24</height>
-    <text>PSU:LV1:CH2</text>
+    <text>HV:HV1:CH1</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -546,7 +546,7 @@
     <y>252</y>
     <width>160</width>
     <height>25</height>
-    <pv_name>BDX:PSU:LV1:CH2:COMM_STATUS</pv_name>
+    <pv_name>BDX:HV:HV1:CH1:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_45</name>
@@ -554,7 +554,7 @@
     <y>227</y>
     <width>160</width>
     <height>24</height>
-    <text>PSU:LV1</text>
+    <text>HV:HV1:CH2</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -565,7 +565,7 @@
     <y>252</y>
     <width>160</width>
     <height>25</height>
-    <pv_name>BDX:PSU:LV1:COMM_STATUS</pv_name>
+    <pv_name>BDX:HV:HV1:CH2:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_47</name>
@@ -573,7 +573,7 @@
     <y>285</y>
     <width>160</width>
     <height>24</height>
-    <text>PSU:LV2:CH1</text>
+    <text>HV:HV1</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -584,7 +584,7 @@
     <y>310</y>
     <width>160</width>
     <height>25</height>
-    <pv_name>BDX:PSU:LV2:CH1:COMM_STATUS</pv_name>
+    <pv_name>BDX:HV:HV1:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_49</name>
@@ -592,7 +592,7 @@
     <y>285</y>
     <width>160</width>
     <height>24</height>
-    <text>PSU:LV2:CH2</text>
+    <text>PSU:LV1:CH1</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -603,7 +603,7 @@
     <y>310</y>
     <width>160</width>
     <height>25</height>
-    <pv_name>BDX:PSU:LV2:CH2:COMM_STATUS</pv_name>
+    <pv_name>BDX:PSU:LV1:CH1:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_51</name>
@@ -611,7 +611,7 @@
     <y>285</y>
     <width>160</width>
     <height>24</height>
-    <text>PSU:LV2</text>
+    <text>PSU:LV1:CH2</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -622,12 +622,97 @@
     <y>310</y>
     <width>160</width>
     <height>25</height>
+    <pv_name>BDX:PSU:LV1:CH2:COMM_STATUS</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_53</name>
+    <x>545</x>
+    <y>285</y>
+    <width>160</width>
+    <height>24</height>
+    <text>PSU:LV1</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_54</name>
+    <x>545</x>
+    <y>310</y>
+    <width>160</width>
+    <height>25</height>
+    <pv_name>BDX:PSU:LV1:COMM_STATUS</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_55</name>
+    <x>720</x>
+    <y>285</y>
+    <width>160</width>
+    <height>24</height>
+    <text>PSU:LV2:CH1</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_56</name>
+    <x>720</x>
+    <y>310</y>
+    <width>160</width>
+    <height>25</height>
+    <pv_name>BDX:PSU:LV2:CH1:COMM_STATUS</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_57</name>
+    <x>895</x>
+    <y>285</y>
+    <width>160</width>
+    <height>24</height>
+    <text>PSU:LV2:CH2</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_58</name>
+    <x>895</x>
+    <y>310</y>
+    <width>160</width>
+    <height>25</height>
+    <pv_name>BDX:PSU:LV2:CH2:COMM_STATUS</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_59</name>
+    <x>1070</x>
+    <y>285</y>
+    <width>160</width>
+    <height>24</height>
+    <text>PSU:LV2</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_60</name>
+    <x>1070</x>
+    <y>310</y>
+    <width>160</width>
+    <height>25</height>
     <pv_name>BDX:PSU:LV2:COMM_STATUS</pv_name>
   </widget>
   <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_53</name>
+    <name>DataBrowser_61</name>
+    <x>20</x>
+    <y>413</y>
+    <width>670</width>
+    <height>360</height>
+    <file>overview_environment.plt</file>
+    <show_toolbar>true</show_toolbar>
+  </widget>
+  <widget type="databrowser" version="2.0.0">
+    <name>DataBrowser_62</name>
     <x>710</x>
-    <y>355</y>
+    <y>413</y>
     <width>670</width>
     <height>360</height>
     <file>overview_chiller.plt</file>

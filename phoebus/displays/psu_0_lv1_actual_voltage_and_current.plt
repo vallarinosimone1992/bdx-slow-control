@@ -56,7 +56,7 @@
             <point_type>NONE</point_type>
             <point_size>6</point_size>
             <waveform_index>0</waveform_index>
-            <period>5.0</period>
+            <period>1.0</period>
             <ring_size>5000</ring_size>
             <request>RAW</request>
         </pv>
@@ -76,7 +76,7 @@
             <point_type>NONE</point_type>
             <point_size>6</point_size>
             <waveform_index>0</waveform_index>
-            <period>5.0</period>
+            <period>1.0</period>
             <ring_size>5000</ring_size>
             <request>RAW</request>
         </pv>
@@ -96,7 +96,7 @@
             <point_type>NONE</point_type>
             <point_size>6</point_size>
             <waveform_index>0</waveform_index>
-            <period>5.0</period>
+            <period>1.0</period>
             <ring_size>5000</ring_size>
             <request>RAW</request>
         </pv>
@@ -116,7 +116,7 @@
             <point_type>NONE</point_type>
             <point_size>6</point_size>
             <waveform_index>0</waveform_index>
-            <period>5.0</period>
+            <period>1.0</period>
             <ring_size>5000</ring_size>
             <request>RAW</request>
         </pv>

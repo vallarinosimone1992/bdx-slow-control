@@ -252,8 +252,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV1:ALLOFF_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV1:ALLOFF_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV1:ALLOFF_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
@@ -320,8 +320,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV1:CH1:APPLY_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV1:CH1:APPLY_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV1:CH1:APPLY_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
@@ -406,8 +406,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV1:CH1:CLEAR_ERROR_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV1:CH1:CLEAR_ERROR_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV1:CH1:CLEAR_ERROR_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
@@ -792,8 +792,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV1:CH1:OUTPUT_SET</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV1:CH1:OUTPUT_SET</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV1:CH1:OUTPUT_SET</description>
       </action>
     </actions>
     <text>ON</text>
@@ -814,8 +814,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV1:CH1:OUTPUT_SET</pv_name>
-        <value>0</value>
-        <description>Write 0 to BDX:PSU:LV1:CH1:OUTPUT_SET</description>
+        <value>Off</value>
+        <description>Write Off to BDX:PSU:LV1:CH1:OUTPUT_SET</description>
       </action>
     </actions>
     <text>OFF</text>
@@ -1067,8 +1067,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV1:CH2:APPLY_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV1:CH2:APPLY_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV1:CH2:APPLY_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
@@ -1153,8 +1153,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV1:CH2:CLEAR_ERROR_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV1:CH2:CLEAR_ERROR_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV1:CH2:CLEAR_ERROR_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
@@ -1539,8 +1539,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV1:CH2:OUTPUT_SET</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV1:CH2:OUTPUT_SET</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV1:CH2:OUTPUT_SET</description>
       </action>
     </actions>
     <text>ON</text>
@@ -1561,8 +1561,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV1:CH2:OUTPUT_SET</pv_name>
-        <value>0</value>
-        <description>Write 0 to BDX:PSU:LV1:CH2:OUTPUT_SET</description>
+        <value>Off</value>
+        <description>Write Off to BDX:PSU:LV1:CH2:OUTPUT_SET</description>
       </action>
     </actions>
     <text>OFF</text>
@@ -1814,8 +1814,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV1:CLEAR_ERROR_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV1:CLEAR_ERROR_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV1:CLEAR_ERROR_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
@@ -2038,8 +2038,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV2:ALLOFF_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV2:ALLOFF_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV2:ALLOFF_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
@@ -2106,8 +2106,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV2:CH1:APPLY_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV2:CH1:APPLY_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV2:CH1:APPLY_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
@@ -2192,8 +2192,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV2:CH1:CLEAR_ERROR_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV2:CH1:CLEAR_ERROR_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV2:CH1:CLEAR_ERROR_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
@@ -2578,8 +2578,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV2:CH1:OUTPUT_SET</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV2:CH1:OUTPUT_SET</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV2:CH1:OUTPUT_SET</description>
       </action>
     </actions>
     <text>ON</text>
@@ -2600,8 +2600,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV2:CH1:OUTPUT_SET</pv_name>
-        <value>0</value>
-        <description>Write 0 to BDX:PSU:LV2:CH1:OUTPUT_SET</description>
+        <value>Off</value>
+        <description>Write Off to BDX:PSU:LV2:CH1:OUTPUT_SET</description>
       </action>
     </actions>
     <text>OFF</text>
@@ -2853,8 +2853,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV2:CH2:APPLY_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV2:CH2:APPLY_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV2:CH2:APPLY_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
@@ -2939,8 +2939,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV2:CH2:CLEAR_ERROR_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV2:CH2:CLEAR_ERROR_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV2:CH2:CLEAR_ERROR_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
@@ -3325,8 +3325,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV2:CH2:OUTPUT_SET</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV2:CH2:OUTPUT_SET</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV2:CH2:OUTPUT_SET</description>
       </action>
     </actions>
     <text>ON</text>
@@ -3347,8 +3347,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV2:CH2:OUTPUT_SET</pv_name>
-        <value>0</value>
-        <description>Write 0 to BDX:PSU:LV2:CH2:OUTPUT_SET</description>
+        <value>Off</value>
+        <description>Write Off to BDX:PSU:LV2:CH2:OUTPUT_SET</description>
       </action>
     </actions>
     <text>OFF</text>
@@ -3600,8 +3600,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV2:CLEAR_ERROR_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV2:CLEAR_ERROR_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV2:CLEAR_ERROR_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>

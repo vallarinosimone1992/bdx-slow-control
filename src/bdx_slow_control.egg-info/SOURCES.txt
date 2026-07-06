@@ -34,6 +34,7 @@ src/bdx_slow_control/iocs/daq.py
 src/bdx_slow_control/iocs/environment.py
 src/bdx_slow_control/iocs/global_system.py
 src/bdx_slow_control/iocs/power.py
+tests/test_archiver_batch_tool.py
 tests/test_archiver_deployment.py
 tests/test_chiller_ioc.py
 tests/test_config.py

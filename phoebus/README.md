@@ -49,7 +49,8 @@ bdx-generate-displays \
 
 Generated plot resources are Phoebus Data Browser `.plt` files. They keep the
 toolbar and legend visible, use a moving window ending at `now`, support standard
-Data Browser pan/zoom, and keep a live Channel Access ring buffer. Use
+Data Browser pan/zoom, and keep a live Channel Access ring buffer. The default
+generated trace scan period is 1.0 s. Use
 `BDX_TREND_ARCHIVE_REQUEST=OPTIMIZED` before generation when long historical
 ranges should prefer optimized Archiver Appliance retrieval; the default is
 `RAW`.
@@ -86,7 +87,10 @@ bdx-generate-displays \
   --only psu
 ```
 
-Register BDX PVs with the management API before relying on historical data:
+Register BDX PVs with the management API before relying on historical data.
+“Full history” works only for PVs registered and actively sampled by Archiver
+Appliance. Samples from before registration cannot be reconstructed
+retroactively:
 
 ```bash
 deploy/archiver-appliance/scripts/register-pvs.py \

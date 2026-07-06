@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>BDX ENVIRONMENT</name>
   <width>1400</width>
-  <height>760</height>
+  <height>1077</height>
   <widget type="label" version="2.0.0">
     <name>Label_1</name>
     <x>20</x>
@@ -261,7 +261,7 @@
     <y>207</y>
     <width>56</width>
     <height>28</height>
-    <text>T00</text>
+    <text>T01</text>
     <font>
       <font name="Default" family="Liberation Sans" style="BOLD" size="16.0" />
     </font>
@@ -279,7 +279,7 @@
     <y>249</y>
     <width>30</width>
     <height>30</height>
-    <pv_name>BDX:ENV:TEMP:T00:STATUS_OK</pv_name>
+    <pv_name>BDX:ENV:TEMP:T01:STATUS_OK</pv_name>
     <off_color>
       <color red="180" green="40" blue="40" />
     </off_color>
@@ -294,7 +294,7 @@
     <y>203</y>
     <width>145</width>
     <height>46</height>
-    <pv_name>BDX:ENV:TEMP:T00:VALUE</pv_name>
+    <pv_name>BDX:ENV:TEMP:T01:VALUE</pv_name>
     <font>
       <font name="Default" family="Liberation Sans" style="BOLD" size="28.0" />
     </font>
@@ -330,270 +330,6 @@
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_24</name>
-    <x>360</x>
-    <y>197</y>
-    <width>320</width>
-    <height>92</height>
-    <text />
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0" />
-    </font>
-    <background_color>
-      <color red="245" green="248" blue="250" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_25</name>
-    <x>372</x>
-    <y>207</y>
-    <width>56</width>
-    <height>28</height>
-    <text>T01</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="16.0" />
-    </font>
-    <background_color>
-      <color red="230" green="85" blue="13" />
-    </background_color>
-    <transparent>false</transparent>
-    <foreground_color>
-      <color red="255" green="255" blue="255" />
-    </foreground_color>
-  </widget>
-  <widget type="led" version="2.0.0">
-    <name>StatusLED_26</name>
-    <x>372</x>
-    <y>249</y>
-    <width>30</width>
-    <height>30</height>
-    <pv_name>BDX:ENV:TEMP:T01:STATUS_OK</pv_name>
-    <off_color>
-      <color red="180" green="40" blue="40" />
-    </off_color>
-    <on_color>
-      <color red="40" green="170" blue="80" />
-    </on_color>
-    <border_alarm_sensitive>false</border_alarm_sensitive>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_27</name>
-    <x>438</x>
-    <y>203</y>
-    <width>145</width>
-    <height>46</height>
-    <pv_name>BDX:ENV:TEMP:T01:VALUE</pv_name>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="28.0" />
-    </font>
-    <format>1</format>
-    <precision>2</precision>
-    <show_units>false</show_units>
-    <background_color>
-      <color red="255" green="255" blue="218" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_28</name>
-    <x>592</x>
-    <y>214</y>
-    <width>34</width>
-    <height>28</height>
-    <text>°C</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="16.0" />
-    </font>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_29</name>
-    <x>412</x>
-    <y>253</y>
-    <width>58</width>
-    <height>22</height>
-    <text>Status</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="11.0" />
-    </font>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_30</name>
-    <x>700</x>
-    <y>197</y>
-    <width>320</width>
-    <height>92</height>
-    <text />
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0" />
-    </font>
-    <background_color>
-      <color red="245" green="248" blue="250" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_31</name>
-    <x>712</x>
-    <y>207</y>
-    <width>56</width>
-    <height>28</height>
-    <text>T02</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="16.0" />
-    </font>
-    <background_color>
-      <color red="49" green="163" blue="84" />
-    </background_color>
-    <transparent>false</transparent>
-    <foreground_color>
-      <color red="255" green="255" blue="255" />
-    </foreground_color>
-  </widget>
-  <widget type="led" version="2.0.0">
-    <name>StatusLED_32</name>
-    <x>712</x>
-    <y>249</y>
-    <width>30</width>
-    <height>30</height>
-    <pv_name>BDX:ENV:TEMP:T02:STATUS_OK</pv_name>
-    <off_color>
-      <color red="180" green="40" blue="40" />
-    </off_color>
-    <on_color>
-      <color red="40" green="170" blue="80" />
-    </on_color>
-    <border_alarm_sensitive>false</border_alarm_sensitive>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_33</name>
-    <x>778</x>
-    <y>203</y>
-    <width>145</width>
-    <height>46</height>
-    <pv_name>BDX:ENV:TEMP:T02:VALUE</pv_name>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="28.0" />
-    </font>
-    <format>1</format>
-    <precision>2</precision>
-    <show_units>false</show_units>
-    <background_color>
-      <color red="254" green="255" blue="255" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_34</name>
-    <x>932</x>
-    <y>214</y>
-    <width>34</width>
-    <height>28</height>
-    <text>°C</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="16.0" />
-    </font>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_35</name>
-    <x>752</x>
-    <y>253</y>
-    <width>58</width>
-    <height>22</height>
-    <text>Status</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="11.0" />
-    </font>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_36</name>
-    <x>1040</x>
-    <y>197</y>
-    <width>320</width>
-    <height>92</height>
-    <text />
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0" />
-    </font>
-    <background_color>
-      <color red="245" green="248" blue="250" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_37</name>
-    <x>1052</x>
-    <y>207</y>
-    <width>56</width>
-    <height>28</height>
-    <text>T03</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="16.0" />
-    </font>
-    <background_color>
-      <color red="117" green="107" blue="177" />
-    </background_color>
-    <transparent>false</transparent>
-    <foreground_color>
-      <color red="255" green="255" blue="255" />
-    </foreground_color>
-  </widget>
-  <widget type="led" version="2.0.0">
-    <name>StatusLED_38</name>
-    <x>1052</x>
-    <y>249</y>
-    <width>30</width>
-    <height>30</height>
-    <pv_name>BDX:ENV:TEMP:T03:STATUS_OK</pv_name>
-    <off_color>
-      <color red="180" green="40" blue="40" />
-    </off_color>
-    <on_color>
-      <color red="40" green="170" blue="80" />
-    </on_color>
-    <border_alarm_sensitive>false</border_alarm_sensitive>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_39</name>
-    <x>1118</x>
-    <y>203</y>
-    <width>145</width>
-    <height>46</height>
-    <pv_name>BDX:ENV:TEMP:T03:VALUE</pv_name>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="28.0" />
-    </font>
-    <format>1</format>
-    <precision>2</precision>
-    <show_units>false</show_units>
-    <background_color>
-      <color red="255" green="255" blue="255" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_40</name>
-    <x>1272</x>
-    <y>214</y>
-    <width>34</width>
-    <height>28</height>
-    <text>°C</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="16.0" />
-    </font>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_41</name>
-    <x>1092</x>
-    <y>253</y>
-    <width>58</width>
-    <height>22</height>
-    <text>Status</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="11.0" />
-    </font>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_42</name>
     <x>20</x>
     <y>312</y>
     <width>420</width>
@@ -604,7 +340,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>OpenFile_43</name>
+    <name>OpenFile_25</name>
     <x>540</x>
     <y>312</y>
     <width>150</width>
@@ -619,12 +355,82 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_44</name>
+    <name>DataBrowser_26</name>
     <x>20</x>
     <y>350</y>
     <width>670</width>
     <height>310</height>
     <file>environment_0_environment_temperatures.plt</file>
+    <show_toolbar>true</show_toolbar>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_27</name>
+    <x>710</x>
+    <y>312</y>
+    <width>420</width>
+    <height>28</height>
+    <text>Environment humidity</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
+    </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>OpenFile_28</name>
+    <x>1230</x>
+    <y>312</y>
+    <width>150</width>
+    <height>30</height>
+    <actions>
+      <action type="open_file">
+        <file>environment_1_environment_humidity.plt</file>
+        <description>Open Full history</description>
+      </action>
+    </actions>
+    <text>Full history</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="databrowser" version="2.0.0">
+    <name>DataBrowser_29</name>
+    <x>710</x>
+    <y>350</y>
+    <width>670</width>
+    <height>310</height>
+    <file>environment_1_environment_humidity.plt</file>
+    <show_toolbar>true</show_toolbar>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_30</name>
+    <x>20</x>
+    <y>672</y>
+    <width>420</width>
+    <height>28</height>
+    <text>Environment pressure</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
+    </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>OpenFile_31</name>
+    <x>540</x>
+    <y>672</y>
+    <width>150</width>
+    <height>30</height>
+    <actions>
+      <action type="open_file">
+        <file>environment_2_environment_pressure.plt</file>
+        <description>Open Full history</description>
+      </action>
+    </actions>
+    <text>Full history</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="databrowser" version="2.0.0">
+    <name>DataBrowser_32</name>
+    <x>20</x>
+    <y>710</y>
+    <width>670</width>
+    <height>310</height>
+    <file>environment_2_environment_pressure.plt</file>
     <show_toolbar>true</show_toolbar>
   </widget>
 </display>

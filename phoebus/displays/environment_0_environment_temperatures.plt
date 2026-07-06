@@ -29,74 +29,14 @@
     </annotations>
     <pvlist>
         <pv>
-            <display_name>T00</display_name>
-            <visible>true</visible>
-            <name>BDX:ENV:TEMP:T00:VALUE</name>
-            <axis>0</axis>
-            <color>
-                <red>33</red>
-                <green>113</green>
-                <blue>181</blue>
-            </color>
-            <trace_type>SINGLE_LINE</trace_type>
-            <linewidth>2</linewidth>
-            <line_style>SOLID</line_style>
-            <point_type>NONE</point_type>
-            <point_size>6</point_size>
-            <waveform_index>0</waveform_index>
-            <period>5.0</period>
-            <ring_size>5000</ring_size>
-            <request>RAW</request>
-        </pv>
-        <pv>
             <display_name>T01</display_name>
             <visible>true</visible>
             <name>BDX:ENV:TEMP:T01:VALUE</name>
             <axis>0</axis>
             <color>
-                <red>230</red>
-                <green>85</green>
-                <blue>13</blue>
-            </color>
-            <trace_type>SINGLE_LINE</trace_type>
-            <linewidth>2</linewidth>
-            <line_style>SOLID</line_style>
-            <point_type>NONE</point_type>
-            <point_size>6</point_size>
-            <waveform_index>0</waveform_index>
-            <period>5.0</period>
-            <ring_size>5000</ring_size>
-            <request>RAW</request>
-        </pv>
-        <pv>
-            <display_name>T02</display_name>
-            <visible>true</visible>
-            <name>BDX:ENV:TEMP:T02:VALUE</name>
-            <axis>0</axis>
-            <color>
-                <red>49</red>
-                <green>163</green>
-                <blue>84</blue>
-            </color>
-            <trace_type>SINGLE_LINE</trace_type>
-            <linewidth>2</linewidth>
-            <line_style>SOLID</line_style>
-            <point_type>NONE</point_type>
-            <point_size>6</point_size>
-            <waveform_index>0</waveform_index>
-            <period>5.0</period>
-            <ring_size>5000</ring_size>
-            <request>RAW</request>
-        </pv>
-        <pv>
-            <display_name>T03</display_name>
-            <visible>true</visible>
-            <name>BDX:ENV:TEMP:T03:VALUE</name>
-            <axis>0</axis>
-            <color>
-                <red>117</red>
-                <green>107</green>
-                <blue>177</blue>
+                <red>33</red>
+                <green>113</green>
+                <blue>181</blue>
             </color>
             <trace_type>SINGLE_LINE</trace_type>
             <linewidth>2</linewidth>

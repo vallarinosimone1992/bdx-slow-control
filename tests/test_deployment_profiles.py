@@ -59,6 +59,7 @@ def test_main_server_psu_profile_uses_two_cpx400dp_lv_supplies():
     psu = load_json(PROFILES / "main-server" / "psu.json")
     devices = psu["devices"]
 
+    assert psu["server"]["poll_interval"] == 1.0
     assert [device["name"] for device in devices] == ["LV1", "LV2"]
     assert [device["prefix"] for device in devices] == [
         "BDX:PSU:LV1:",
@@ -73,6 +74,15 @@ def test_main_server_psu_profile_uses_two_cpx400dp_lv_supplies():
     assert all(device["software_limits"]["maximum_voltage"] == 60.0 for device in devices)
     assert all(device["software_limits"]["maximum_current_limit"] == 20.0 for device in devices)
     assert all(device["software_limits"]["maximum_power"] == 420.0 for device in devices)
+
+
+def test_main_server_global_profile_uses_one_hertz_update_limits():
+    global_config = load_json(PROFILES / "main-server" / "global.json")
+    system = global_config["system"]
+
+    assert system["initial_update_period"] == 1.0
+    assert system["minimum_update_period"] == 1.0
+    assert system["maximum_update_period"] == 3600.0
 
 
 def test_main_server_chiller_profile_uses_ecosilver_hardware():

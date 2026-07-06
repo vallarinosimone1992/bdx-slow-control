@@ -275,8 +275,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:CHILLER:CHILLER1:APPLY_SETPOINT_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:CHILLER:CHILLER1:APPLY_SETPOINT_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:CHILLER:CHILLER1:APPLY_SETPOINT_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
@@ -361,8 +361,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:CHILLER:CHILLER1:CLEAR_ERROR_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:CHILLER:CHILLER1:CLEAR_ERROR_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:CHILLER:CHILLER1:CLEAR_ERROR_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
@@ -984,8 +984,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:CHILLER:CHILLER1:RUN_SET</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:CHILLER:CHILLER1:RUN_SET</description>
+        <value>On</value>
+        <description>Write On to BDX:CHILLER:CHILLER1:RUN_SET</description>
       </action>
     </actions>
     <text>START</text>
@@ -1006,8 +1006,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:CHILLER:CHILLER1:RUN_SET</pv_name>
-        <value>0</value>
-        <description>Write 0 to BDX:CHILLER:CHILLER1:RUN_SET</description>
+        <value>Off</value>
+        <description>Write Off to BDX:CHILLER:CHILLER1:RUN_SET</description>
       </action>
     </actions>
     <text>STOP</text>

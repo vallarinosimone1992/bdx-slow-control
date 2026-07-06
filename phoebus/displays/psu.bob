@@ -269,8 +269,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV1:ALLOFF_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV1:ALLOFF_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV1:ALLOFF_CMD</description>
       </action>
     </actions>
     <text>ALL OFF</text>
@@ -387,8 +387,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV2:ALLOFF_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV2:ALLOFF_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV2:ALLOFF_CMD</description>
       </action>
     </actions>
     <text>ALL OFF</text>
@@ -625,6 +625,8 @@
     <width>108</width>
     <height>28</height>
     <pv_name>BDX:PSU:LV1:CH1:VOLTAGE_REQUEST</pv_name>
+    <format>1</format>
+    <precision>3</precision>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_47</name>
@@ -655,6 +657,8 @@
     <width>108</width>
     <height>28</height>
     <pv_name>BDX:PSU:LV1:CH1:CURRENT_LIMIT_REQUEST</pv_name>
+    <format>1</format>
+    <precision>3</precision>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_50</name>
@@ -677,8 +681,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV1:CH1:APPLY_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV1:CH1:APPLY_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV1:CH1:APPLY_CMD</description>
       </action>
     </actions>
     <text>APPLY</text>
@@ -756,8 +760,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV1:CH1:OUTPUT_SET</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV1:CH1:OUTPUT_SET</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV1:CH1:OUTPUT_SET</description>
       </action>
     </actions>
     <text>ON</text>
@@ -778,8 +782,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV1:CH1:OUTPUT_SET</pv_name>
-        <value>0</value>
-        <description>Write 0 to BDX:PSU:LV1:CH1:OUTPUT_SET</description>
+        <value>Off</value>
+        <description>Write Off to BDX:PSU:LV1:CH1:OUTPUT_SET</description>
       </action>
     </actions>
     <text>OFF</text>
@@ -1042,6 +1046,8 @@
     <width>108</width>
     <height>28</height>
     <pv_name>BDX:PSU:LV1:CH2:VOLTAGE_REQUEST</pv_name>
+    <format>1</format>
+    <precision>3</precision>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_79</name>
@@ -1072,6 +1078,8 @@
     <width>108</width>
     <height>28</height>
     <pv_name>BDX:PSU:LV1:CH2:CURRENT_LIMIT_REQUEST</pv_name>
+    <format>1</format>
+    <precision>3</precision>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_82</name>
@@ -1094,8 +1102,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV1:CH2:APPLY_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV1:CH2:APPLY_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV1:CH2:APPLY_CMD</description>
       </action>
     </actions>
     <text>APPLY</text>
@@ -1173,8 +1181,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV1:CH2:OUTPUT_SET</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV1:CH2:OUTPUT_SET</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV1:CH2:OUTPUT_SET</description>
       </action>
     </actions>
     <text>ON</text>
@@ -1195,8 +1203,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV1:CH2:OUTPUT_SET</pv_name>
-        <value>0</value>
-        <description>Write 0 to BDX:PSU:LV1:CH2:OUTPUT_SET</description>
+        <value>Off</value>
+        <description>Write Off to BDX:PSU:LV1:CH2:OUTPUT_SET</description>
       </action>
     </actions>
     <text>OFF</text>
@@ -1470,6 +1478,8 @@
     <width>108</width>
     <height>28</height>
     <pv_name>BDX:PSU:LV2:CH1:VOLTAGE_REQUEST</pv_name>
+    <format>1</format>
+    <precision>3</precision>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_112</name>
@@ -1500,6 +1510,8 @@
     <width>108</width>
     <height>28</height>
     <pv_name>BDX:PSU:LV2:CH1:CURRENT_LIMIT_REQUEST</pv_name>
+    <format>1</format>
+    <precision>3</precision>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_115</name>
@@ -1522,8 +1534,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV2:CH1:APPLY_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV2:CH1:APPLY_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV2:CH1:APPLY_CMD</description>
       </action>
     </actions>
     <text>APPLY</text>
@@ -1601,8 +1613,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV2:CH1:OUTPUT_SET</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV2:CH1:OUTPUT_SET</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV2:CH1:OUTPUT_SET</description>
       </action>
     </actions>
     <text>ON</text>
@@ -1623,8 +1635,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV2:CH1:OUTPUT_SET</pv_name>
-        <value>0</value>
-        <description>Write 0 to BDX:PSU:LV2:CH1:OUTPUT_SET</description>
+        <value>Off</value>
+        <description>Write Off to BDX:PSU:LV2:CH1:OUTPUT_SET</description>
       </action>
     </actions>
     <text>OFF</text>
@@ -1887,6 +1899,8 @@
     <width>108</width>
     <height>28</height>
     <pv_name>BDX:PSU:LV2:CH2:VOLTAGE_REQUEST</pv_name>
+    <format>1</format>
+    <precision>3</precision>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_144</name>
@@ -1917,6 +1931,8 @@
     <width>108</width>
     <height>28</height>
     <pv_name>BDX:PSU:LV2:CH2:CURRENT_LIMIT_REQUEST</pv_name>
+    <format>1</format>
+    <precision>3</precision>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_147</name>
@@ -1939,8 +1955,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV2:CH2:APPLY_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV2:CH2:APPLY_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV2:CH2:APPLY_CMD</description>
       </action>
     </actions>
     <text>APPLY</text>
@@ -2018,8 +2034,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV2:CH2:OUTPUT_SET</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:PSU:LV2:CH2:OUTPUT_SET</description>
+        <value>On</value>
+        <description>Write On to BDX:PSU:LV2:CH2:OUTPUT_SET</description>
       </action>
     </actions>
     <text>ON</text>
@@ -2040,8 +2056,8 @@
     <actions>
       <action type="write_pv">
         <pv_name>BDX:PSU:LV2:CH2:OUTPUT_SET</pv_name>
-        <value>0</value>
-        <description>Write 0 to BDX:PSU:LV2:CH2:OUTPUT_SET</description>
+        <value>Off</value>
+        <description>Write Off to BDX:PSU:LV2:CH2:OUTPUT_SET</description>
       </action>
     </actions>
     <text>OFF</text>

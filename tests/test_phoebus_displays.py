@@ -75,6 +75,14 @@ def _plt_archive_urls(plt_root: ET.Element) -> set[str]:
     }
 
 
+def _plt_archive_count(plt_root: ET.Element) -> int:
+    return len(plt_root.findall("pvlist/pv/archive"))
+
+
+def _plt_trace_count(plt_root: ET.Element) -> int:
+    return len(plt_root.findall("pvlist/pv/name"))
+
+
 def _text_updates(path: Path) -> list[ET.Element]:
     root = ET.parse(path).getroot()
     return [
@@ -130,6 +138,19 @@ def _confirmed_button_texts_for_pv(path: Path, pv_name: str) -> set[str]:
         if widget.findtext("pv_name") == pv_name
         and widget.findtext("confirm_dialog") == "true"
     }
+
+
+def _action_values_for_pv(path: Path, pv_name: str) -> list[str]:
+    root = ET.parse(path).getroot()
+    return [
+        action.findtext("value")
+        for action in root.findall(".//action[@type='write_pv']")
+        if action.findtext("pv_name") == pv_name
+    ]
+
+
+def _text_entries(path: Path) -> list[ET.Element]:
+    return _widgets(path, "textentry")
 
 
 def test_generated_displays_are_valid_xml_and_cover_every_pv(tmp_path: Path):
@@ -193,14 +214,16 @@ def test_generated_databrowser_plt_files_are_live_only_when_archiver_is_disabled
 
     generate(PROTOTYPE_PROFILE, tmp_path)
     for path in tmp_path.glob("*.plt"):
-        assert _plt(path).find("pvlist/pv/archive") is None
+        root = _plt(path)
+        assert root.find("pvlist/pv/archive") is None
+        assert _plt_archive_count(root) == 0
         assert {
             period.text
-            for period in _plt(path).findall("pvlist/pv/period")
-        } == {"5.0"}
+            for period in root.findall("pvlist/pv/period")
+        } == {"1.0"}
         assert {
             request.text
-            for request in _plt(path).findall("pvlist/pv/request")
+            for request in root.findall("pvlist/pv/request")
         } == {"RAW"}
 
 
@@ -219,6 +242,7 @@ def test_generated_databrowser_plt_files_include_archive_source_when_enabled(
 
     for path in tmp_path.glob("psu_*.plt"):
         root = _plt(path)
+        assert _plt_archive_count(root) == _plt_trace_count(root)
         assert _plt_archive_urls(root) == {
             "pbraw://archiver.example:17668/retrieval"
         }
@@ -394,6 +418,21 @@ def test_psu_operator_and_expert_displays_from_main_server_profile(tmp_path: Pat
     assert "BDX:PSU:LV1:CH1:OCP_SET" not in _pv_references(operator)
 
 
+def test_psu_request_text_entries_use_decimal_precision(tmp_path: Path):
+    generate(MAIN_SERVER_PROFILE, tmp_path, only="psu")
+
+    entries = {
+        widget.findtext("pv_name"): widget
+        for widget in _text_entries(tmp_path / "psu.bob")
+    }
+    for device in ("LV1", "LV2"):
+        for channel in ("CH1", "CH2"):
+            for suffix in ("VOLTAGE_REQUEST", "CURRENT_LIMIT_REQUEST"):
+                widget = entries[f"BDX:PSU:{device}:{channel}:{suffix}"]
+                assert widget.findtext("precision") == "3"
+                assert widget.findtext("format") == "1"
+
+
 def test_psu_operator_output_and_all_off_actions_are_confirmed(tmp_path: Path):
     generate(MAIN_SERVER_PROFILE, tmp_path, only="psu")
     operator = tmp_path / "psu.bob"
@@ -412,6 +451,34 @@ def test_psu_operator_output_and_all_off_actions_are_confirmed(tmp_path: Path):
     assert _confirmed_button_texts_for_pv(operator, "BDX:PSU:LV2:ALLOFF_CMD") == {
         "ALL OFF"
     }
+
+
+def test_boolean_action_values_use_enum_strings(tmp_path: Path):
+    generate(MAIN_SERVER_PROFILE, tmp_path, only="psu")
+    generate(MAIN_SERVER_PROFILE, tmp_path, only="chiller")
+    generate(PROTOTYPE_PROFILE, tmp_path, only="global")
+
+    psu = tmp_path / "psu.bob"
+    chiller = tmp_path / "chiller.bob"
+    global_display = tmp_path / "global.bob"
+
+    assert _action_values_for_pv(psu, "BDX:PSU:LV1:ALLOFF_CMD") == ["On"]
+    assert _action_values_for_pv(psu, "BDX:PSU:LV1:CH1:APPLY_CMD") == ["On"]
+    assert _action_values_for_pv(psu, "BDX:PSU:LV1:CH1:OUTPUT_SET") == ["On", "Off"]
+    assert _action_values_for_pv(chiller, "BDX:CHILLER:CHILLER1:APPLY_SETPOINT_CMD") == [
+        "On"
+    ]
+    assert _action_values_for_pv(chiller, "BDX:CHILLER:CHILLER1:RUN_SET") == [
+        "On",
+        "Off",
+    ]
+    assert set(_action_values_for_pv(global_display, "BDX:GLOBAL:ALLOFF_CMD")) == {"On"}
+    assert _action_values_for_pv(global_display, "BDX:GLOBAL:UPDATE_PERIOD_SET") == [
+        "1",
+        "2",
+        "5",
+        "10",
+    ]
 
 
 def test_psu_generates_one_dual_axis_actual_readback_plot_per_supply(tmp_path: Path):
@@ -555,9 +622,35 @@ def test_phoebus_launcher_uses_live_only_databrowser_settings_when_archive_disab
     assert "org.csstudio.trends.databrowser3/archives=\n" in settings
     assert "org.csstudio.trends.databrowser3/use_default_archives=true\n" in settings
     assert "org.csstudio.trends.databrowser3/drop_failed_archives=true\n" in settings
+    assert "org.csstudio.display.builder.runtime/update_throttle=1000\n" in settings
     assert "pbraw://" not in settings
     assert "Archiver enabled: false" in completed.stdout
     assert not (tmp_path / "all_pvs.bob").exists()
+
+
+def test_phoebus_launcher_rejects_update_throttle_below_one_second(tmp_path: Path):
+    launcher = tmp_path / "fake_phoebus.sh"
+    launcher.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+    launcher.chmod(0o755)
+
+    env = {
+        **os.environ,
+        "BDX_PHOEBUS_CMD": str(launcher),
+        "BDX_PHOEBUS_ENV": str(tmp_path / "missing.env"),
+        "BDX_PHOEBUS_UPDATE_THROTTLE_MS": "999",
+        "XDG_RUNTIME_DIR": str(tmp_path),
+    }
+    completed = subprocess.run(
+        ["bash", "scripts/launch_phoebus.sh", "overview"],
+        check=False,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+    assert completed.returncode == 2
+    assert "at least 1000 ms" in completed.stderr
 
 
 def test_phoebus_launcher_configures_archive_settings_when_enabled(tmp_path: Path):

@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>BDX HV</name>
   <width>1400</width>
-  <height>1467</height>
+  <height>2077</height>
   <widget type="label" version="2.0.0">
     <name>Label_1</name>
     <x>20</x>
@@ -158,28 +158,80 @@
     <text>All PVs</text>
     <tooltip>$(actions)</tooltip>
   </widget>
-  <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_11</name>
+  <widget type="label" version="2.0.0">
+    <name>Label_11</name>
     <x>20</x>
     <y>105</y>
+    <width>420</width>
+    <height>28</height>
+    <text>HV voltage and protection</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
+    </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>OpenFile_12</name>
+    <x>540</x>
+    <y>105</y>
+    <width>150</width>
+    <height>30</height>
+    <actions>
+      <action type="open_file">
+        <file>hv_0_hv_voltage_and_protection.plt</file>
+        <description>Open Full history</description>
+      </action>
+    </actions>
+    <text>Full history</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="databrowser" version="2.0.0">
+    <name>DataBrowser_13</name>
+    <x>20</x>
+    <y>143</y>
     <width>670</width>
     <height>310</height>
     <file>hv_0_hv_voltage_and_protection.plt</file>
     <show_toolbar>true</show_toolbar>
   </widget>
-  <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_12</name>
+  <widget type="label" version="2.0.0">
+    <name>Label_14</name>
     <x>710</x>
     <y>105</y>
+    <width>420</width>
+    <height>28</height>
+    <text>HV current and protection</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
+    </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>OpenFile_15</name>
+    <x>1230</x>
+    <y>105</y>
+    <width>150</width>
+    <height>30</height>
+    <actions>
+      <action type="open_file">
+        <file>hv_1_hv_current_and_protection.plt</file>
+        <description>Open Full history</description>
+      </action>
+    </actions>
+    <text>Full history</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="databrowser" version="2.0.0">
+    <name>DataBrowser_16</name>
+    <x>710</x>
+    <y>143</y>
     <width>670</width>
     <height>310</height>
     <file>hv_1_hv_current_and_protection.plt</file>
     <show_toolbar>true</show_toolbar>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_13</name>
+    <name>Label_17</name>
     <x>20</x>
-    <y>445</y>
+    <y>475</y>
     <width>570</width>
     <height>26</height>
     <text>PV name</text>
@@ -192,9 +244,9 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_14</name>
+    <name>Label_18</name>
     <x>600</x>
-    <y>445</y>
+    <y>475</y>
     <width>250</width>
     <height>26</height>
     <text>Current value</text>
@@ -207,9 +259,9 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_15</name>
+    <name>Label_19</name>
     <x>870</x>
-    <y>445</y>
+    <y>475</y>
     <width>270</width>
     <height>26</height>
     <text>Control</text>
@@ -222,9 +274,9 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_16</name>
+    <name>Label_20</name>
     <x>20</x>
-    <y>477</y>
+    <y>507</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:ALLOFF_CMD</text>
@@ -237,25 +289,25 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_17</name>
+    <name>Readback_21</name>
     <x>600</x>
-    <y>477</y>
+    <y>507</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:ALLOFF_CMD</pv_name>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_18</name>
+    <name>Action_22</name>
     <x>870</x>
-    <y>477</y>
+    <y>507</y>
     <width>135</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:ALLOFF_CMD</pv_name>
     <actions>
       <action type="write_pv">
         <pv_name>BDX:HV:HV1:ALLOFF_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:HV:HV1:ALLOFF_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:HV:HV1:ALLOFF_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
@@ -267,9 +319,9 @@
     </background_color>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_19</name>
+    <name>Label_23</name>
     <x>20</x>
-    <y>506</y>
+    <y>536</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:ALL_OUTPUTS_OFF</text>
@@ -282,17 +334,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_20</name>
+    <name>Readback_24</name>
     <x>600</x>
-    <y>506</y>
+    <y>536</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:ALL_OUTPUTS_OFF</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_21</name>
+    <name>Label_25</name>
     <x>20</x>
-    <y>535</y>
+    <y>565</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:CLEAR_ERROR_CMD</text>
@@ -305,34 +357,34 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_22</name>
+    <name>Readback_26</name>
     <x>600</x>
-    <y>535</y>
+    <y>565</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:CLEAR_ERROR_CMD</pv_name>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_23</name>
+    <name>Action_27</name>
     <x>870</x>
-    <y>535</y>
+    <y>565</y>
     <width>135</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:CLEAR_ERROR_CMD</pv_name>
     <actions>
       <action type="write_pv">
         <pv_name>BDX:HV:HV1:CH1:CLEAR_ERROR_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:HV:HV1:CH1:CLEAR_ERROR_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:HV:HV1:CH1:CLEAR_ERROR_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_24</name>
+    <name>Label_28</name>
     <x>20</x>
-    <y>564</y>
+    <y>594</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:COMM_OK</text>
@@ -345,17 +397,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_25</name>
+    <name>Readback_29</name>
     <x>600</x>
-    <y>564</y>
+    <y>594</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:COMM_OK</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_26</name>
+    <name>Label_30</name>
     <x>20</x>
-    <y>593</y>
+    <y>623</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:COMM_STATUS</text>
@@ -368,17 +420,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_27</name>
+    <name>Readback_31</name>
     <x>600</x>
-    <y>593</y>
+    <y>623</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_28</name>
+    <name>Label_32</name>
     <x>20</x>
-    <y>622</y>
+    <y>652</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:CURRENT_LIMIT_RBV</text>
@@ -391,17 +443,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_29</name>
+    <name>Readback_33</name>
     <x>600</x>
-    <y>622</y>
+    <y>652</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:CURRENT_LIMIT_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_30</name>
+    <name>Label_34</name>
     <x>20</x>
-    <y>651</y>
+    <y>681</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:CURRENT_LIMIT_SET</text>
@@ -414,25 +466,25 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_31</name>
+    <name>Readback_35</name>
     <x>600</x>
-    <y>651</y>
+    <y>681</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:CURRENT_LIMIT_SET</pv_name>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_32</name>
+    <name>Setpoint_36</name>
     <x>870</x>
-    <y>651</y>
+    <y>681</y>
     <width>270</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:CURRENT_LIMIT_SET</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_33</name>
+    <name>Label_37</name>
     <x>20</x>
-    <y>680</y>
+    <y>710</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:CURRENT_RBV</text>
@@ -445,17 +497,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_34</name>
+    <name>Readback_38</name>
     <x>600</x>
-    <y>680</y>
+    <y>710</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:CURRENT_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_35</name>
+    <name>Label_39</name>
     <x>20</x>
-    <y>709</y>
+    <y>739</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:ERROR_CODE</text>
@@ -468,17 +520,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_36</name>
+    <name>Readback_40</name>
     <x>600</x>
-    <y>709</y>
+    <y>739</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:ERROR_CODE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_37</name>
+    <name>Label_41</name>
     <x>20</x>
-    <y>738</y>
+    <y>768</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:ERROR_MESSAGE</text>
@@ -491,17 +543,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_38</name>
+    <name>Readback_42</name>
     <x>600</x>
-    <y>738</y>
+    <y>768</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:ERROR_MESSAGE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_39</name>
+    <name>Label_43</name>
     <x>20</x>
-    <y>767</y>
+    <y>797</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:HEARTBEAT</text>
@@ -514,17 +566,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_40</name>
+    <name>Readback_44</name>
     <x>600</x>
-    <y>767</y>
+    <y>797</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:HEARTBEAT</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_41</name>
+    <name>Label_45</name>
     <x>20</x>
-    <y>796</y>
+    <y>826</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:IOC_STATE</text>
@@ -537,17 +589,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_42</name>
+    <name>Readback_46</name>
     <x>600</x>
-    <y>796</y>
+    <y>826</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:IOC_STATE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_43</name>
+    <name>Label_47</name>
     <x>20</x>
-    <y>825</y>
+    <y>855</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:LAST_UPDATE</text>
@@ -560,17 +612,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_44</name>
+    <name>Readback_48</name>
     <x>600</x>
-    <y>825</y>
+    <y>855</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:LAST_UPDATE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_45</name>
+    <name>Label_49</name>
     <x>20</x>
-    <y>854</y>
+    <y>884</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:OCP_RBV</text>
@@ -583,17 +635,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_46</name>
+    <name>Readback_50</name>
     <x>600</x>
-    <y>854</y>
+    <y>884</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:OCP_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_47</name>
+    <name>Label_51</name>
     <x>20</x>
-    <y>883</y>
+    <y>913</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:OCP_SET</text>
@@ -606,25 +658,25 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_48</name>
+    <name>Readback_52</name>
     <x>600</x>
-    <y>883</y>
+    <y>913</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:OCP_SET</pv_name>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_49</name>
+    <name>Setpoint_53</name>
     <x>870</x>
-    <y>883</y>
+    <y>913</y>
     <width>270</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:OCP_SET</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_50</name>
+    <name>Label_54</name>
     <x>20</x>
-    <y>912</y>
+    <y>942</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:OUTPUT_RBV</text>
@@ -637,17 +689,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_51</name>
+    <name>Readback_55</name>
     <x>600</x>
-    <y>912</y>
+    <y>942</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:OUTPUT_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_52</name>
+    <name>Label_56</name>
     <x>20</x>
-    <y>941</y>
+    <y>971</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:OUTPUT_SET</text>
@@ -660,25 +712,25 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_53</name>
+    <name>Readback_57</name>
     <x>600</x>
-    <y>941</y>
+    <y>971</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:OUTPUT_SET</pv_name>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_54</name>
+    <name>Action_58</name>
     <x>870</x>
-    <y>941</y>
+    <y>971</y>
     <width>64</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:OUTPUT_SET</pv_name>
     <actions>
       <action type="write_pv">
         <pv_name>BDX:HV:HV1:CH1:OUTPUT_SET</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:HV:HV1:CH1:OUTPUT_SET</description>
+        <value>On</value>
+        <description>Write On to BDX:HV:HV1:CH1:OUTPUT_SET</description>
       </action>
     </actions>
     <text>ON</text>
@@ -690,17 +742,17 @@
     </background_color>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_55</name>
+    <name>Action_59</name>
     <x>941</x>
-    <y>941</y>
+    <y>971</y>
     <width>64</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:OUTPUT_SET</pv_name>
     <actions>
       <action type="write_pv">
         <pv_name>BDX:HV:HV1:CH1:OUTPUT_SET</pv_name>
-        <value>0</value>
-        <description>Write 0 to BDX:HV:HV1:CH1:OUTPUT_SET</description>
+        <value>Off</value>
+        <description>Write Off to BDX:HV:HV1:CH1:OUTPUT_SET</description>
       </action>
     </actions>
     <text>OFF</text>
@@ -712,9 +764,9 @@
     </background_color>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_56</name>
+    <name>Label_60</name>
     <x>20</x>
-    <y>970</y>
+    <y>1000</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:OVP_RBV</text>
@@ -727,17 +779,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_57</name>
+    <name>Readback_61</name>
     <x>600</x>
-    <y>970</y>
+    <y>1000</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:OVP_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_58</name>
+    <name>Label_62</name>
     <x>20</x>
-    <y>999</y>
+    <y>1029</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:OVP_SET</text>
@@ -750,25 +802,25 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_59</name>
+    <name>Readback_63</name>
     <x>600</x>
-    <y>999</y>
+    <y>1029</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:OVP_SET</pv_name>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_60</name>
+    <name>Setpoint_64</name>
     <x>870</x>
-    <y>999</y>
+    <y>1029</y>
     <width>270</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:OVP_SET</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_61</name>
+    <name>Label_65</name>
     <x>20</x>
-    <y>1028</y>
+    <y>1058</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:SIMULATION</text>
@@ -781,17 +833,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_62</name>
+    <name>Readback_66</name>
     <x>600</x>
-    <y>1028</y>
+    <y>1058</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:SIMULATION</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_63</name>
+    <name>Label_67</name>
     <x>20</x>
-    <y>1057</y>
+    <y>1087</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:VOLTAGE_RBV</text>
@@ -804,17 +856,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_64</name>
+    <name>Readback_68</name>
     <x>600</x>
-    <y>1057</y>
+    <y>1087</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:VOLTAGE_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_65</name>
+    <name>Label_69</name>
     <x>20</x>
-    <y>1086</y>
+    <y>1116</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CH1:VOLTAGE_SET</text>
@@ -827,25 +879,578 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_66</name>
+    <name>Readback_70</name>
     <x>600</x>
-    <y>1086</y>
+    <y>1116</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:VOLTAGE_SET</pv_name>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_67</name>
+    <name>Setpoint_71</name>
     <x>870</x>
-    <y>1086</y>
+    <y>1116</y>
     <width>270</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CH1:VOLTAGE_SET</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_68</name>
+    <name>Label_72</name>
     <x>20</x>
-    <y>1115</y>
+    <y>1145</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:CLEAR_ERROR_CMD</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_73</name>
+    <x>600</x>
+    <y>1145</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:CLEAR_ERROR_CMD</pv_name>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_74</name>
+    <x>870</x>
+    <y>1145</y>
+    <width>135</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:CLEAR_ERROR_CMD</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:HV:HV1:CH2:CLEAR_ERROR_CMD</pv_name>
+        <value>On</value>
+        <description>Write On to BDX:HV:HV1:CH2:CLEAR_ERROR_CMD</description>
+      </action>
+    </actions>
+    <text>EXECUTE</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_75</name>
+    <x>20</x>
+    <y>1174</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:COMM_OK</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_76</name>
+    <x>600</x>
+    <y>1174</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:COMM_OK</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_77</name>
+    <x>20</x>
+    <y>1203</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:COMM_STATUS</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_78</name>
+    <x>600</x>
+    <y>1203</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:COMM_STATUS</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_79</name>
+    <x>20</x>
+    <y>1232</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:CURRENT_LIMIT_RBV</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_80</name>
+    <x>600</x>
+    <y>1232</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:CURRENT_LIMIT_RBV</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_81</name>
+    <x>20</x>
+    <y>1261</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:CURRENT_LIMIT_SET</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_82</name>
+    <x>600</x>
+    <y>1261</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:CURRENT_LIMIT_SET</pv_name>
+  </widget>
+  <widget type="textentry" version="2.0.0">
+    <name>Setpoint_83</name>
+    <x>870</x>
+    <y>1261</y>
+    <width>270</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:CURRENT_LIMIT_SET</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_84</name>
+    <x>20</x>
+    <y>1290</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:CURRENT_RBV</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_85</name>
+    <x>600</x>
+    <y>1290</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:CURRENT_RBV</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_86</name>
+    <x>20</x>
+    <y>1319</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:ERROR_CODE</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_87</name>
+    <x>600</x>
+    <y>1319</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:ERROR_CODE</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_88</name>
+    <x>20</x>
+    <y>1348</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:ERROR_MESSAGE</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_89</name>
+    <x>600</x>
+    <y>1348</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:ERROR_MESSAGE</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_90</name>
+    <x>20</x>
+    <y>1377</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:HEARTBEAT</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_91</name>
+    <x>600</x>
+    <y>1377</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:HEARTBEAT</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_92</name>
+    <x>20</x>
+    <y>1406</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:IOC_STATE</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_93</name>
+    <x>600</x>
+    <y>1406</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:IOC_STATE</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_94</name>
+    <x>20</x>
+    <y>1435</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:LAST_UPDATE</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_95</name>
+    <x>600</x>
+    <y>1435</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:LAST_UPDATE</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_96</name>
+    <x>20</x>
+    <y>1464</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:OCP_RBV</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_97</name>
+    <x>600</x>
+    <y>1464</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:OCP_RBV</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_98</name>
+    <x>20</x>
+    <y>1493</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:OCP_SET</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_99</name>
+    <x>600</x>
+    <y>1493</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:OCP_SET</pv_name>
+  </widget>
+  <widget type="textentry" version="2.0.0">
+    <name>Setpoint_100</name>
+    <x>870</x>
+    <y>1493</y>
+    <width>270</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:OCP_SET</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_101</name>
+    <x>20</x>
+    <y>1522</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:OUTPUT_RBV</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_102</name>
+    <x>600</x>
+    <y>1522</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:OUTPUT_RBV</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_103</name>
+    <x>20</x>
+    <y>1551</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:OUTPUT_SET</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_104</name>
+    <x>600</x>
+    <y>1551</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:OUTPUT_SET</pv_name>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_105</name>
+    <x>870</x>
+    <y>1551</y>
+    <width>64</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:OUTPUT_SET</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:HV:HV1:CH2:OUTPUT_SET</pv_name>
+        <value>On</value>
+        <description>Write On to BDX:HV:HV1:CH2:OUTPUT_SET</description>
+      </action>
+    </actions>
+    <text>ON</text>
+    <tooltip>$(actions)</tooltip>
+    <confirm_dialog>true</confirm_dialog>
+    <confirm_message>Switch output on for BDX:HV:HV1:CH2:OUTPUT_SET?</confirm_message>
+    <background_color>
+      <color red="170" green="225" blue="180" />
+    </background_color>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_106</name>
+    <x>941</x>
+    <y>1551</y>
+    <width>64</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:OUTPUT_SET</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:HV:HV1:CH2:OUTPUT_SET</pv_name>
+        <value>Off</value>
+        <description>Write Off to BDX:HV:HV1:CH2:OUTPUT_SET</description>
+      </action>
+    </actions>
+    <text>OFF</text>
+    <tooltip>$(actions)</tooltip>
+    <confirm_dialog>true</confirm_dialog>
+    <confirm_message>Switch output off for BDX:HV:HV1:CH2:OUTPUT_SET?</confirm_message>
+    <background_color>
+      <color red="255" green="190" blue="190" />
+    </background_color>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_107</name>
+    <x>20</x>
+    <y>1580</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:OVP_RBV</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_108</name>
+    <x>600</x>
+    <y>1580</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:OVP_RBV</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_109</name>
+    <x>20</x>
+    <y>1609</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:OVP_SET</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_110</name>
+    <x>600</x>
+    <y>1609</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:OVP_SET</pv_name>
+  </widget>
+  <widget type="textentry" version="2.0.0">
+    <name>Setpoint_111</name>
+    <x>870</x>
+    <y>1609</y>
+    <width>270</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:OVP_SET</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_112</name>
+    <x>20</x>
+    <y>1638</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:SIMULATION</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_113</name>
+    <x>600</x>
+    <y>1638</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:SIMULATION</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_114</name>
+    <x>20</x>
+    <y>1667</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:VOLTAGE_RBV</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_115</name>
+    <x>600</x>
+    <y>1667</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:VOLTAGE_RBV</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_116</name>
+    <x>20</x>
+    <y>1696</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:HV:HV1:CH2:VOLTAGE_SET</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_117</name>
+    <x>600</x>
+    <y>1696</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:VOLTAGE_SET</pv_name>
+  </widget>
+  <widget type="textentry" version="2.0.0">
+    <name>Setpoint_118</name>
+    <x>870</x>
+    <y>1696</y>
+    <width>270</width>
+    <height>25</height>
+    <pv_name>BDX:HV:HV1:CH2:VOLTAGE_SET</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_119</name>
+    <x>20</x>
+    <y>1725</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:CLEAR_ERROR_CMD</text>
@@ -858,34 +1463,34 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_69</name>
+    <name>Readback_120</name>
     <x>600</x>
-    <y>1115</y>
+    <y>1725</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CLEAR_ERROR_CMD</pv_name>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_70</name>
+    <name>Action_121</name>
     <x>870</x>
-    <y>1115</y>
+    <y>1725</y>
     <width>135</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:CLEAR_ERROR_CMD</pv_name>
     <actions>
       <action type="write_pv">
         <pv_name>BDX:HV:HV1:CLEAR_ERROR_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:HV:HV1:CLEAR_ERROR_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:HV:HV1:CLEAR_ERROR_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_71</name>
+    <name>Label_122</name>
     <x>20</x>
-    <y>1144</y>
+    <y>1754</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:COMM_OK</text>
@@ -898,17 +1503,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_72</name>
+    <name>Readback_123</name>
     <x>600</x>
-    <y>1144</y>
+    <y>1754</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:COMM_OK</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_73</name>
+    <name>Label_124</name>
     <x>20</x>
-    <y>1173</y>
+    <y>1783</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:COMM_STATUS</text>
@@ -921,17 +1526,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_74</name>
+    <name>Readback_125</name>
     <x>600</x>
-    <y>1173</y>
+    <y>1783</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_75</name>
+    <name>Label_126</name>
     <x>20</x>
-    <y>1202</y>
+    <y>1812</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:ERROR_CODE</text>
@@ -944,17 +1549,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_76</name>
+    <name>Readback_127</name>
     <x>600</x>
-    <y>1202</y>
+    <y>1812</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:ERROR_CODE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_77</name>
+    <name>Label_128</name>
     <x>20</x>
-    <y>1231</y>
+    <y>1841</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:ERROR_MESSAGE</text>
@@ -967,17 +1572,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_78</name>
+    <name>Readback_129</name>
     <x>600</x>
-    <y>1231</y>
+    <y>1841</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:ERROR_MESSAGE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_79</name>
+    <name>Label_130</name>
     <x>20</x>
-    <y>1260</y>
+    <y>1870</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:HEARTBEAT</text>
@@ -990,17 +1595,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_80</name>
+    <name>Readback_131</name>
     <x>600</x>
-    <y>1260</y>
+    <y>1870</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:HEARTBEAT</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_81</name>
+    <name>Label_132</name>
     <x>20</x>
-    <y>1289</y>
+    <y>1899</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:IOC_STATE</text>
@@ -1013,17 +1618,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_82</name>
+    <name>Readback_133</name>
     <x>600</x>
-    <y>1289</y>
+    <y>1899</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:IOC_STATE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_83</name>
+    <name>Label_134</name>
     <x>20</x>
-    <y>1318</y>
+    <y>1928</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:LAST_UPDATE</text>
@@ -1036,17 +1641,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_84</name>
+    <name>Readback_135</name>
     <x>600</x>
-    <y>1318</y>
+    <y>1928</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:LAST_UPDATE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_85</name>
+    <name>Label_136</name>
     <x>20</x>
-    <y>1347</y>
+    <y>1957</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:HV:HV1:SIMULATION</text>
@@ -1059,9 +1664,9 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_86</name>
+    <name>Readback_137</name>
     <x>600</x>
-    <y>1347</y>
+    <y>1957</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:HV:HV1:SIMULATION</pv_name>

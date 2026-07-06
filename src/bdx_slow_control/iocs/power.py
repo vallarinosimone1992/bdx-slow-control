@@ -9,6 +9,8 @@ from caproto.server import pvproperty
 
 from .common import ManagedIOC
 
+PSU_FLOAT_PRECISION = 3
+
 
 @dataclass(frozen=True)
 class PowerChannelLimits:
@@ -67,17 +69,42 @@ class PowerDeviceIOC(ManagedIOC):
 class PowerChannelIOC(ManagedIOC):
     """Single-channel setpoint and readback group."""
 
-    VOLTAGE_SET = pvproperty(value=0.0, dtype=float)
-    VOLTAGE_RBV = pvproperty(value=0.0, dtype=float, read_only=True)
-    CURRENT_LIMIT_SET = pvproperty(value=0.0, dtype=float)
-    CURRENT_LIMIT_RBV = pvproperty(value=0.0, dtype=float, read_only=True)
-    CURRENT_RBV = pvproperty(value=0.0, dtype=float, read_only=True)
+    VOLTAGE_SET = pvproperty(value=0.0, dtype=float, precision=PSU_FLOAT_PRECISION)
+    VOLTAGE_RBV = pvproperty(
+        value=0.0,
+        dtype=float,
+        read_only=True,
+        precision=PSU_FLOAT_PRECISION,
+    )
+    CURRENT_LIMIT_SET = pvproperty(value=0.0, dtype=float, precision=PSU_FLOAT_PRECISION)
+    CURRENT_LIMIT_RBV = pvproperty(
+        value=0.0,
+        dtype=float,
+        read_only=True,
+        precision=PSU_FLOAT_PRECISION,
+    )
+    CURRENT_RBV = pvproperty(
+        value=0.0,
+        dtype=float,
+        read_only=True,
+        precision=PSU_FLOAT_PRECISION,
+    )
     OUTPUT_SET = pvproperty(value=False, dtype=bool)
     OUTPUT_RBV = pvproperty(value=False, dtype=bool, read_only=True)
-    OVP_SET = pvproperty(value=0.0, dtype=float)
-    OVP_RBV = pvproperty(value=0.0, dtype=float, read_only=True)
-    OCP_SET = pvproperty(value=0.0, dtype=float)
-    OCP_RBV = pvproperty(value=0.0, dtype=float, read_only=True)
+    OVP_SET = pvproperty(value=0.0, dtype=float, precision=PSU_FLOAT_PRECISION)
+    OVP_RBV = pvproperty(
+        value=0.0,
+        dtype=float,
+        read_only=True,
+        precision=PSU_FLOAT_PRECISION,
+    )
+    OCP_SET = pvproperty(value=0.0, dtype=float, precision=PSU_FLOAT_PRECISION)
+    OCP_RBV = pvproperty(
+        value=0.0,
+        dtype=float,
+        read_only=True,
+        precision=PSU_FLOAT_PRECISION,
+    )
 
     def __init__(self, *args, channel: int, **kwargs) -> None:
         self.channel = int(channel)
@@ -141,10 +168,19 @@ class PowerChannelIOC(ManagedIOC):
 class LowVoltagePowerChannelIOC(PowerChannelIOC):
     """Low-voltage PSU channel with staged operator setpoints."""
 
-    VOLTAGE_SET_RBV = pvproperty(value=0.0, dtype=float, read_only=True)
+    VOLTAGE_SET_RBV = pvproperty(
+        value=0.0,
+        dtype=float,
+        read_only=True,
+        precision=PSU_FLOAT_PRECISION,
+    )
     OUTPUT_STATE = pvproperty(value="OFF", dtype=ChannelType.STRING, read_only=True)
-    VOLTAGE_REQUEST = pvproperty(value=0.0, dtype=float)
-    CURRENT_LIMIT_REQUEST = pvproperty(value=0.0, dtype=float)
+    VOLTAGE_REQUEST = pvproperty(value=0.0, dtype=float, precision=PSU_FLOAT_PRECISION)
+    CURRENT_LIMIT_REQUEST = pvproperty(
+        value=0.0,
+        dtype=float,
+        precision=PSU_FLOAT_PRECISION,
+    )
     APPLY_CMD = pvproperty(value=False, dtype=bool)
     APPLY_STATUS = pvproperty(value="IDLE", dtype=ChannelType.STRING, read_only=True)
     APPLY_MESSAGE = pvproperty(value="", dtype=ChannelType.STRING, read_only=True)

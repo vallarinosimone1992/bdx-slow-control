@@ -163,7 +163,7 @@ BDX:GLOBAL:MIN_UPDATE_PERIOD_RBV
 BDX:GLOBAL:MAX_UPDATE_PERIOD_RBV
 ```
 
-The prototype range is 2–3600 seconds. This keeps the live update frequency below 1 Hz while allowing the operator to change it without restarting the IOC.
+The prototype range is 1–3600 seconds. This keeps the live update frequency at or below 1 Hz while allowing the operator to change it without restarting the IOC.
 
 ## Simulated interlock coordination
 

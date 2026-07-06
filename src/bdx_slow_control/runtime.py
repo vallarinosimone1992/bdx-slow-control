@@ -10,8 +10,8 @@ from threading import RLock
 class RuntimeSettings:
     """Thread-safe mutable IOC update-period settings."""
 
-    initial_update_period: float = 5.0
-    minimum_update_period: float = 2.0
+    initial_update_period: float = 1.0
+    minimum_update_period: float = 1.0
     maximum_update_period: float = 3600.0
     _update_period: float = field(init=False, repr=False)
     _lock: RLock = field(default_factory=RLock, init=False, repr=False)

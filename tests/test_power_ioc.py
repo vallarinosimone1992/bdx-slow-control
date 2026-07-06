@@ -3,8 +3,11 @@ import asyncio
 import pytest
 
 from bdx_slow_control.drivers.base import PowerChannelState
+from bdx_slow_control.builders import build_psu
+from bdx_slow_control.config import load_json
 from bdx_slow_control.iocs.power import LowVoltagePowerChannelIOC, PowerChannelLimits
 from bdx_slow_control.runtime import RuntimeSettings
+from pathlib import Path
 
 
 class RecordingPowerDriver:
@@ -152,3 +155,27 @@ def test_successful_apply_performs_both_writes_and_updates_readbacks():
         assert group.APPLY_STATUS.value == "APPLIED"
 
     asyncio.run(scenario())
+
+
+def test_low_voltage_psu_float_pvs_advertise_three_decimal_precision():
+    pvdb, _ = build_psu(load_json(Path("config/profiles/main-server/psu.json")))
+
+    float_suffixes = (
+        "VOLTAGE_SET",
+        "VOLTAGE_RBV",
+        "VOLTAGE_SET_RBV",
+        "VOLTAGE_REQUEST",
+        "CURRENT_LIMIT_SET",
+        "CURRENT_LIMIT_RBV",
+        "CURRENT_LIMIT_REQUEST",
+        "CURRENT_RBV",
+        "OVP_SET",
+        "OVP_RBV",
+        "OCP_SET",
+        "OCP_RBV",
+    )
+    for device in ("LV1", "LV2"):
+        for channel in ("CH1", "CH2"):
+            prefix = f"BDX:PSU:{device}:{channel}:"
+            for suffix in float_suffixes:
+                assert pvdb[f"{prefix}{suffix}"].precision == 3

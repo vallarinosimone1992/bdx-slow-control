@@ -15,7 +15,7 @@ from xml.sax.saxutils import escape
 from .prototype import build_prototype
 
 DEFAULT_TREND_RANGE = "10 minutes"
-DEFAULT_TREND_SCAN_PERIOD = 5.0
+DEFAULT_TREND_SCAN_PERIOD = 1.0
 DEFAULT_TREND_RING_SIZE = 5000
 DEFAULT_TREND_ARCHIVE_REQUEST = "RAW"
 DEFAULT_ARCHIVER_NAME = "BDX Archiver"
@@ -293,9 +293,23 @@ class Display:
             )
         return widget
 
-    def text_entry(self, pv: str, x: int, y: int, width: int, height: int = 25) -> ET.Element:
+    def text_entry(
+        self,
+        pv: str,
+        x: int,
+        y: int,
+        width: int,
+        height: int = 25,
+        *,
+        precision: int | None = None,
+        format_code: int | None = None,
+    ) -> ET.Element:
         widget = self.widget("textentry", "2.0.0", "Setpoint", x, y, width, height)
         ET.SubElement(widget, "pv_name").text = pv
+        if format_code is not None:
+            ET.SubElement(widget, "format").text = str(format_code)
+        if precision is not None:
+            ET.SubElement(widget, "precision").text = str(precision)
         return widget
 
     def bool_button(
@@ -355,6 +369,7 @@ class Display:
         confirm: str | None = None,
         background: tuple[int, int, int] | None = None,
     ) -> ET.Element:
+        value = action_value_for_pv(pv, value)
         widget = self.widget("action_button", "3.0.0", "Action", x, y, width, height)
         ET.SubElement(widget, "pv_name").text = pv
         actions = ET.SubElement(widget, "actions")
@@ -460,6 +475,26 @@ def catalog(config_dir: Path) -> list[PVInfo]:
             )
         )
     return result
+
+
+def action_value_for_pv(pv: str, value: str) -> str:
+    """Return a display-safe action value for known boolean command PVs."""
+    if value == "1" and pv.endswith(
+        (
+            ":ALLOFF_CMD",
+            ":APPLY_CMD",
+            ":APPLY_SETPOINT_CMD",
+            ":CLEAR_ERROR_CMD",
+            ":INTERLOCK_RESET_CMD",
+            ":INTERLOCK_TEST_CMD",
+            ":OUTPUT_SET",
+            ":RUN_SET",
+        )
+    ):
+        return "On"
+    if value == "0" and pv.endswith((":OUTPUT_SET", ":RUN_SET")):
+        return "Off"
+    return value
 
 
 def add_header(display: Display, title: str) -> None:
@@ -875,7 +910,7 @@ def add_timing_controls(display: Display, y: int) -> int:
     display.text_entry("BDX:GLOBAL:UPDATE_PERIOD_SET", 220, y, 120, 28)
     display.label("s", 345, y, 30, 28)
     x = 390
-    for period in (2, 5, 10, 30):
+    for period in (1, 2, 5, 10):
         display.action_button(
             f"{period} s",
             "BDX:GLOBAL:UPDATE_PERIOD_SET",
@@ -889,7 +924,7 @@ def add_timing_controls(display: Display, y: int) -> int:
     display.label("Frequency", 735, y, 95, 28, bold=True)
     display.text_update("BDX:GLOBAL:UPDATE_FREQUENCY_RBV", 835, y, 100, 28)
     display.label("Hz", 940, y, 35, 28)
-    display.label("Allowed period: 2–3600 s; all values remain below 1 Hz.", 995, y, 390, 28)
+    display.label("Allowed period: 1–3600 s.", 995, y, 240, 28)
     return y + 42
 
 
@@ -1083,10 +1118,26 @@ def _add_psu_channel_card(
     )
 
     display.label("Requested voltage", x + 14, y + 126, 130, 20, size=11, bold=True)
-    display.text_entry(_pv(prefix, "VOLTAGE_REQUEST"), x + 14, y + 148, 108, 28)
+    display.text_entry(
+        _pv(prefix, "VOLTAGE_REQUEST"),
+        x + 14,
+        y + 148,
+        108,
+        28,
+        precision=3,
+        format_code=1,
+    )
     display.label("V", x + 127, y + 151, 22, 24, size=12, bold=True)
     display.label("Requested current", x + 158, y + 126, 130, 20, size=11, bold=True)
-    display.text_entry(_pv(prefix, "CURRENT_LIMIT_REQUEST"), x + 158, y + 148, 108, 28)
+    display.text_entry(
+        _pv(prefix, "CURRENT_LIMIT_REQUEST"),
+        x + 158,
+        y + 148,
+        108,
+        28,
+        precision=3,
+        format_code=1,
+    )
     display.label("A", x + 271, y + 151, 22, 24, size=12, bold=True)
     display.action_button(
         "APPLY",

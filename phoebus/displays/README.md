@@ -33,7 +33,8 @@ end = now
 ```
 
 Set `BDX_TREND_RANGE` and `BDX_TREND_SCAN_PERIOD` before regeneration to change
-the generated window and live sample period. Set `BDX_TREND_RING_SIZE` to change
+the generated window and live sample period. The default generated trace scan
+period is 1.0 s. Set `BDX_TREND_RING_SIZE` to change
 the live Data Browser ring buffer. Set `BDX_TREND_ARCHIVE_REQUEST=OPTIMIZED`
 before regeneration for long historical windows where optimized Archiver
 Appliance retrieval is preferred; the default request is `RAW`.
@@ -68,7 +69,9 @@ historical data.
 are generated in `psu_expert.bob` and `chiller_expert.bob`.
 
 Operator pages embed the principal Data Browser plots and include “Full
-history” actions that open the corresponding `.plt` resource. PSU plots use one
+history” actions that open the corresponding `.plt` resource. Full history
+requires the PV to be registered and actively sampled by Archiver Appliance;
+samples cannot be reconstructed retroactively. PSU plots use one
 dual-axis plot per physical LV supply. Chiller plots include controlled
 temperature, bath temperature, and applied setpoint. Chiller pressure and
 external-temperature plots are generated only when those measurements are

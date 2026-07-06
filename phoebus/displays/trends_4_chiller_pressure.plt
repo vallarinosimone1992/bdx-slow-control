@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <databrowser>
-    <title>Prototype update frequency</title>
+    <title>Chiller pressure</title>
     <save_changes>false</save_changes>
     <show_legend>true</show_legend>
     <show_toolbar>true</show_toolbar>
@@ -29,9 +29,9 @@
     </annotations>
     <pvlist>
         <pv>
-            <display_name>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</display_name>
+            <display_name>BDX:CHILLER:CHILLER1:PRESSURE_RBV</display_name>
             <visible>true</visible>
-            <name>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</name>
+            <name>BDX:CHILLER:CHILLER1:PRESSURE_RBV</name>
             <axis>0</axis>
             <color>
                 <red>33</red>
