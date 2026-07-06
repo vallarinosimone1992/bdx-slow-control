@@ -117,14 +117,14 @@ The bootstrap script installs the package in editable mode and regenerates the P
 
 This uses the full simulated profile in `config/profiles/prototype`.
 
-The default simulation update period is 5 seconds, corresponding to 0.2 Hz. It can be changed at runtime between 2 and 3600 seconds:
+The default simulation update period is 1 second, corresponding to 1 Hz. It can be changed at runtime between 1 and 3600 seconds:
 
 ```bash
-caproto-put BDX:GLOBAL:UPDATE_PERIOD_SET 2
+caproto-put BDX:GLOBAL:UPDATE_PERIOD_SET 1
 caproto-get BDX:GLOBAL:UPDATE_FREQUENCY_RBV
 ```
 
-The minimum period of 2 seconds limits the prototype update frequency to 0.5 Hz.
+The minimum period of 1 second limits the prototype update frequency to 1 Hz.
 
 ## Raspberry MCP9808 temperature IOC
 
@@ -260,7 +260,9 @@ By default, plots are live-only and contain no archive source. When the EPICS
 Archiver Appliance is enabled, the same `.plt` resources combine historical
 pbraw retrieval with the live Channel Access buffer. Operator pages embed the
 principal plots and provide “Full history” actions that open the corresponding
-Data Browser `.plt` resource.
+Data Browser `.plt` resource. “Full history” is available only for PVs that are
+registered and actively sampled by Archiver Appliance; history cannot be
+reconstructed retroactively for periods before a PV was archived.
 
 PSU operator plots contain one dual-axis Data Browser plot per physical LV
 supply. Each plot shows actual channel voltage readbacks on the voltage axis
@@ -342,7 +344,7 @@ Start the IOC when needed and launch Phoebus in one command:
 ./scripts/run_prototype_with_phoebus.sh
 ```
 
-The launcher creates a runtime `settings.ini` containing the local Channel Access address list and Phoebus display update throttle. The default throttle is 2000 ms, or at most 0.5 Hz.
+The launcher creates a runtime `settings.ini` containing the local Channel Access address list and Phoebus display update throttle. The default throttle is 1000 ms, or at most 1 Hz.
 
 Launch with live Channel Access plots only:
 
@@ -408,8 +410,9 @@ bdx-generate-displays \
   --only psu
 ```
 
-Register the same PVs through the deployment helper before relying on historical
-data:
+Register the same PVs through the deployment helper and leave them actively
+sampled before relying on historical data. The Archiver Appliance cannot
+reconstruct samples from before a PV was registered and archived:
 
 ```bash
 deploy/archiver-appliance/scripts/register-pvs.py \

@@ -59,6 +59,11 @@
             <period>1.0</period>
             <ring_size>5000</ring_size>
             <request>RAW</request>
+            <archive>
+                <name>BDX Archiver</name>
+                <url>pbraw://127.0.0.1:17668/retrieval</url>
+                <key>1</key>
+            </archive>
         </pv>
         <pv>
             <display_name>LV2 CH1 current</display_name>
@@ -79,6 +84,11 @@
             <period>1.0</period>
             <ring_size>5000</ring_size>
             <request>RAW</request>
+            <archive>
+                <name>BDX Archiver</name>
+                <url>pbraw://127.0.0.1:17668/retrieval</url>
+                <key>1</key>
+            </archive>
         </pv>
         <pv>
             <display_name>LV2 CH2 voltage</display_name>
@@ -99,6 +109,11 @@
             <period>1.0</period>
             <ring_size>5000</ring_size>
             <request>RAW</request>
+            <archive>
+                <name>BDX Archiver</name>
+                <url>pbraw://127.0.0.1:17668/retrieval</url>
+                <key>1</key>
+            </archive>
         </pv>
         <pv>
             <display_name>LV2 CH2 current</display_name>
@@ -119,6 +134,11 @@
             <period>1.0</period>
             <ring_size>5000</ring_size>
             <request>RAW</request>
+            <archive>
+                <name>BDX Archiver</name>
+                <url>pbraw://127.0.0.1:17668/retrieval</url>
+                <key>1</key>
+            </archive>
         </pv>
     </pvlist>
 </databrowser>
