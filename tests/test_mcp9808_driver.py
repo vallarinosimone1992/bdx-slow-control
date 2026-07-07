@@ -93,6 +93,6 @@ def test_raspberry_environment_config_builds_pvdb_without_opening_i2c():
 def test_raspberry_environment_config_uses_expected_bus_and_addresses():
     config = load_json("config/profiles/raspberry/environment.json")
     sensors = config["sensors"]
-    assert config["server"]["poll_interval"] == 5.0
+    assert config["server"]["poll_interval"] == 1.0
     assert {sensor["bus"] for sensor in sensors} == {"/dev/i2c-6"}
     assert [sensor["address"] for sensor in sensors] == ["0x18", "0x19", "0x1A", "0x1B"]

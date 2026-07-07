@@ -4,6 +4,7 @@ bin/
 lib/
 .venv/
 .runtime/
+config/runtime.env
 .pytest_cache/
 .ruff_cache/
 __pycache__/

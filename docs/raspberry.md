@@ -16,7 +16,7 @@ The Raspberry environment profile uses:
 - Raspberry Pi 4B BSC6 on GPIO22/GPIO23;
 - I2C device `/dev/i2c-6`;
 - MCP9808 addresses `0x18`, `0x19`, `0x1A`, and `0x1B`;
-- a 5 second polling interval;
+- a nominal 1.0 second monitoring period;
 - `BDX_EPICS_INTERFACE=172.22.50.10`.
 
 ## Network Model

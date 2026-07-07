@@ -103,7 +103,7 @@ modify host firewall rules.
 Configure Channel Access in the private environment file:
 
 ```bash
-EPICS_CA_ADDR_LIST="172.22.50.1 172.22.50.10"
+EPICS_CA_ADDR_LIST="172.22.50.2 172.22.50.10"
 EPICS_CA_AUTO_ADDR_LIST=NO
 EPICS_CA_SERVER_PORT=5064
 EPICS_CA_REPEATER_PORT=5065
@@ -204,7 +204,7 @@ Edit `~/.config/bdx-archiver/archappl.env` and set:
 BDX_ARCHIVER_EVALUATION_MODE=true
 ARCHAPPL_PERSISTENCE_LAYER=
 BDX_ARCHIVER_TOMCAT_TARBALL=/path/to/apache-tomcat-11.x.y.tar.gz
-EPICS_CA_ADDR_LIST="172.22.50.1 172.22.50.10"
+EPICS_CA_ADDR_LIST="172.22.50.2 172.22.50.10"
 ```
 
 Then stage and configure:
@@ -239,6 +239,7 @@ For `--user-local`, the default PV lists resolve to:
 ```text
 ~/.local/share/bdx-archiver/app/pv-lists/psu.txt
 ~/.local/share/bdx-archiver/app/pv-lists/chiller.txt
+~/.local/share/bdx-archiver/app/pv-lists/environment.txt
 ```
 
 ## Provisional Ubuntu 22.04 Deployment
@@ -260,7 +261,7 @@ Set at least:
 BDX_ARCHIVER_TOMCAT_HOME=/opt/bdx-archiver/tomcat
 BDX_ARCHIVER_TOMCAT_TARBALL=/path/to/apache-tomcat-11.x.y.tar.gz
 ARCHAPPL_PERSISTENCE_LAYER=<site-selected persistent layer>
-EPICS_CA_ADDR_LIST="172.22.50.1 172.22.50.10"
+EPICS_CA_ADDR_LIST="172.22.50.2 172.22.50.10"
 ```
 
 Stage the BDX deployment files and optionally download the pinned release:
@@ -297,15 +298,18 @@ BDX_ARCHIVER_REGISTER_RETRY_SECONDS=30
 
 When `BDX_ARCHIVER_PV_LISTS` is empty, the startup scripts use
 `$BDX_ARCHIVER_APP_DIR/pv-lists/psu.txt` and
-`$BDX_ARCHIVER_APP_DIR/pv-lists/chiller.txt`, matching the current default
-laboratory IOC profile. After `mgmt`, `engine`, `etl`, and `retrieval` respond
-on component-specific BPL operations, the helper runs an equivalent of:
+`$BDX_ARCHIVER_APP_DIR/pv-lists/chiller.txt`, and
+`$BDX_ARCHIVER_APP_DIR/pv-lists/environment.txt`, matching the complete deployed
+prototype split across the main host and Raspberry. After `mgmt`, `engine`,
+`etl`, and `retrieval` respond on component-specific BPL operations, the helper
+runs an equivalent of:
 
 ```bash
 register-pvs.py \
   --mgmt-url "$BDX_ARCHIVER_MGMT_URL" \
   "$BDX_ARCHIVER_APP_DIR/pv-lists/psu.txt" \
-  "$BDX_ARCHIVER_APP_DIR/pv-lists/chiller.txt"
+  "$BDX_ARCHIVER_APP_DIR/pv-lists/chiller.txt" \
+  "$BDX_ARCHIVER_APP_DIR/pv-lists/environment.txt"
 ```
 
 Registration is idempotent; PVs reported as already registered are treated as

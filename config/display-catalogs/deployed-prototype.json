@@ -1,0 +1,7 @@
+{
+  "description": "Phoebus catalog for the deployed BDX prototype split across the main host and Raspberry Pi.",
+  "profile_dirs": [
+    "../profiles/default",
+    "../profiles/raspberry"
+  ]
+}

@@ -86,38 +86,6 @@
     <height>30</height>
     <actions>
       <action type="open_display">
-        <file>hv.bob</file>
-        <target>tab</target>
-        <description>Open HV</description>
-      </action>
-    </actions>
-    <text>HV</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>Navigation_7</name>
-    <x>610</x>
-    <y>58</y>
-    <width>112</width>
-    <height>30</height>
-    <actions>
-      <action type="open_display">
-        <file>daq.bob</file>
-        <target>tab</target>
-        <description>Open DAQ</description>
-      </action>
-    </actions>
-    <text>DAQ</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>Navigation_8</name>
-    <x>728</x>
-    <y>58</y>
-    <width>112</width>
-    <height>30</height>
-    <actions>
-      <action type="open_display">
         <file>global.bob</file>
         <target>tab</target>
         <description>Open Global</description>
@@ -127,8 +95,8 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Navigation_9</name>
-    <x>846</x>
+    <name>Navigation_7</name>
+    <x>610</x>
     <y>58</y>
     <width>112</width>
     <height>30</height>
@@ -143,8 +111,8 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Navigation_10</name>
-    <x>964</x>
+    <name>Navigation_8</name>
+    <x>728</x>
     <y>58</y>
     <width>112</width>
     <height>30</height>
@@ -159,7 +127,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Navigation_11</name>
+    <name>Navigation_9</name>
     <x>20</x>
     <y>105</y>
     <width>200</width>
@@ -175,7 +143,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_12</name>
+    <name>Label_10</name>
     <x>20</x>
     <y>150</y>
     <width>570</width>
@@ -190,7 +158,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_13</name>
+    <name>Label_11</name>
     <x>600</x>
     <y>150</y>
     <width>250</width>
@@ -205,7 +173,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_14</name>
+    <name>Label_12</name>
     <x>870</x>
     <y>150</y>
     <width>270</width>
@@ -220,7 +188,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_15</name>
+    <name>Label_13</name>
     <x>20</x>
     <y>182</y>
     <width>570</width>
@@ -235,7 +203,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_16</name>
+    <name>Readback_14</name>
     <x>600</x>
     <y>182</y>
     <width>250</width>
@@ -243,7 +211,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:APPLY_MESSAGE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_17</name>
+    <name>Label_15</name>
     <x>20</x>
     <y>211</y>
     <width>570</width>
@@ -258,7 +226,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_18</name>
+    <name>Readback_16</name>
     <x>600</x>
     <y>211</y>
     <width>250</width>
@@ -266,7 +234,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:APPLY_SETPOINT_CMD</pv_name>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_19</name>
+    <name>Action_17</name>
     <x>870</x>
     <y>211</y>
     <width>135</width>
@@ -283,7 +251,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_20</name>
+    <name>Label_18</name>
     <x>20</x>
     <y>240</y>
     <width>570</width>
@@ -298,7 +266,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_21</name>
+    <name>Readback_19</name>
     <x>600</x>
     <y>240</y>
     <width>250</width>
@@ -306,7 +274,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:APPLY_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_22</name>
+    <name>Label_20</name>
     <x>20</x>
     <y>269</y>
     <width>570</width>
@@ -321,7 +289,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_23</name>
+    <name>Readback_21</name>
     <x>600</x>
     <y>269</y>
     <width>250</width>
@@ -329,7 +297,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_24</name>
+    <name>Label_22</name>
     <x>20</x>
     <y>298</y>
     <width>570</width>
@@ -344,7 +312,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_25</name>
+    <name>Readback_23</name>
     <x>600</x>
     <y>298</y>
     <width>250</width>
@@ -352,7 +320,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:CLEAR_ERROR_CMD</pv_name>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_26</name>
+    <name>Action_24</name>
     <x>870</x>
     <y>298</y>
     <width>135</width>
@@ -369,7 +337,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_27</name>
+    <name>Label_25</name>
     <x>20</x>
     <y>327</y>
     <width>570</width>
@@ -384,7 +352,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_28</name>
+    <name>Readback_26</name>
     <x>600</x>
     <y>327</y>
     <width>250</width>
@@ -392,7 +360,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:COMM_OK</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_29</name>
+    <name>Label_27</name>
     <x>20</x>
     <y>356</y>
     <width>570</width>
@@ -407,7 +375,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_30</name>
+    <name>Readback_28</name>
     <x>600</x>
     <y>356</y>
     <width>250</width>
@@ -415,7 +383,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_31</name>
+    <name>Label_29</name>
     <x>20</x>
     <y>385</y>
     <width>570</width>
@@ -430,7 +398,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_32</name>
+    <name>Readback_30</name>
     <x>600</x>
     <y>385</y>
     <width>250</width>
@@ -438,7 +406,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:COMM_TIMEOUT_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_33</name>
+    <name>Label_31</name>
     <x>20</x>
     <y>414</y>
     <width>570</width>
@@ -453,7 +421,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_34</name>
+    <name>Readback_32</name>
     <x>600</x>
     <y>414</y>
     <width>250</width>
@@ -461,7 +429,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:COMM_TIMEOUT_SET</pv_name>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_35</name>
+    <name>Setpoint_33</name>
     <x>870</x>
     <y>414</y>
     <width>270</width>
@@ -469,7 +437,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:COMM_TIMEOUT_SET</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_36</name>
+    <name>Label_34</name>
     <x>20</x>
     <y>443</y>
     <width>570</width>
@@ -484,7 +452,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_37</name>
+    <name>Readback_35</name>
     <x>600</x>
     <y>443</y>
     <width>250</width>
@@ -492,7 +460,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_38</name>
+    <name>Label_36</name>
     <x>20</x>
     <y>472</y>
     <width>570</width>
@@ -507,7 +475,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_39</name>
+    <name>Readback_37</name>
     <x>600</x>
     <y>472</y>
     <width>250</width>
@@ -515,7 +483,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:COOLING_MODE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_40</name>
+    <name>Label_38</name>
     <x>20</x>
     <y>501</y>
     <width>570</width>
@@ -530,7 +498,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_41</name>
+    <name>Readback_39</name>
     <x>600</x>
     <y>501</y>
     <width>250</width>
@@ -538,7 +506,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:DEVIATION_ALARM</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_42</name>
+    <name>Label_40</name>
     <x>20</x>
     <y>530</y>
     <width>570</width>
@@ -553,7 +521,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_43</name>
+    <name>Readback_41</name>
     <x>600</x>
     <y>530</y>
     <width>250</width>
@@ -561,7 +529,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:DEVIATION_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_44</name>
+    <name>Label_42</name>
     <x>20</x>
     <y>559</y>
     <width>570</width>
@@ -576,7 +544,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_45</name>
+    <name>Readback_43</name>
     <x>600</x>
     <y>559</y>
     <width>250</width>
@@ -584,7 +552,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:DEVIATION_WARNING</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_46</name>
+    <name>Label_44</name>
     <x>20</x>
     <y>588</y>
     <width>570</width>
@@ -599,7 +567,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_47</name>
+    <name>Readback_45</name>
     <x>600</x>
     <y>588</y>
     <width>250</width>
@@ -607,7 +575,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:DEVICE_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_48</name>
+    <name>Label_46</name>
     <x>20</x>
     <y>617</y>
     <width>570</width>
@@ -622,7 +590,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_49</name>
+    <name>Readback_47</name>
     <x>600</x>
     <y>617</y>
     <width>250</width>
@@ -630,7 +598,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:ERROR_CODE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_50</name>
+    <name>Label_48</name>
     <x>20</x>
     <y>646</y>
     <width>570</width>
@@ -645,7 +613,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_51</name>
+    <name>Readback_49</name>
     <x>600</x>
     <y>646</y>
     <width>250</width>
@@ -653,7 +621,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:ERROR_MESSAGE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_52</name>
+    <name>Label_50</name>
     <x>20</x>
     <y>675</y>
     <width>570</width>
@@ -668,7 +636,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_53</name>
+    <name>Readback_51</name>
     <x>600</x>
     <y>675</y>
     <width>250</width>
@@ -676,7 +644,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:EXTERNAL_TEMPERATURE_ENABLED</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_54</name>
+    <name>Label_52</name>
     <x>20</x>
     <y>704</y>
     <width>570</width>
@@ -691,7 +659,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_55</name>
+    <name>Readback_53</name>
     <x>600</x>
     <y>704</y>
     <width>250</width>
@@ -699,7 +667,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:EXTERNAL_TEMPERATURE_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_56</name>
+    <name>Label_54</name>
     <x>20</x>
     <y>733</y>
     <width>570</width>
@@ -714,7 +682,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_57</name>
+    <name>Readback_55</name>
     <x>600</x>
     <y>733</y>
     <width>250</width>
@@ -722,7 +690,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:EXTERNAL_TEMPERATURE_VALID</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_58</name>
+    <name>Label_56</name>
     <x>20</x>
     <y>762</y>
     <width>570</width>
@@ -737,7 +705,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_59</name>
+    <name>Readback_57</name>
     <x>600</x>
     <y>762</y>
     <width>250</width>
@@ -745,7 +713,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:FAULT</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_60</name>
+    <name>Label_58</name>
     <x>20</x>
     <y>791</y>
     <width>570</width>
@@ -760,7 +728,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_61</name>
+    <name>Readback_59</name>
     <x>600</x>
     <y>791</y>
     <width>250</width>
@@ -768,7 +736,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:FAULT_DIAGNOSIS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_62</name>
+    <name>Label_60</name>
     <x>20</x>
     <y>820</y>
     <width>570</width>
@@ -783,7 +751,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_63</name>
+    <name>Readback_61</name>
     <x>600</x>
     <y>820</y>
     <width>250</width>
@@ -791,7 +759,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:HEARTBEAT</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_64</name>
+    <name>Label_62</name>
     <x>20</x>
     <y>849</y>
     <width>570</width>
@@ -806,7 +774,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_65</name>
+    <name>Readback_63</name>
     <x>600</x>
     <y>849</y>
     <width>250</width>
@@ -814,7 +782,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:IOC_STATE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_66</name>
+    <name>Label_64</name>
     <x>20</x>
     <y>878</y>
     <width>570</width>
@@ -829,7 +797,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_67</name>
+    <name>Readback_65</name>
     <x>600</x>
     <y>878</y>
     <width>250</width>
@@ -837,7 +805,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:LAST_UPDATE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_68</name>
+    <name>Label_66</name>
     <x>20</x>
     <y>907</y>
     <width>570</width>
@@ -852,7 +820,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_69</name>
+    <name>Readback_67</name>
     <x>600</x>
     <y>907</y>
     <width>250</width>
@@ -860,7 +828,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:PRESSURE_ENABLED</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_70</name>
+    <name>Label_68</name>
     <x>20</x>
     <y>936</y>
     <width>570</width>
@@ -875,7 +843,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_71</name>
+    <name>Readback_69</name>
     <x>600</x>
     <y>936</y>
     <width>250</width>
@@ -883,7 +851,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:PRESSURE_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_72</name>
+    <name>Label_70</name>
     <x>20</x>
     <y>965</y>
     <width>570</width>
@@ -898,7 +866,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_73</name>
+    <name>Readback_71</name>
     <x>600</x>
     <y>965</y>
     <width>250</width>
@@ -906,7 +874,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:PRESSURE_VALID</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_74</name>
+    <name>Label_72</name>
     <x>20</x>
     <y>994</y>
     <width>570</width>
@@ -921,7 +889,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_75</name>
+    <name>Readback_73</name>
     <x>600</x>
     <y>994</y>
     <width>250</width>
@@ -929,7 +897,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:PUMP_STAGE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_76</name>
+    <name>Label_74</name>
     <x>20</x>
     <y>1023</y>
     <width>570</width>
@@ -944,7 +912,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_77</name>
+    <name>Readback_75</name>
     <x>600</x>
     <y>1023</y>
     <width>250</width>
@@ -952,7 +920,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:RUN_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_78</name>
+    <name>Label_76</name>
     <x>20</x>
     <y>1052</y>
     <width>570</width>
@@ -967,7 +935,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_79</name>
+    <name>Readback_77</name>
     <x>600</x>
     <y>1052</y>
     <width>250</width>
@@ -975,7 +943,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:RUN_SET</pv_name>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_80</name>
+    <name>Action_78</name>
     <x>870</x>
     <y>1052</y>
     <width>64</width>
@@ -997,7 +965,7 @@
     </background_color>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_81</name>
+    <name>Action_79</name>
     <x>941</x>
     <y>1052</y>
     <width>64</width>
@@ -1019,7 +987,7 @@
     </background_color>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_82</name>
+    <name>Label_80</name>
     <x>20</x>
     <y>1081</y>
     <width>570</width>
@@ -1034,7 +1002,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_83</name>
+    <name>Readback_81</name>
     <x>600</x>
     <y>1081</y>
     <width>250</width>
@@ -1042,7 +1010,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:RUN_STATE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_84</name>
+    <name>Label_82</name>
     <x>20</x>
     <y>1110</y>
     <width>570</width>
@@ -1057,7 +1025,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_85</name>
+    <name>Readback_83</name>
     <x>600</x>
     <y>1110</y>
     <width>250</width>
@@ -1065,7 +1033,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:SAFE_MODE_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_86</name>
+    <name>Label_84</name>
     <x>20</x>
     <y>1139</y>
     <width>570</width>
@@ -1080,7 +1048,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_87</name>
+    <name>Readback_85</name>
     <x>600</x>
     <y>1139</y>
     <width>250</width>
@@ -1088,7 +1056,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:SAFE_SETPOINT_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_88</name>
+    <name>Label_86</name>
     <x>20</x>
     <y>1168</y>
     <width>570</width>
@@ -1103,7 +1071,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_89</name>
+    <name>Readback_87</name>
     <x>600</x>
     <y>1168</y>
     <width>250</width>
@@ -1111,7 +1079,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:SAFE_SETPOINT_SET</pv_name>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_90</name>
+    <name>Setpoint_88</name>
     <x>870</x>
     <y>1168</y>
     <width>270</width>
@@ -1119,7 +1087,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:SAFE_SETPOINT_SET</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_91</name>
+    <name>Label_89</name>
     <x>20</x>
     <y>1197</y>
     <width>570</width>
@@ -1134,7 +1102,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_92</name>
+    <name>Readback_90</name>
     <x>600</x>
     <y>1197</y>
     <width>250</width>
@@ -1142,7 +1110,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:SETPOINT_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_93</name>
+    <name>Label_91</name>
     <x>20</x>
     <y>1226</y>
     <width>570</width>
@@ -1157,7 +1125,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_94</name>
+    <name>Readback_92</name>
     <x>600</x>
     <y>1226</y>
     <width>250</width>
@@ -1165,7 +1133,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:SETPOINT_REQUEST</pv_name>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_95</name>
+    <name>Setpoint_93</name>
     <x>870</x>
     <y>1226</y>
     <width>270</width>
@@ -1173,7 +1141,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:SETPOINT_REQUEST</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_96</name>
+    <name>Label_94</name>
     <x>20</x>
     <y>1255</y>
     <width>570</width>
@@ -1188,7 +1156,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_97</name>
+    <name>Readback_95</name>
     <x>600</x>
     <y>1255</y>
     <width>250</width>
@@ -1196,7 +1164,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:SETPOINT_SET</pv_name>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_98</name>
+    <name>Setpoint_96</name>
     <x>870</x>
     <y>1255</y>
     <width>270</width>
@@ -1204,7 +1172,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:SETPOINT_SET</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_99</name>
+    <name>Label_97</name>
     <x>20</x>
     <y>1284</y>
     <width>570</width>
@@ -1219,7 +1187,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_100</name>
+    <name>Readback_98</name>
     <x>600</x>
     <y>1284</y>
     <width>250</width>
@@ -1227,7 +1195,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:SIMULATION</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_101</name>
+    <name>Label_99</name>
     <x>20</x>
     <y>1313</y>
     <width>570</width>
@@ -1242,7 +1210,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_102</name>
+    <name>Readback_100</name>
     <x>600</x>
     <y>1313</y>
     <width>250</width>
@@ -1250,7 +1218,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:STANDBY_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_103</name>
+    <name>Label_101</name>
     <x>20</x>
     <y>1342</y>
     <width>570</width>
@@ -1265,7 +1233,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_104</name>
+    <name>Readback_102</name>
     <x>600</x>
     <y>1342</y>
     <width>250</width>
@@ -1273,7 +1241,7 @@
     <pv_name>BDX:CHILLER:CHILLER1:TEMPERATURE_DEVIATION_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_105</name>
+    <name>Label_103</name>
     <x>20</x>
     <y>1371</y>
     <width>570</width>
@@ -1288,7 +1256,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_106</name>
+    <name>Readback_104</name>
     <x>600</x>
     <y>1371</y>
     <width>250</width>

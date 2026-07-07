@@ -195,7 +195,7 @@ def test_archiver_env_path_generation_is_configurable(tmp_path: Path):
     assert f"ARCHAPPL_SHORT_TERM_FOLDER={tmp_path / 'state' / 'sts'}" in result.stdout
 
 
-def test_archiver_auto_registration_command_defaults_to_deployed_psu_and_chiller_lists(
+def test_archiver_auto_registration_command_defaults_to_deployed_lists(
     tmp_path: Path,
 ):
     env_file = _write_minimal_archiver_env(tmp_path)
@@ -216,6 +216,7 @@ def test_archiver_auto_registration_command_defaults_to_deployed_psu_and_chiller
     assert "--mgmt-url http://127.0.0.1:17665/mgmt/bpl" in result.stdout
     assert f"{tmp_path / 'app' / 'pv-lists' / 'psu.txt'}" in result.stdout
     assert f"{tmp_path / 'app' / 'pv-lists' / 'chiller.txt'}" in result.stdout
+    assert f"{tmp_path / 'app' / 'pv-lists' / 'environment.txt'}" in result.stdout
 
 
 def test_archiver_auto_registration_explicit_pv_lists_override_defaults(tmp_path: Path):
@@ -243,6 +244,7 @@ def test_archiver_auto_registration_explicit_pv_lists_override_defaults(tmp_path
     assert str(override_b) in result.stdout
     assert f"{tmp_path / 'app' / 'pv-lists' / 'psu.txt'}" not in result.stdout
     assert f"{tmp_path / 'app' / 'pv-lists' / 'chiller.txt'}" not in result.stdout
+    assert f"{tmp_path / 'app' / 'pv-lists' / 'environment.txt'}" not in result.stdout
 
 
 def test_archiver_auto_registration_duplicate_start_is_ignored(tmp_path: Path):
@@ -296,9 +298,9 @@ def test_archiver_readiness_checks_use_functional_bpl_endpoints(tmp_path: Path):
     urls = result.stdout.splitlines()
     assert urls == [
         "http://127.0.0.1:17665/mgmt/bpl/getApplianceInfo",
-        "http://127.0.0.1:17666/engine/bpl/getApplianceInfo",
-        "http://127.0.0.1:17667/etl/bpl/getApplianceInfo",
-        "http://127.0.0.1:17668/retrieval/bpl/getApplianceInfo",
+        "http://127.0.0.1:17666/engine/bpl/getApplianceMetrics",
+        "http://127.0.0.1:17667/etl/bpl/getApplianceMetrics",
+        "http://127.0.0.1:17668/retrieval/bpl/getApplianceMetrics",
     ]
     assert all(not url.endswith("/bpl") for url in urls)
 

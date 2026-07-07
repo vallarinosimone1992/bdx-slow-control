@@ -146,15 +146,15 @@ bdx_component_ready_url() {
             ;;
         engine)
             base="$BDX_ARCHIVER_ENGINE_URL"
-            path="${BDX_ARCHIVER_ENGINE_READY_PATH:-getApplianceInfo}"
+            path="${BDX_ARCHIVER_ENGINE_READY_PATH:-getApplianceMetrics}"
             ;;
         etl)
             base="$BDX_ARCHIVER_ETL_URL"
-            path="${BDX_ARCHIVER_ETL_READY_PATH:-getApplianceInfo}"
+            path="${BDX_ARCHIVER_ETL_READY_PATH:-getApplianceMetrics}"
             ;;
         retrieval)
             base="$BDX_ARCHIVER_RETRIEVAL_BPL_URL"
-            path="${BDX_ARCHIVER_RETRIEVAL_READY_PATH:-getApplianceInfo}"
+            path="${BDX_ARCHIVER_RETRIEVAL_READY_PATH:-getApplianceMetrics}"
             ;;
         *)
             bdx_die "Unknown Archiver Appliance component: $component"
@@ -187,7 +187,9 @@ bdx_archiver_resolved_pv_lists() {
     local raw item
     raw="${BDX_ARCHIVER_PV_LISTS:-}"
     if [[ -z "${raw//[[:space:]]/}" ]]; then
-        raw="$BDX_ARCHIVER_APP_DIR/pv-lists/psu.txt $BDX_ARCHIVER_APP_DIR/pv-lists/chiller.txt"
+        raw="$BDX_ARCHIVER_APP_DIR/pv-lists/psu.txt"
+        raw+=" $BDX_ARCHIVER_APP_DIR/pv-lists/chiller.txt"
+        raw+=" $BDX_ARCHIVER_APP_DIR/pv-lists/environment.txt"
     fi
     for item in $raw; do
         [[ -n "$item" ]] || continue

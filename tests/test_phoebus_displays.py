@@ -3,13 +3,18 @@ import os
 import subprocess
 import xml.etree.ElementTree as ET
 
-from bdx_slow_control.phoebus_generator import archiver_pbraw_url, generate
+from bdx_slow_control.phoebus_generator import (
+    archiver_pbraw_url,
+    display_catalog_profile_dirs,
+    generate,
+)
 
 
 PROTOTYPE_PROFILE = Path("config/profiles/prototype")
 DEFAULT_PROFILE = Path("config/profiles/default")
 MAIN_SERVER_PROFILE = Path("config/profiles/main-server")
 RASPBERRY_PROFILE = Path("config/profiles/raspberry")
+DEPLOYED_DISPLAY_CATALOG = Path("config/display-catalogs/deployed-prototype.json")
 RASPBERRY_TEMPERATURE_PVS = {
     "BDX:ENV:TEMP:T00:VALUE",
     "BDX:ENV:TEMP:T01:VALUE",
@@ -120,6 +125,15 @@ def _open_file_targets(path: Path) -> set[str]:
     return {
         element.text
         for element in root.findall(".//action[@type='open_file']/file")
+        if element.text
+    }
+
+
+def _open_display_targets(path: Path) -> set[str]:
+    root = ET.parse(path).getroot()
+    return {
+        element.text
+        for element in root.findall(".//action[@type='open_display']/file")
         if element.text
     }
 
@@ -639,7 +653,10 @@ def test_default_overview_chiller_navigation_opens_existing_display(tmp_path: Pa
     generate(DEFAULT_PROFILE, tmp_path)
 
     targets = _open_file_targets(tmp_path / "overview.bob")
-    assert "overview_chiller.plt" in targets or (tmp_path / "overview_chiller.plt").exists()
+    assert (
+        "overview_chiller_temperature.plt" in targets
+        or (tmp_path / "overview_chiller_temperature.plt").exists()
+    )
     open_targets = {
         element.text
         for element in ET.parse(tmp_path / "overview.bob")
@@ -649,6 +666,81 @@ def test_default_overview_chiller_navigation_opens_existing_display(tmp_path: Pa
     }
     assert "chiller.bob" in open_targets
     assert ET.parse(tmp_path / "chiller.bob").getroot().tag == "display"
+
+
+def test_deployed_display_catalog_composes_main_host_and_raspberry_profiles(
+    tmp_path: Path,
+):
+    profile_dirs = display_catalog_profile_dirs(DEPLOYED_DISPLAY_CATALOG)
+
+    assert profile_dirs == (
+        (DEPLOYED_DISPLAY_CATALOG.parent / "../profiles/default").resolve(),
+        (DEPLOYED_DISPLAY_CATALOG.parent / "../profiles/raspberry").resolve(),
+    )
+
+    pvs = generate(DEFAULT_PROFILE, tmp_path, catalog_path=DEPLOYED_DISPLAY_CATALOG)
+    names = {pv.name for pv in pvs}
+
+    assert RASPBERRY_TEMPERATURE_PVS.issubset(names)
+    assert "BDX:PSU:LV1:COMM_STATUS" in names
+    assert "BDX:PSU:LV2:COMM_STATUS" in names
+    assert "BDX:CHILLER:CHILLER1:COMM_STATUS" in names
+    assert "BDX:GLOBAL:SYSTEM_STATE" in names
+    assert not any(name.startswith("BDX:HV:") for name in names)
+    assert not any(name.startswith("BDX:DAQ:") for name in names)
+
+
+def test_deployed_display_catalog_generates_active_subsystems_only(tmp_path: Path):
+    generate(DEFAULT_PROFILE, tmp_path, catalog_path=DEPLOYED_DISPLAY_CATALOG)
+
+    assert (tmp_path / "psu.bob").exists()
+    assert (tmp_path / "chiller.bob").exists()
+    assert (tmp_path / "environment.bob").exists()
+    assert (tmp_path / "global.bob").exists()
+    assert not (tmp_path / "hv.bob").exists()
+    assert not (tmp_path / "daq.bob").exists()
+    assert not list(tmp_path.glob("*humidity*.plt"))
+    assert not list(tmp_path.glob("*pressure*.plt"))
+
+    navigation_targets = _open_display_targets(tmp_path / "overview.bob")
+    assert {"psu.bob", "chiller.bob", "environment.bob", "global.bob"}.issubset(
+        navigation_targets
+    )
+    assert "hv.bob" not in navigation_targets
+    assert "daq.bob" not in navigation_targets
+
+
+def test_deployed_overview_and_trends_cover_environment_chiller_and_lv(
+    tmp_path: Path,
+):
+    generate(DEFAULT_PROFILE, tmp_path, catalog_path=DEPLOYED_DISPLAY_CATALOG)
+
+    overview_traces = set()
+    for path in tmp_path.glob("overview_*.plt"):
+        overview_traces.update(_plt_traces(_plt(path)))
+
+    trends_traces = set()
+    for path in tmp_path.glob("trends_*.plt"):
+        trends_traces.update(_plt_traces(_plt(path)))
+
+    expected_lv = {
+        "BDX:PSU:LV1:CH1:VOLTAGE_RBV",
+        "BDX:PSU:LV1:CH1:CURRENT_RBV",
+        "BDX:PSU:LV2:CH2:VOLTAGE_RBV",
+        "BDX:PSU:LV2:CH2:CURRENT_RBV",
+    }
+    expected_chiller = {
+        "BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV",
+        "BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV",
+        "BDX:CHILLER:CHILLER1:SETPOINT_RBV",
+    }
+
+    assert RASPBERRY_TEMPERATURE_PVS.issubset(overview_traces)
+    assert expected_chiller.issubset(overview_traces)
+    assert expected_lv.issubset(overview_traces)
+    assert RASPBERRY_TEMPERATURE_PVS.issubset(trends_traces)
+    assert expected_chiller.issubset(trends_traces)
+    assert expected_lv.issubset(trends_traces)
 
 
 def test_phoebus_launcher_uses_live_only_databrowser_settings_when_archive_disabled(
@@ -695,12 +787,13 @@ def test_phoebus_launcher_enables_local_archiver_by_default(tmp_path: Path):
     env = {
         key: value
         for key, value in os.environ.items()
-        if not key.startswith("BDX_ARCHIVER_")
+        if not key.startswith("BDX_ARCHIVER_") and not key.startswith("BDX_CA_")
     }
     env.update(
         {
             "BDX_PHOEBUS_CMD": str(launcher),
             "BDX_PHOEBUS_ENV": str(tmp_path / "missing.env"),
+            "BDX_MAIN_HOST": "172.22.50.2",
             "XDG_RUNTIME_DIR": str(tmp_path),
         }
     )
@@ -717,8 +810,10 @@ def test_phoebus_launcher_enables_local_archiver_by_default(tmp_path: Path):
         encoding="utf-8"
     )
     expected = "pbraw://127.0.0.1:17668/retrieval|BDX Archiver"
+    assert "org.phoebus.pv.ca/addr_list=172.22.50.2 172.22.50.10\n" in settings
     assert f"org.csstudio.trends.databrowser3/urls={expected}\n" in settings
     assert f"org.csstudio.trends.databrowser3/archives={expected}\n" in settings
+    assert "CA address list:  172.22.50.2 172.22.50.10" in completed.stdout
     assert "Archiver enabled: true" in completed.stdout
     assert "Archiver retrieval: pbraw://127.0.0.1:17668/retrieval" in completed.stdout
 

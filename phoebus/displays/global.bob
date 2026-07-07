@@ -86,38 +86,6 @@
     <height>30</height>
     <actions>
       <action type="open_display">
-        <file>hv.bob</file>
-        <target>tab</target>
-        <description>Open HV</description>
-      </action>
-    </actions>
-    <text>HV</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>Navigation_7</name>
-    <x>610</x>
-    <y>58</y>
-    <width>112</width>
-    <height>30</height>
-    <actions>
-      <action type="open_display">
-        <file>daq.bob</file>
-        <target>tab</target>
-        <description>Open DAQ</description>
-      </action>
-    </actions>
-    <text>DAQ</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>Navigation_8</name>
-    <x>728</x>
-    <y>58</y>
-    <width>112</width>
-    <height>30</height>
-    <actions>
-      <action type="open_display">
         <file>global.bob</file>
         <target>tab</target>
         <description>Open Global</description>
@@ -127,8 +95,8 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Navigation_9</name>
-    <x>846</x>
+    <name>Navigation_7</name>
+    <x>610</x>
     <y>58</y>
     <width>112</width>
     <height>30</height>
@@ -143,8 +111,8 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Navigation_10</name>
-    <x>964</x>
+    <name>Navigation_8</name>
+    <x>728</x>
     <y>58</y>
     <width>112</width>
     <height>30</height>
@@ -159,7 +127,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_11</name>
+    <name>Label_9</name>
     <x>20</x>
     <y>105</y>
     <width>190</width>
@@ -170,7 +138,7 @@
     </font>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_12</name>
+    <name>Setpoint_10</name>
     <x>220</x>
     <y>105</y>
     <width>120</width>
@@ -178,7 +146,7 @@
     <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_13</name>
+    <name>Label_11</name>
     <x>345</x>
     <y>105</y>
     <width>30</width>
@@ -189,7 +157,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_14</name>
+    <name>Action_12</name>
     <x>390</x>
     <y>105</y>
     <width>75</width>
@@ -206,7 +174,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_15</name>
+    <name>Action_13</name>
     <x>472</x>
     <y>105</y>
     <width>75</width>
@@ -223,7 +191,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_16</name>
+    <name>Action_14</name>
     <x>554</x>
     <y>105</y>
     <width>75</width>
@@ -240,7 +208,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_17</name>
+    <name>Action_15</name>
     <x>636</x>
     <y>105</y>
     <width>75</width>
@@ -257,7 +225,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_18</name>
+    <name>Label_16</name>
     <x>735</x>
     <y>105</y>
     <width>95</width>
@@ -268,7 +236,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_19</name>
+    <name>Readback_17</name>
     <x>835</x>
     <y>105</y>
     <width>100</width>
@@ -276,7 +244,7 @@
     <pv_name>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_20</name>
+    <name>Label_18</name>
     <x>940</x>
     <y>105</y>
     <width>35</width>
@@ -287,7 +255,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_21</name>
+    <name>Label_19</name>
     <x>995</x>
     <y>105</y>
     <width>240</width>
@@ -298,7 +266,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_22</name>
+    <name>Action_20</name>
     <x>20</x>
     <y>147</y>
     <width>160</width>
@@ -320,7 +288,7 @@
     </background_color>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_23</name>
+    <name>Action_21</name>
     <x>190</x>
     <y>147</y>
     <width>160</width>
@@ -337,7 +305,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_24</name>
+    <name>Action_22</name>
     <x>360</x>
     <y>147</y>
     <width>160</width>
@@ -359,7 +327,7 @@
     </background_color>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_25</name>
+    <name>Label_23</name>
     <x>20</x>
     <y>197</y>
     <width>420</width>
@@ -370,7 +338,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>OpenFile_26</name>
+    <name>OpenFile_24</name>
     <x>540</x>
     <y>197</y>
     <width>150</width>
@@ -385,7 +353,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_27</name>
+    <name>DataBrowser_25</name>
     <x>20</x>
     <y>235</y>
     <width>670</width>
@@ -394,7 +362,7 @@
     <show_toolbar>true</show_toolbar>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_28</name>
+    <name>Label_26</name>
     <x>20</x>
     <y>567</y>
     <width>570</width>
@@ -409,7 +377,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_29</name>
+    <name>Label_27</name>
     <x>600</x>
     <y>567</y>
     <width>250</width>
@@ -424,7 +392,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_30</name>
+    <name>Label_28</name>
     <x>870</x>
     <y>567</y>
     <width>270</width>
@@ -439,7 +407,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_31</name>
+    <name>Label_29</name>
     <x>20</x>
     <y>599</y>
     <width>570</width>
@@ -454,7 +422,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_32</name>
+    <name>Readback_30</name>
     <x>600</x>
     <y>599</y>
     <width>250</width>
@@ -462,7 +430,7 @@
     <pv_name>BDX:GLOBAL:ALLOFF_CMD</pv_name>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_33</name>
+    <name>Action_31</name>
     <x>870</x>
     <y>599</y>
     <width>135</width>
@@ -484,7 +452,7 @@
     </background_color>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_34</name>
+    <name>Label_32</name>
     <x>20</x>
     <y>628</y>
     <width>570</width>
@@ -499,7 +467,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_35</name>
+    <name>Readback_33</name>
     <x>600</x>
     <y>628</y>
     <width>250</width>
@@ -507,7 +475,7 @@
     <pv_name>BDX:GLOBAL:HEARTBEAT</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_36</name>
+    <name>Label_34</name>
     <x>20</x>
     <y>657</y>
     <width>570</width>
@@ -522,7 +490,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_37</name>
+    <name>Readback_35</name>
     <x>600</x>
     <y>657</y>
     <width>250</width>
@@ -530,7 +498,7 @@
     <pv_name>BDX:GLOBAL:INTERLOCK_ACTIVE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_38</name>
+    <name>Label_36</name>
     <x>20</x>
     <y>686</y>
     <width>570</width>
@@ -545,7 +513,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_39</name>
+    <name>Readback_37</name>
     <x>600</x>
     <y>686</y>
     <width>250</width>
@@ -553,7 +521,7 @@
     <pv_name>BDX:GLOBAL:INTERLOCK_REASON</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_40</name>
+    <name>Label_38</name>
     <x>20</x>
     <y>715</y>
     <width>570</width>
@@ -568,7 +536,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_41</name>
+    <name>Readback_39</name>
     <x>600</x>
     <y>715</y>
     <width>250</width>
@@ -576,7 +544,7 @@
     <pv_name>BDX:GLOBAL:INTERLOCK_RESET_CMD</pv_name>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_42</name>
+    <name>Action_40</name>
     <x>870</x>
     <y>715</y>
     <width>135</width>
@@ -593,7 +561,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_43</name>
+    <name>Label_41</name>
     <x>20</x>
     <y>744</y>
     <width>570</width>
@@ -608,7 +576,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_44</name>
+    <name>Readback_42</name>
     <x>600</x>
     <y>744</y>
     <width>250</width>
@@ -616,7 +584,7 @@
     <pv_name>BDX:GLOBAL:INTERLOCK_TEST_CMD</pv_name>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_45</name>
+    <name>Action_43</name>
     <x>870</x>
     <y>744</y>
     <width>135</width>
@@ -638,7 +606,7 @@
     </background_color>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_46</name>
+    <name>Label_44</name>
     <x>20</x>
     <y>773</y>
     <width>570</width>
@@ -653,7 +621,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_47</name>
+    <name>Readback_45</name>
     <x>600</x>
     <y>773</y>
     <width>250</width>
@@ -661,7 +629,7 @@
     <pv_name>BDX:GLOBAL:LAST_ACTION</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_48</name>
+    <name>Label_46</name>
     <x>20</x>
     <y>802</y>
     <width>570</width>
@@ -676,7 +644,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_49</name>
+    <name>Readback_47</name>
     <x>600</x>
     <y>802</y>
     <width>250</width>
@@ -684,7 +652,7 @@
     <pv_name>BDX:GLOBAL:MAX_UPDATE_PERIOD_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_50</name>
+    <name>Label_48</name>
     <x>20</x>
     <y>831</y>
     <width>570</width>
@@ -699,7 +667,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_51</name>
+    <name>Readback_49</name>
     <x>600</x>
     <y>831</y>
     <width>250</width>
@@ -707,7 +675,7 @@
     <pv_name>BDX:GLOBAL:MIN_UPDATE_PERIOD_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_52</name>
+    <name>Label_50</name>
     <x>20</x>
     <y>860</y>
     <width>570</width>
@@ -722,7 +690,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_53</name>
+    <name>Readback_51</name>
     <x>600</x>
     <y>860</y>
     <width>250</width>
@@ -730,7 +698,7 @@
     <pv_name>BDX:GLOBAL:READY</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_54</name>
+    <name>Label_52</name>
     <x>20</x>
     <y>889</y>
     <width>570</width>
@@ -745,7 +713,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_55</name>
+    <name>Readback_53</name>
     <x>600</x>
     <y>889</y>
     <width>250</width>
@@ -753,7 +721,7 @@
     <pv_name>BDX:GLOBAL:SIMULATION</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_56</name>
+    <name>Label_54</name>
     <x>20</x>
     <y>918</y>
     <width>570</width>
@@ -768,7 +736,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_57</name>
+    <name>Readback_55</name>
     <x>600</x>
     <y>918</y>
     <width>250</width>
@@ -776,7 +744,7 @@
     <pv_name>BDX:GLOBAL:SYSTEM_STATE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_58</name>
+    <name>Label_56</name>
     <x>20</x>
     <y>947</y>
     <width>570</width>
@@ -791,7 +759,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_59</name>
+    <name>Readback_57</name>
     <x>600</x>
     <y>947</y>
     <width>250</width>
@@ -799,7 +767,7 @@
     <pv_name>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_60</name>
+    <name>Label_58</name>
     <x>20</x>
     <y>976</y>
     <width>570</width>
@@ -814,7 +782,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_61</name>
+    <name>Readback_59</name>
     <x>600</x>
     <y>976</y>
     <width>250</width>
@@ -822,7 +790,7 @@
     <pv_name>BDX:GLOBAL:UPDATE_PERIOD_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_62</name>
+    <name>Label_60</name>
     <x>20</x>
     <y>1005</y>
     <width>570</width>
@@ -837,7 +805,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_63</name>
+    <name>Readback_61</name>
     <x>600</x>
     <y>1005</y>
     <width>250</width>
@@ -845,7 +813,7 @@
     <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_64</name>
+    <name>Setpoint_62</name>
     <x>870</x>
     <y>1005</y>
     <width>270</width>

@@ -298,210 +298,7 @@
     </pv>
     <pv>
       <selected>true</selected>
-      <name>BDX:DAQ:CRATE01:CLEAR_ERROR_CMD</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:DAQ:CRATE01:COMM_OK</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:DAQ:CRATE01:COMM_STATUS</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:DAQ:CRATE01:CONFIG_APPLIED</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:DAQ:CRATE01:CONFIG_REQUEST</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:DAQ:CRATE01:ERROR</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:DAQ:CRATE01:ERROR_CODE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:DAQ:CRATE01:ERROR_MESSAGE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:DAQ:CRATE01:HEARTBEAT</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:DAQ:CRATE01:IOC_STATE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:DAQ:CRATE01:LAST_UPDATE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:DAQ:CRATE01:READY</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:DAQ:CRATE01:SIMULATION</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:DAQ:CRATE01:STATE_RBV</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:DAQ:CRATE01:STATE_SET</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
       <name>BDX:ENV:HEARTBEAT</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:ENV:HUMIDITY:H01:CLEAR_ERROR_CMD</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:ENV:HUMIDITY:H01:COMM_OK</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:ENV:HUMIDITY:H01:COMM_STATUS</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:ENV:HUMIDITY:H01:ERROR_CODE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:ENV:HUMIDITY:H01:ERROR_MESSAGE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:ENV:HUMIDITY:H01:HEARTBEAT</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:ENV:HUMIDITY:H01:IOC_STATE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:ENV:HUMIDITY:H01:LAST_UPDATE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:ENV:HUMIDITY:H01:SENSOR_KIND</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:ENV:HUMIDITY:H01:SIMULATION</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:ENV:HUMIDITY:H01:STATUS</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:ENV:HUMIDITY:H01:STATUS_OK</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:ENV:HUMIDITY:H01:UNIT</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:ENV:HUMIDITY:H01:VALUE</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
@@ -515,98 +312,98 @@
     </pv>
     <pv>
       <selected>true</selected>
-      <name>BDX:ENV:PRESSURE:P01:CLEAR_ERROR_CMD</name>
+      <name>BDX:ENV:TEMP:T00:CLEAR_ERROR_CMD</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
     </pv>
     <pv>
       <selected>true</selected>
-      <name>BDX:ENV:PRESSURE:P01:COMM_OK</name>
+      <name>BDX:ENV:TEMP:T00:COMM_OK</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
     </pv>
     <pv>
       <selected>true</selected>
-      <name>BDX:ENV:PRESSURE:P01:COMM_STATUS</name>
+      <name>BDX:ENV:TEMP:T00:COMM_STATUS</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
     </pv>
     <pv>
       <selected>true</selected>
-      <name>BDX:ENV:PRESSURE:P01:ERROR_CODE</name>
+      <name>BDX:ENV:TEMP:T00:ERROR_CODE</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
     </pv>
     <pv>
       <selected>true</selected>
-      <name>BDX:ENV:PRESSURE:P01:ERROR_MESSAGE</name>
+      <name>BDX:ENV:TEMP:T00:ERROR_MESSAGE</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
     </pv>
     <pv>
       <selected>true</selected>
-      <name>BDX:ENV:PRESSURE:P01:HEARTBEAT</name>
+      <name>BDX:ENV:TEMP:T00:HEARTBEAT</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
     </pv>
     <pv>
       <selected>true</selected>
-      <name>BDX:ENV:PRESSURE:P01:IOC_STATE</name>
+      <name>BDX:ENV:TEMP:T00:IOC_STATE</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
     </pv>
     <pv>
       <selected>true</selected>
-      <name>BDX:ENV:PRESSURE:P01:LAST_UPDATE</name>
+      <name>BDX:ENV:TEMP:T00:LAST_UPDATE</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
     </pv>
     <pv>
       <selected>true</selected>
-      <name>BDX:ENV:PRESSURE:P01:SENSOR_KIND</name>
+      <name>BDX:ENV:TEMP:T00:SENSOR_KIND</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
     </pv>
     <pv>
       <selected>true</selected>
-      <name>BDX:ENV:PRESSURE:P01:SIMULATION</name>
+      <name>BDX:ENV:TEMP:T00:SIMULATION</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
     </pv>
     <pv>
       <selected>true</selected>
-      <name>BDX:ENV:PRESSURE:P01:STATUS</name>
+      <name>BDX:ENV:TEMP:T00:STATUS</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
     </pv>
     <pv>
       <selected>true</selected>
-      <name>BDX:ENV:PRESSURE:P01:STATUS_OK</name>
+      <name>BDX:ENV:TEMP:T00:STATUS_OK</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
     </pv>
     <pv>
       <selected>true</selected>
-      <name>BDX:ENV:PRESSURE:P01:UNIT</name>
+      <name>BDX:ENV:TEMP:T00:UNIT</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
     </pv>
     <pv>
       <selected>true</selected>
-      <name>BDX:ENV:PRESSURE:P01:VALUE</name>
+      <name>BDX:ENV:TEMP:T00:VALUE</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
@@ -705,6 +502,202 @@
     <pv>
       <selected>true</selected>
       <name>BDX:ENV:TEMP:T01:VALUE</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T02:CLEAR_ERROR_CMD</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T02:COMM_OK</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T02:COMM_STATUS</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T02:ERROR_CODE</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T02:ERROR_MESSAGE</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T02:HEARTBEAT</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T02:IOC_STATE</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T02:LAST_UPDATE</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T02:SENSOR_KIND</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T02:SIMULATION</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T02:STATUS</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T02:STATUS_OK</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T02:UNIT</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T02:VALUE</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T03:CLEAR_ERROR_CMD</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T03:COMM_OK</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T03:COMM_STATUS</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T03:ERROR_CODE</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T03:ERROR_MESSAGE</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T03:HEARTBEAT</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T03:IOC_STATE</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T03:LAST_UPDATE</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T03:SENSOR_KIND</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T03:SIMULATION</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T03:STATUS</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T03:STATUS_OK</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T03:UNIT</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T03:VALUE</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
@@ -810,363 +803,6 @@
     <pv>
       <selected>true</selected>
       <name>BDX:GLOBAL:UPDATE_PERIOD_SET</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:ALLOFF_CMD</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:ALL_OUTPUTS_OFF</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:CLEAR_ERROR_CMD</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:COMM_OK</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:COMM_STATUS</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:CURRENT_LIMIT_RBV</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:CURRENT_LIMIT_SET</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:CURRENT_RBV</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:ERROR_CODE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:ERROR_MESSAGE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:HEARTBEAT</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:IOC_STATE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:LAST_UPDATE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:OCP_RBV</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:OCP_SET</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:OUTPUT_RBV</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:OUTPUT_SET</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:OVP_RBV</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:OVP_SET</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:SIMULATION</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:VOLTAGE_RBV</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH1:VOLTAGE_SET</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:CLEAR_ERROR_CMD</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:COMM_OK</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:COMM_STATUS</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:CURRENT_LIMIT_RBV</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:CURRENT_LIMIT_SET</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:CURRENT_RBV</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:ERROR_CODE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:ERROR_MESSAGE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:HEARTBEAT</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:IOC_STATE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:LAST_UPDATE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:OCP_RBV</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:OCP_SET</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:OUTPUT_RBV</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:OUTPUT_SET</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:OVP_RBV</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:OVP_SET</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:SIMULATION</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:VOLTAGE_RBV</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CH2:VOLTAGE_SET</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:CLEAR_ERROR_CMD</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:COMM_OK</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:COMM_STATUS</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:ERROR_CODE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:ERROR_MESSAGE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:HEARTBEAT</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:IOC_STATE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:LAST_UPDATE</name>
-      <tolerance>0.1</tolerance>
-      <saved_value_timestamp/>
-      <completion>true</completion>
-    </pv>
-    <pv>
-      <selected>true</selected>
-      <name>BDX:HV:HV1:SIMULATION</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>

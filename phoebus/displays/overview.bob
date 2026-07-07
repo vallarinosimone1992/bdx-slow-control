@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>BDX Slow Control Overview</name>
   <width>1400</width>
-  <height>980</height>
+  <height>1110</height>
   <widget type="label" version="2.0.0">
     <name>Label_1</name>
     <x>20</x>
@@ -86,38 +86,6 @@
     <height>30</height>
     <actions>
       <action type="open_display">
-        <file>hv.bob</file>
-        <target>tab</target>
-        <description>Open HV</description>
-      </action>
-    </actions>
-    <text>HV</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>Navigation_7</name>
-    <x>610</x>
-    <y>58</y>
-    <width>112</width>
-    <height>30</height>
-    <actions>
-      <action type="open_display">
-        <file>daq.bob</file>
-        <target>tab</target>
-        <description>Open DAQ</description>
-      </action>
-    </actions>
-    <text>DAQ</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>Navigation_8</name>
-    <x>728</x>
-    <y>58</y>
-    <width>112</width>
-    <height>30</height>
-    <actions>
-      <action type="open_display">
         <file>global.bob</file>
         <target>tab</target>
         <description>Open Global</description>
@@ -127,8 +95,8 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Navigation_9</name>
-    <x>846</x>
+    <name>Navigation_7</name>
+    <x>610</x>
     <y>58</y>
     <width>112</width>
     <height>30</height>
@@ -143,8 +111,8 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Navigation_10</name>
-    <x>964</x>
+    <name>Navigation_8</name>
+    <x>728</x>
     <y>58</y>
     <width>112</width>
     <height>30</height>
@@ -159,7 +127,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_11</name>
+    <name>Label_9</name>
     <x>20</x>
     <y>105</y>
     <width>160</width>
@@ -170,7 +138,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_12</name>
+    <name>Readback_10</name>
     <x>185</x>
     <y>105</y>
     <width>150</width>
@@ -178,7 +146,7 @@
     <pv_name>BDX:GLOBAL:SYSTEM_STATE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_13</name>
+    <name>Label_11</name>
     <x>350</x>
     <y>105</y>
     <width>70</width>
@@ -189,7 +157,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_14</name>
+    <name>Readback_12</name>
     <x>425</x>
     <y>105</y>
     <width>90</width>
@@ -197,7 +165,7 @@
     <pv_name>BDX:GLOBAL:READY</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_15</name>
+    <name>Label_13</name>
     <x>530</x>
     <y>105</y>
     <width>90</width>
@@ -208,7 +176,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_16</name>
+    <name>Readback_14</name>
     <x>625</x>
     <y>105</y>
     <width>90</width>
@@ -216,7 +184,7 @@
     <pv_name>BDX:GLOBAL:INTERLOCK_ACTIVE</pv_name>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_17</name>
+    <name>Readback_15</name>
     <x>725</x>
     <y>105</y>
     <width>340</width>
@@ -224,7 +192,7 @@
     <pv_name>BDX:GLOBAL:INTERLOCK_REASON</pv_name>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_18</name>
+    <name>Action_16</name>
     <x>1080</x>
     <y>105</y>
     <width>135</width>
@@ -246,7 +214,7 @@
     </background_color>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_19</name>
+    <name>Action_17</name>
     <x>1225</x>
     <y>105</y>
     <width>75</width>
@@ -263,7 +231,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_20</name>
+    <name>Action_18</name>
     <x>1310</x>
     <y>105</y>
     <width>75</width>
@@ -285,7 +253,7 @@
     </background_color>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_21</name>
+    <name>Label_19</name>
     <x>20</x>
     <y>150</y>
     <width>190</width>
@@ -296,7 +264,7 @@
     </font>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_22</name>
+    <name>Setpoint_20</name>
     <x>220</x>
     <y>150</y>
     <width>120</width>
@@ -304,7 +272,7 @@
     <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_23</name>
+    <name>Label_21</name>
     <x>345</x>
     <y>150</y>
     <width>30</width>
@@ -315,7 +283,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_24</name>
+    <name>Action_22</name>
     <x>390</x>
     <y>150</y>
     <width>75</width>
@@ -332,7 +300,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_25</name>
+    <name>Action_23</name>
     <x>472</x>
     <y>150</y>
     <width>75</width>
@@ -349,7 +317,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_26</name>
+    <name>Action_24</name>
     <x>554</x>
     <y>150</y>
     <width>75</width>
@@ -366,7 +334,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_27</name>
+    <name>Action_25</name>
     <x>636</x>
     <y>150</y>
     <width>75</width>
@@ -383,7 +351,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_28</name>
+    <name>Label_26</name>
     <x>735</x>
     <y>150</y>
     <width>95</width>
@@ -394,7 +362,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_29</name>
+    <name>Readback_27</name>
     <x>835</x>
     <y>150</y>
     <width>100</width>
@@ -402,7 +370,7 @@
     <pv_name>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_30</name>
+    <name>Label_28</name>
     <x>940</x>
     <y>150</y>
     <width>35</width>
@@ -413,7 +381,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_31</name>
+    <name>Label_29</name>
     <x>995</x>
     <y>150</y>
     <width>240</width>
@@ -424,7 +392,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_32</name>
+    <name>Label_30</name>
     <x>20</x>
     <y>192</y>
     <width>300</width>
@@ -435,7 +403,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_33</name>
+    <name>Label_31</name>
     <x>20</x>
     <y>227</y>
     <width>160</width>
@@ -446,7 +414,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_34</name>
+    <name>Readback_32</name>
     <x>20</x>
     <y>252</y>
     <width>160</width>
@@ -454,8 +422,84 @@
     <pv_name>BDX:CHILLER:CHILLER1:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_35</name>
+    <name>Label_33</name>
     <x>195</x>
+    <y>227</y>
+    <width>160</width>
+    <height>24</height>
+    <text>ENV:TEMP:T00</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_34</name>
+    <x>195</x>
+    <y>252</y>
+    <width>160</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T00:COMM_STATUS</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_35</name>
+    <x>370</x>
+    <y>227</y>
+    <width>160</width>
+    <height>24</height>
+    <text>ENV:TEMP:T01</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_36</name>
+    <x>370</x>
+    <y>252</y>
+    <width>160</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T01:COMM_STATUS</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_37</name>
+    <x>545</x>
+    <y>227</y>
+    <width>160</width>
+    <height>24</height>
+    <text>ENV:TEMP:T02</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_38</name>
+    <x>545</x>
+    <y>252</y>
+    <width>160</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T02:COMM_STATUS</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_39</name>
+    <x>720</x>
+    <y>227</y>
+    <width>160</width>
+    <height>24</height>
+    <text>ENV:TEMP:T03</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_40</name>
+    <x>720</x>
+    <y>252</y>
+    <width>160</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T03:COMM_STATUS</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_41</name>
+    <x>895</x>
     <y>227</y>
     <width>160</width>
     <height>24</height>
@@ -465,16 +509,16 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_36</name>
-    <x>195</x>
+    <name>Readback_42</name>
+    <x>895</x>
     <y>252</y>
     <width>160</width>
     <height>25</height>
     <pv_name>BDX:PSU:LV1:CH1:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_37</name>
-    <x>370</x>
+    <name>Label_43</name>
+    <x>1070</x>
     <y>227</y>
     <width>160</width>
     <height>24</height>
@@ -484,17 +528,17 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_38</name>
-    <x>370</x>
+    <name>Readback_44</name>
+    <x>1070</x>
     <y>252</y>
     <width>160</width>
     <height>25</height>
     <pv_name>BDX:PSU:LV1:CH2:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_39</name>
-    <x>545</x>
-    <y>227</y>
+    <name>Label_45</name>
+    <x>20</x>
+    <y>285</y>
     <width>160</width>
     <height>24</height>
     <text>PSU:LV1</text>
@@ -503,17 +547,17 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_40</name>
-    <x>545</x>
-    <y>252</y>
+    <name>Readback_46</name>
+    <x>20</x>
+    <y>310</y>
     <width>160</width>
     <height>25</height>
     <pv_name>BDX:PSU:LV1:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_41</name>
-    <x>720</x>
-    <y>227</y>
+    <name>Label_47</name>
+    <x>195</x>
+    <y>285</y>
     <width>160</width>
     <height>24</height>
     <text>PSU:LV2:CH1</text>
@@ -522,17 +566,17 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_42</name>
-    <x>720</x>
-    <y>252</y>
+    <name>Readback_48</name>
+    <x>195</x>
+    <y>310</y>
     <width>160</width>
     <height>25</height>
     <pv_name>BDX:PSU:LV2:CH1:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_43</name>
-    <x>895</x>
-    <y>227</y>
+    <name>Label_49</name>
+    <x>370</x>
+    <y>285</y>
     <width>160</width>
     <height>24</height>
     <text>PSU:LV2:CH2</text>
@@ -541,17 +585,17 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_44</name>
-    <x>895</x>
-    <y>252</y>
+    <name>Readback_50</name>
+    <x>370</x>
+    <y>310</y>
     <width>160</width>
     <height>25</height>
     <pv_name>BDX:PSU:LV2:CH2:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_45</name>
-    <x>1070</x>
-    <y>227</y>
+    <name>Label_51</name>
+    <x>545</x>
+    <y>285</y>
     <width>160</width>
     <height>24</height>
     <text>PSU:LV2</text>
@@ -560,20 +604,151 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_46</name>
-    <x>1070</x>
-    <y>252</y>
+    <name>Readback_52</name>
+    <x>545</x>
+    <y>310</y>
     <width>160</width>
     <height>25</height>
     <pv_name>BDX:PSU:LV2:COMM_STATUS</pv_name>
   </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_53</name>
+    <x>20</x>
+    <y>355</y>
+    <width>420</width>
+    <height>28</height>
+    <text>Environment</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
+    </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>OpenFile_54</name>
+    <x>540</x>
+    <y>355</y>
+    <width>150</width>
+    <height>30</height>
+    <actions>
+      <action type="open_file">
+        <file>overview_environment.plt</file>
+        <description>Open Full history</description>
+      </action>
+    </actions>
+    <text>Full history</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
   <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_47</name>
+    <name>DataBrowser_55</name>
+    <x>20</x>
+    <y>393</y>
+    <width>670</width>
+    <height>320</height>
+    <file>overview_environment.plt</file>
+    <show_toolbar>true</show_toolbar>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_56</name>
     <x>710</x>
     <y>355</y>
+    <width>420</width>
+    <height>28</height>
+    <text>Chiller temperature</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
+    </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>OpenFile_57</name>
+    <x>1230</x>
+    <y>355</y>
+    <width>150</width>
+    <height>30</height>
+    <actions>
+      <action type="open_file">
+        <file>overview_chiller_temperature.plt</file>
+        <description>Open Full history</description>
+      </action>
+    </actions>
+    <text>Full history</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="databrowser" version="2.0.0">
+    <name>DataBrowser_58</name>
+    <x>710</x>
+    <y>393</y>
     <width>670</width>
-    <height>360</height>
-    <file>overview_chiller.plt</file>
+    <height>320</height>
+    <file>overview_chiller_temperature.plt</file>
+    <show_toolbar>true</show_toolbar>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_59</name>
+    <x>20</x>
+    <y>760</y>
+    <width>420</width>
+    <height>28</height>
+    <text>LV1 actual voltage and current</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
+    </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>OpenFile_60</name>
+    <x>540</x>
+    <y>760</y>
+    <width>150</width>
+    <height>30</height>
+    <actions>
+      <action type="open_file">
+        <file>overview_lv1_actual_voltage_and_current.plt</file>
+        <description>Open Full history</description>
+      </action>
+    </actions>
+    <text>Full history</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="databrowser" version="2.0.0">
+    <name>DataBrowser_61</name>
+    <x>20</x>
+    <y>798</y>
+    <width>670</width>
+    <height>320</height>
+    <file>overview_lv1_actual_voltage_and_current.plt</file>
+    <show_toolbar>true</show_toolbar>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_62</name>
+    <x>710</x>
+    <y>760</y>
+    <width>420</width>
+    <height>28</height>
+    <text>LV2 actual voltage and current</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
+    </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>OpenFile_63</name>
+    <x>1230</x>
+    <y>760</y>
+    <width>150</width>
+    <height>30</height>
+    <actions>
+      <action type="open_file">
+        <file>overview_lv2_actual_voltage_and_current.plt</file>
+        <description>Open Full history</description>
+      </action>
+    </actions>
+    <text>Full history</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="databrowser" version="2.0.0">
+    <name>DataBrowser_64</name>
+    <x>710</x>
+    <y>798</y>
+    <width>670</width>
+    <height>320</height>
+    <file>overview_lv2_actual_voltage_and_current.plt</file>
     <show_toolbar>true</show_toolbar>
   </widget>
 </display>

@@ -144,6 +144,102 @@ bdx-pv-list
 bdx-generate-displays --output-dir phoebus/displays --only psu
 ```
 
+## Start the local prototype stack
+
+For the current macOS prototype setup, each machine uses its own untracked local
+runtime file. The only machine-specific value is the slow-control LAN address of
+the computer that runs the main IOC:
+
+```bash
+cp config/runtime.env.example config/runtime.env
+```
+
+Edit `config/runtime.env`:
+
+```bash
+BDX_MAIN_HOST=172.22.50.2
+```
+
+For the final server, use the same file with the actual slow-control LAN
+address:
+
+```bash
+BDX_MAIN_HOST=<actual slow-control LAN address>
+```
+
+`127.0.0.1` is not a valid operational main IOC address because remote Channel
+Access clients cannot reach a loopback-only IOC. The unified launcher rejects
+loopback unless `--allow-loopback` is passed explicitly for local-only
+development.
+
+Then start the stack and open Phoebus:
+
+```bash
+./scripts/start_bdx_stack.sh overview
+```
+
+The launcher derives all Channel Access settings from `BDX_MAIN_HOST`, starts
+`bdx-prototype-ioc` in a dedicated macOS Terminal window only if it is not
+already running on `$BDX_MAIN_HOST:5064`, verifies
+`BDX:PSU:LV1:CH1:VOLTAGE_RBV`, checks the user-local Archiver Appliance with the
+repository deployment scripts, starts it only when it is fully inactive, waits
+for Archiver `getPVStatus` to report `connectionState=true`, and then launches
+Phoebus. It does not configure network interfaces, invoke `sudo`, set clocks,
+write EPICS PVs, or change PSU or chiller settings.
+
+The fixed prototype endpoints are:
+
+```text
+Raspberry IOC: 172.22.50.10
+LV1:           172.22.50.20:9221
+LV2:           172.22.50.21:9221
+Chiller:       172.22.50.60:54321
+Archiver:      http://127.0.0.1:17665-17668
+```
+
+Controlled shutdown commands:
+
+```bash
+./scripts/kill_slow_control_phoebus.sh
+./scripts/kill_slow_control_archiver.sh
+./scripts/kill_slow_control_ioc.sh
+./scripts/kill_slow_control_all.sh
+```
+
+Despite the command names, normal shutdown is graceful. The IOC and direct
+Phoebus launchers receive `SIGTERM`; `SIGKILL` is used only when `--force` is
+supplied explicitly. The Archiver command delegates to the installed user-local
+Archiver stop script:
+
+```bash
+~/.local/share/bdx-archiver/app/scripts/stop.sh \
+  --env ~/.config/bdx-archiver/archappl.env \
+  --user-local
+```
+
+The shutdown commands use runtime state under `.runtime/bdx-stack/` and validate
+recorded PIDs before acting on them. They stop software processes only: they do
+not switch off PSU outputs, send `ALLOFF`, stop or modify the chiller, change
+voltage or current settings, alter network configuration, or modify the
+Raspberry clock.
+
+If LV2 is not reachable on port `9221`, first verify Ethernet routing and the
+instrument TCP port without writing any PVs:
+
+```bash
+nc -vz 172.22.50.21 9221
+ping 172.22.50.21
+```
+
+If the port check fails while LV1 works, inspect the LV2 front-panel network
+configuration, Ethernet cabling/switch port, and whether another client already
+holds the instrument socket.
+
+The main host, Raspberry Pi, and Archiver host must have synchronized clocks.
+Phoebus Data Browser and Archiver retrieval use absolute timestamps; clock skew
+can make recent samples appear missing even when live Channel Access updates are
+working.
+
 ## Run the simulated IOC
 
 ```bash
@@ -186,6 +282,7 @@ BDX:ENV:TEMP:T03:VALUE
 
 Do not run another environment IOC on the main server when the Raspberry is active.
 Two Channel Access servers must never expose the same PV names.
+The Raspberry environment IOC uses a nominal 1.0 s monitoring period.
 
 The Raspberry uses a dedicated slow-control Ethernet address, `172.22.50.10/24`,
 on `eth0`. This Ethernet profile has no gateway, no DNS, and no default route;
@@ -246,8 +343,8 @@ runtimes, WAR/JAR files, credentials, logs, databases, or archive data.
 See `deploy/archiver-appliance/README.md` for the pinned release, storage
 layout, local evaluation commands, provisional Ubuntu 22.04 deployment commands,
 PV registration, health checks, retrieval tests, and backup procedure.
-The default Archiver startup helper registers the operational PSU and chiller
-PV lists unless `BDX_ARCHIVER_AUTO_REGISTER=false` or an explicit
+The default Archiver startup helper registers the operational PSU, chiller, and
+environment PV lists unless `BDX_ARCHIVER_AUTO_REGISTER=false` or an explicit
 `BDX_ARCHIVER_PV_LISTS` override is configured.
 
 ## Phoebus displays
@@ -262,8 +359,6 @@ phoebus/displays/chiller.bob
 phoebus/displays/chiller_expert.bob
 phoebus/displays/environment.bob
 phoebus/displays/environment_expert.bob
-phoebus/displays/hv.bob
-phoebus/displays/daq.bob
 phoebus/displays/global.bob
 phoebus/displays/trends.bob
 phoebus/displays/all_pvs.bob
@@ -357,10 +452,12 @@ BDX_ARCHIVER_PREFLIGHT_PV
 
 Relative launcher paths are resolved first from the current working directory and then from the repository root.
 
-For the deployed two-host layout, configure Phoebus with both Channel Access servers:
+For the deployed two-host layout, the repository default Phoebus client address
+list is derived from `BDX_MAIN_HOST` and the fixed Raspberry address:
 
 ```bash
-BDX_CA_ADDR_LIST="<MAIN_SERVER_IP> <RASPBERRY_IP>"
+BDX_MAIN_HOST=172.22.50.2
+BDX_CA_ADDR_LIST="$BDX_MAIN_HOST 172.22.50.10"
 BDX_CA_AUTO_ADDR_LIST=false
 ```
 
@@ -427,6 +524,18 @@ prototype displays explicitly when needed:
 ```bash
 bdx-generate-displays \
   --config-dir config/profiles/prototype \
+  --output-dir phoebus/displays
+```
+
+Regenerate the deployed prototype displays from the display-only catalog when the
+main host and Raspberry are both active. This catalog composes the main-host
+default IOC profile and the Raspberry environment profile for Phoebus only; it is
+not an IOC runtime profile and does not make the main host start a second
+environment IOC:
+
+```bash
+bdx-generate-displays \
+  --catalog config/display-catalogs/deployed-prototype.json \
   --output-dir phoebus/displays
 ```
 
@@ -502,10 +611,12 @@ Set the Channel Access server interface explicitly when the host has multiple ne
 export BDX_EPICS_INTERFACE=193.206.147.141
 ```
 
-For a local Phoebus client, the default client address list is `127.0.0.1`. For the two-host deployment, set `BDX_CA_ADDR_LIST` to both IOC host addresses:
+For the two-host deployment, set `BDX_MAIN_HOST` to the main IOC host address;
+the launcher derives `BDX_CA_ADDR_LIST` from it:
 
 ```bash
-BDX_CA_ADDR_LIST="<MAIN_SERVER_IP> <RASPBERRY_IP>"
+BDX_MAIN_HOST=172.22.50.2
+BDX_CA_ADDR_LIST="$BDX_MAIN_HOST 172.22.50.10"
 BDX_CA_AUTO_ADDR_LIST=false
 ```
 

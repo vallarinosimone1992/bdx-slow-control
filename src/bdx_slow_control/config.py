@@ -11,6 +11,7 @@ from typing import Any
 
 DEFAULT_PROFILE_DIR = Path("config/profiles/default")
 PROTOTYPE_PROFILE_DIR = Path("config/profiles/prototype")
+DEPLOYED_PROTOTYPE_DISPLAY_CATALOG = Path("config/display-catalogs/deployed-prototype.json")
 DEFAULT_PSU_CONFIG = DEFAULT_PROFILE_DIR / "psu.json"
 DEFAULT_CHILLER_CONFIG = DEFAULT_PROFILE_DIR / "chiller.json"
 

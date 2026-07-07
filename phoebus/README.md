@@ -11,8 +11,6 @@ Phoebus is installed separately from this repository. The repository provides ge
 - `chiller_expert.bob`: complete chiller PV table and diagnostics;
 - `environment.bob`: environmental operator status, current temperature readbacks, and plots;
 - `environment_expert.bob`: complete environmental PV table;
-- `hv.bob`: all HV PVs, controls, and plots;
-- `daq.bob`: all DAQ PVs and state shortcuts;
 - `global.bob`: update timing, interlock, and global commands;
 - `trends.bob`: combined Data Browser trends;
 - `all_pvs.bob`: complete simulation PV table with controls;
@@ -27,7 +25,17 @@ bdx-generate-displays \
 
 Without `--config-dir`, the generator uses `config/profiles/default`, the
 current laboratory operational profile containing global, PSU, and chiller. Use
-`--config-dir config/profiles/prototype` for the full simulated profile.
+the deployed-prototype display catalog to monitor the main host plus the
+Raspberry environment IOC without adding `environment.json` to the main IOC
+runtime profile:
+
+```bash
+bdx-generate-displays \
+  --catalog config/display-catalogs/deployed-prototype.json \
+  --output-dir phoebus/displays
+```
+
+Use `--config-dir config/profiles/prototype` for the full simulated profile.
 
 Generate a single deployed subsystem without overwriting unrelated displays:
 

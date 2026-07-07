@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <databrowser>
-    <title>Chiller</title>
+    <title>Environment</title>
     <save_changes>false</save_changes>
     <show_legend>true</show_legend>
     <show_toolbar>true</show_toolbar>
@@ -14,7 +14,7 @@
     <axes>
         <axis>
             <visible>true</visible>
-            <name>Value</name>
+            <name>Temperature [degC]</name>
             <use_axis_name>true</use_axis_name>
             <use_trace_names>false</use_trace_names>
             <right>false</right>
@@ -29,9 +29,9 @@
     </annotations>
     <pvlist>
         <pv>
-            <display_name>BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV</display_name>
+            <display_name>T00</display_name>
             <visible>true</visible>
-            <name>BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV</name>
+            <name>BDX:ENV:TEMP:T00:VALUE</name>
             <axis>0</axis>
             <color>
                 <red>33</red>
@@ -54,9 +54,9 @@
             </archive>
         </pv>
         <pv>
-            <display_name>BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV</display_name>
+            <display_name>T01</display_name>
             <visible>true</visible>
-            <name>BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV</name>
+            <name>BDX:ENV:TEMP:T01:VALUE</name>
             <axis>0</axis>
             <color>
                 <red>230</red>
@@ -79,14 +79,39 @@
             </archive>
         </pv>
         <pv>
-            <display_name>BDX:CHILLER:CHILLER1:SETPOINT_RBV</display_name>
+            <display_name>T02</display_name>
             <visible>true</visible>
-            <name>BDX:CHILLER:CHILLER1:SETPOINT_RBV</name>
+            <name>BDX:ENV:TEMP:T02:VALUE</name>
             <axis>0</axis>
             <color>
                 <red>49</red>
                 <green>163</green>
                 <blue>84</blue>
+            </color>
+            <trace_type>SINGLE_LINE</trace_type>
+            <linewidth>2</linewidth>
+            <line_style>SOLID</line_style>
+            <point_type>NONE</point_type>
+            <point_size>6</point_size>
+            <waveform_index>0</waveform_index>
+            <period>1.0</period>
+            <ring_size>5000</ring_size>
+            <request>RAW</request>
+            <archive>
+                <name>BDX Archiver</name>
+                <url>pbraw://127.0.0.1:17668/retrieval</url>
+                <key>1</key>
+            </archive>
+        </pv>
+        <pv>
+            <display_name>T03</display_name>
+            <visible>true</visible>
+            <name>BDX:ENV:TEMP:T03:VALUE</name>
+            <axis>0</axis>
+            <color>
+                <red>117</red>
+                <green>107</green>
+                <blue>177</blue>
             </color>
             <trace_type>SINGLE_LINE</trace_type>
             <linewidth>2</linewidth>

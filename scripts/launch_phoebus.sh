@@ -2,14 +2,24 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+RUNTIME_ENV_FILE="${BDX_RUNTIME_ENV:-$ROOT_DIR/config/runtime.env}"
 ENV_FILE="${BDX_PHOEBUS_ENV:-$ROOT_DIR/phoebus/phoebus.env}"
+BDX_STACK_RUNTIME_DIR="${BDX_STACK_RUNTIME_DIR:-$ROOT_DIR/.runtime/bdx-stack}"
+PHOEBUS_PID_FILE="$BDX_STACK_RUNTIME_DIR/phoebus.pid"
+PHOEBUS_MODE_FILE="$BDX_STACK_RUNTIME_DIR/phoebus.mode"
+
+if [[ -f "$RUNTIME_ENV_FILE" ]]; then
+    # shellcheck disable=SC1090
+    source "$RUNTIME_ENV_FILE"
+fi
 
 if [[ -f "$ENV_FILE" ]]; then
     # shellcheck disable=SC1090
     source "$ENV_FILE"
 fi
 
-BDX_CA_ADDR_LIST="${BDX_CA_ADDR_LIST:-127.0.0.1}"
+BDX_MAIN_HOST="${BDX_MAIN_HOST:-127.0.0.1}"
+BDX_CA_ADDR_LIST="${BDX_CA_ADDR_LIST:-$BDX_MAIN_HOST 172.22.50.10}"
 BDX_CA_AUTO_ADDR_LIST="${BDX_CA_AUTO_ADDR_LIST:-false}"
 BDX_CA_SERVER_PORT="${BDX_CA_SERVER_PORT:-5064}"
 BDX_CA_REPEATER_PORT="${BDX_CA_REPEATER_PORT:-5065}"
@@ -101,6 +111,46 @@ pbraw_to_http_url() {
     else
         printf 'http://%s\n' "${pbraw_url#pbraw://}"
     fi
+}
+
+runtime_python() {
+    if [[ -x "$ROOT_DIR/.venv/bin/python" ]]; then
+        printf '%s\n' "$ROOT_DIR/.venv/bin/python"
+    elif command -v python3 >/dev/null 2>&1; then
+        command -v python3
+    else
+        return 1
+    fi
+}
+
+archiver_preflight_query() {
+    local pv="$1"
+    local python_cmd
+    python_cmd="$(runtime_python)" || return 1
+    "$python_cmd" -c '
+from datetime import datetime, timedelta, timezone
+import sys
+import urllib.parse
+
+def timestamp(value):
+    return value.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+end = datetime.now(timezone.utc).replace(microsecond=0)
+start = end - timedelta(minutes=5)
+print(urllib.parse.urlencode({"pv": sys.argv[1], "from": timestamp(start), "to": timestamp(end)}))
+' "$pv"
+}
+
+record_phoebus_direct_launch() {
+    mkdir -p "$BDX_STACK_RUNTIME_DIR"
+    printf "%s\n" "$$" > "$PHOEBUS_PID_FILE"
+    printf "%s\n" "direct" > "$PHOEBUS_MODE_FILE"
+}
+
+record_phoebus_macos_app_launch() {
+    mkdir -p "$BDX_STACK_RUNTIME_DIR"
+    rm -f "$PHOEBUS_PID_FILE"
+    printf "%s\n" "macos-app" > "$PHOEBUS_MODE_FILE"
 }
 
 archive_enabled=false
@@ -200,8 +250,18 @@ echo "Archiver strict check: $BDX_ARCHIVER_STRICT_CHECK"
 if [[ "$archive_enabled" == true && -n "$BDX_ARCHIVER_PREFLIGHT_PV" ]]; then
     if command -v curl >/dev/null 2>&1; then
         archive_http="$(pbraw_to_http_url "$archive_retrieval")"
-        preflight_url="${archive_http%/}/data/getData.json?pv=${BDX_ARCHIVER_PREFLIGHT_PV}&from=-5%20min&to=now"
-        if curl -fsS --max-time 5 "$preflight_url" >/dev/null; then
+        if ! preflight_query="$(archiver_preflight_query "$BDX_ARCHIVER_PREFLIGHT_PV")"; then
+            if is_true "$BDX_ARCHIVER_STRICT_CHECK"; then
+                echo "Python 3 is required for strict Archiver preflight query generation." >&2
+                exit 2
+            fi
+            echo "Python 3 is not available; skipping Archiver preflight." >&2
+            preflight_query=""
+        fi
+        if [[ -z "$preflight_query" ]]; then
+            :
+        elif curl -fsS --max-time 5 \
+            "${archive_http%/}/data/getData.json?${preflight_query}" >/dev/null; then
             echo "Archiver preflight: ok for $BDX_ARCHIVER_PREFLIGHT_PV"
         elif is_true "$BDX_ARCHIVER_STRICT_CHECK"; then
             echo "Archiver preflight failed for $BDX_ARCHIVER_PREFLIGHT_PV." >&2
@@ -218,15 +278,18 @@ if [[ "$archive_enabled" == true && -n "$BDX_ARCHIVER_PREFLIGHT_PV" ]]; then
 fi
 
 if [[ -n "$phoebus_cmd" && -x "$phoebus_cmd" ]]; then
+    record_phoebus_direct_launch
     exec "$phoebus_cmd" -settings "$settings" -resource "$display" "$@"
 fi
 
 if [[ -n "${BDX_PHOEBUS_APP:-}" ]]; then
     app="$(resolve_path "$BDX_PHOEBUS_APP")"
+    record_phoebus_macos_app_launch
     exec open -a "$app" --args -settings "$settings" -resource "$display" "$@"
 fi
 
 if [[ "$(uname -s)" == "Darwin" ]] && [[ -d /Applications/Phoebus.app ]]; then
+    record_phoebus_macos_app_launch
     exec open -a /Applications/Phoebus.app --args \
         -settings "$settings" -resource "$display" "$@"
 fi

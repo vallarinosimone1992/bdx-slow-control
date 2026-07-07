@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>BDX Trends</name>
   <width>1400</width>
-  <height>890</height>
+  <height>1250</height>
   <widget type="label" version="2.0.0">
     <name>Label_1</name>
     <x>20</x>
@@ -86,38 +86,6 @@
     <height>30</height>
     <actions>
       <action type="open_display">
-        <file>hv.bob</file>
-        <target>tab</target>
-        <description>Open HV</description>
-      </action>
-    </actions>
-    <text>HV</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>Navigation_7</name>
-    <x>610</x>
-    <y>58</y>
-    <width>112</width>
-    <height>30</height>
-    <actions>
-      <action type="open_display">
-        <file>daq.bob</file>
-        <target>tab</target>
-        <description>Open DAQ</description>
-      </action>
-    </actions>
-    <text>DAQ</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>Navigation_8</name>
-    <x>728</x>
-    <y>58</y>
-    <width>112</width>
-    <height>30</height>
-    <actions>
-      <action type="open_display">
         <file>global.bob</file>
         <target>tab</target>
         <description>Open Global</description>
@@ -127,8 +95,8 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Navigation_9</name>
-    <x>846</x>
+    <name>Navigation_7</name>
+    <x>610</x>
     <y>58</y>
     <width>112</width>
     <height>30</height>
@@ -143,8 +111,8 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Navigation_10</name>
-    <x>964</x>
+    <name>Navigation_8</name>
+    <x>728</x>
     <y>58</y>
     <width>112</width>
     <height>30</height>
@@ -159,7 +127,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_11</name>
+    <name>Label_9</name>
     <x>20</x>
     <y>105</y>
     <width>190</width>
@@ -170,7 +138,7 @@
     </font>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_12</name>
+    <name>Setpoint_10</name>
     <x>220</x>
     <y>105</y>
     <width>120</width>
@@ -178,7 +146,7 @@
     <pv_name>BDX:GLOBAL:UPDATE_PERIOD_SET</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_13</name>
+    <name>Label_11</name>
     <x>345</x>
     <y>105</y>
     <width>30</width>
@@ -189,7 +157,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_14</name>
+    <name>Action_12</name>
     <x>390</x>
     <y>105</y>
     <width>75</width>
@@ -206,7 +174,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_15</name>
+    <name>Action_13</name>
     <x>472</x>
     <y>105</y>
     <width>75</width>
@@ -223,7 +191,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_16</name>
+    <name>Action_14</name>
     <x>554</x>
     <y>105</y>
     <width>75</width>
@@ -240,7 +208,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_17</name>
+    <name>Action_15</name>
     <x>636</x>
     <y>105</y>
     <width>75</width>
@@ -257,7 +225,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_18</name>
+    <name>Label_16</name>
     <x>735</x>
     <y>105</y>
     <width>95</width>
@@ -268,7 +236,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_19</name>
+    <name>Readback_17</name>
     <x>835</x>
     <y>105</y>
     <width>100</width>
@@ -276,7 +244,7 @@
     <pv_name>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_20</name>
+    <name>Label_18</name>
     <x>940</x>
     <y>105</y>
     <width>35</width>
@@ -287,7 +255,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_21</name>
+    <name>Label_19</name>
     <x>995</x>
     <y>105</y>
     <width>240</width>
@@ -298,7 +266,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_22</name>
+    <name>Label_20</name>
     <x>20</x>
     <y>147</y>
     <width>1320</width>
@@ -309,8 +277,43 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_23</name>
+    <name>Label_21</name>
     <x>20</x>
+    <y>185</y>
+    <width>420</width>
+    <height>28</height>
+    <text>Environment temperatures</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
+    </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>OpenFile_22</name>
+    <x>540</x>
+    <y>185</y>
+    <width>150</width>
+    <height>30</height>
+    <actions>
+      <action type="open_file">
+        <file>trends_0_environment_temperatures.plt</file>
+        <description>Open Full history</description>
+      </action>
+    </actions>
+    <text>Full history</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="databrowser" version="2.0.0">
+    <name>DataBrowser_23</name>
+    <x>20</x>
+    <y>223</y>
+    <width>670</width>
+    <height>310</height>
+    <file>trends_0_environment_temperatures.plt</file>
+    <show_toolbar>true</show_toolbar>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_24</name>
+    <x>710</x>
     <y>185</y>
     <width>420</width>
     <height>28</height>
@@ -320,14 +323,14 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>OpenFile_24</name>
-    <x>540</x>
+    <name>OpenFile_25</name>
+    <x>1230</x>
     <y>185</y>
     <width>150</width>
     <height>30</height>
     <actions>
       <action type="open_file">
-        <file>trends_0_chiller_temperature.plt</file>
+        <file>trends_1_chiller_temperature.plt</file>
         <description>Open Full history</description>
       </action>
     </actions>
@@ -335,18 +338,18 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_25</name>
-    <x>20</x>
+    <name>DataBrowser_26</name>
+    <x>710</x>
     <y>223</y>
     <width>670</width>
     <height>310</height>
-    <file>trends_0_chiller_temperature.plt</file>
+    <file>trends_1_chiller_temperature.plt</file>
     <show_toolbar>true</show_toolbar>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_26</name>
-    <x>710</x>
-    <y>185</y>
+    <name>Label_27</name>
+    <x>20</x>
+    <y>545</y>
     <width>420</width>
     <height>28</height>
     <text>LV1 actual voltage and current</text>
@@ -355,14 +358,14 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>OpenFile_27</name>
-    <x>1230</x>
-    <y>185</y>
+    <name>OpenFile_28</name>
+    <x>540</x>
+    <y>545</y>
     <width>150</width>
     <height>30</height>
     <actions>
       <action type="open_file">
-        <file>trends_1_lv1_actual_voltage_and_current.plt</file>
+        <file>trends_2_lv1_actual_voltage_and_current.plt</file>
         <description>Open Full history</description>
       </action>
     </actions>
@@ -370,17 +373,17 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_28</name>
-    <x>710</x>
-    <y>223</y>
+    <name>DataBrowser_29</name>
+    <x>20</x>
+    <y>583</y>
     <width>670</width>
     <height>310</height>
-    <file>trends_1_lv1_actual_voltage_and_current.plt</file>
+    <file>trends_2_lv1_actual_voltage_and_current.plt</file>
     <show_toolbar>true</show_toolbar>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_29</name>
-    <x>20</x>
+    <name>Label_30</name>
+    <x>710</x>
     <y>545</y>
     <width>420</width>
     <height>28</height>
@@ -390,14 +393,14 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>OpenFile_30</name>
-    <x>540</x>
+    <name>OpenFile_31</name>
+    <x>1230</x>
     <y>545</y>
     <width>150</width>
     <height>30</height>
     <actions>
       <action type="open_file">
-        <file>trends_2_lv2_actual_voltage_and_current.plt</file>
+        <file>trends_3_lv2_actual_voltage_and_current.plt</file>
         <description>Open Full history</description>
       </action>
     </actions>
@@ -405,18 +408,18 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_31</name>
-    <x>20</x>
+    <name>DataBrowser_32</name>
+    <x>710</x>
     <y>583</y>
     <width>670</width>
     <height>310</height>
-    <file>trends_2_lv2_actual_voltage_and_current.plt</file>
+    <file>trends_3_lv2_actual_voltage_and_current.plt</file>
     <show_toolbar>true</show_toolbar>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_32</name>
-    <x>710</x>
-    <y>545</y>
+    <name>Label_33</name>
+    <x>20</x>
+    <y>905</y>
     <width>420</width>
     <height>28</height>
     <text>Prototype update frequency</text>
@@ -425,14 +428,14 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>OpenFile_33</name>
-    <x>1230</x>
-    <y>545</y>
+    <name>OpenFile_34</name>
+    <x>540</x>
+    <y>905</y>
     <width>150</width>
     <height>30</height>
     <actions>
       <action type="open_file">
-        <file>trends_3_prototype_update_frequency.plt</file>
+        <file>trends_4_prototype_update_frequency.plt</file>
         <description>Open Full history</description>
       </action>
     </actions>
@@ -440,12 +443,12 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_34</name>
-    <x>710</x>
-    <y>583</y>
+    <name>DataBrowser_35</name>
+    <x>20</x>
+    <y>943</y>
     <width>670</width>
     <height>310</height>
-    <file>trends_3_prototype_update_frequency.plt</file>
+    <file>trends_4_prototype_update_frequency.plt</file>
     <show_toolbar>true</show_toolbar>
   </widget>
 </display>

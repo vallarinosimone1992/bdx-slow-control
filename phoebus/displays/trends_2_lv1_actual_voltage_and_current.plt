@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <databrowser>
-    <title>Environment temperatures</title>
+    <title>LV1 actual voltage and current</title>
     <save_changes>false</save_changes>
     <show_legend>true</show_legend>
     <show_toolbar>true</show_toolbar>
@@ -14,10 +14,22 @@
     <axes>
         <axis>
             <visible>true</visible>
-            <name>Temperature [degC]</name>
+            <name>Voltage [V]</name>
             <use_axis_name>true</use_axis_name>
             <use_trace_names>false</use_trace_names>
             <right>false</right>
+            <min>0.0</min>
+            <max>100.0</max>
+            <grid>true</grid>
+            <autoscale>true</autoscale>
+            <log_scale>false</log_scale>
+        </axis>
+        <axis>
+            <visible>true</visible>
+            <name>Current [A]</name>
+            <use_axis_name>true</use_axis_name>
+            <use_trace_names>false</use_trace_names>
+            <right>true</right>
             <min>0.0</min>
             <max>100.0</max>
             <grid>true</grid>
@@ -29,9 +41,9 @@
     </annotations>
     <pvlist>
         <pv>
-            <display_name>T00</display_name>
+            <display_name>LV1 CH1 voltage</display_name>
             <visible>true</visible>
-            <name>BDX:ENV:TEMP:T00:VALUE</name>
+            <name>BDX:PSU:LV1:CH1:VOLTAGE_RBV</name>
             <axis>0</axis>
             <color>
                 <red>33</red>
@@ -54,10 +66,10 @@
             </archive>
         </pv>
         <pv>
-            <display_name>T01</display_name>
+            <display_name>LV1 CH1 current</display_name>
             <visible>true</visible>
-            <name>BDX:ENV:TEMP:T01:VALUE</name>
-            <axis>0</axis>
+            <name>BDX:PSU:LV1:CH1:CURRENT_RBV</name>
+            <axis>1</axis>
             <color>
                 <red>230</red>
                 <green>85</green>
@@ -79,9 +91,9 @@
             </archive>
         </pv>
         <pv>
-            <display_name>T02</display_name>
+            <display_name>LV1 CH2 voltage</display_name>
             <visible>true</visible>
-            <name>BDX:ENV:TEMP:T02:VALUE</name>
+            <name>BDX:PSU:LV1:CH2:VOLTAGE_RBV</name>
             <axis>0</axis>
             <color>
                 <red>49</red>
@@ -104,10 +116,10 @@
             </archive>
         </pv>
         <pv>
-            <display_name>T03</display_name>
+            <display_name>LV1 CH2 current</display_name>
             <visible>true</visible>
-            <name>BDX:ENV:TEMP:T03:VALUE</name>
-            <axis>0</axis>
+            <name>BDX:PSU:LV1:CH2:CURRENT_RBV</name>
+            <axis>1</axis>
             <color>
                 <red>117</red>
                 <green>107</green>

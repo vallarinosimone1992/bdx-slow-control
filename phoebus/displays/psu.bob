@@ -86,38 +86,6 @@
     <height>30</height>
     <actions>
       <action type="open_display">
-        <file>hv.bob</file>
-        <target>tab</target>
-        <description>Open HV</description>
-      </action>
-    </actions>
-    <text>HV</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>Navigation_7</name>
-    <x>610</x>
-    <y>58</y>
-    <width>112</width>
-    <height>30</height>
-    <actions>
-      <action type="open_display">
-        <file>daq.bob</file>
-        <target>tab</target>
-        <description>Open DAQ</description>
-      </action>
-    </actions>
-    <text>DAQ</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>Navigation_8</name>
-    <x>728</x>
-    <y>58</y>
-    <width>112</width>
-    <height>30</height>
-    <actions>
-      <action type="open_display">
         <file>global.bob</file>
         <target>tab</target>
         <description>Open Global</description>
@@ -127,8 +95,8 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Navigation_9</name>
-    <x>846</x>
+    <name>Navigation_7</name>
+    <x>610</x>
     <y>58</y>
     <width>112</width>
     <height>30</height>
@@ -143,8 +111,8 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Navigation_10</name>
-    <x>964</x>
+    <name>Navigation_8</name>
+    <x>728</x>
     <y>58</y>
     <width>112</width>
     <height>30</height>
@@ -159,7 +127,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Navigation_11</name>
+    <name>Navigation_9</name>
     <x>1220</x>
     <y>12</y>
     <width>140</width>
@@ -175,7 +143,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_12</name>
+    <name>Label_10</name>
     <x>20</x>
     <y>105</y>
     <width>670</width>
@@ -190,7 +158,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_13</name>
+    <name>Label_11</name>
     <x>32</x>
     <y>115</y>
     <width>70</width>
@@ -201,7 +169,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_14</name>
+    <name>Label_12</name>
     <x>120</x>
     <y>117</y>
     <width>50</width>
@@ -212,7 +180,7 @@
     </font>
   </widget>
   <widget type="led" version="2.0.0">
-    <name>StatusLED_15</name>
+    <name>StatusLED_13</name>
     <x>174</x>
     <y>114</y>
     <width>28</width>
@@ -227,7 +195,7 @@
     <border_alarm_sensitive>false</border_alarm_sensitive>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_16</name>
+    <name>Readback_14</name>
     <x>212</x>
     <y>114</y>
     <width>120</width>
@@ -238,7 +206,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_17</name>
+    <name>Label_15</name>
     <x>344</x>
     <y>117</y>
     <width>92</width>
@@ -249,7 +217,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_18</name>
+    <name>Readback_16</name>
     <x>440</x>
     <y>114</y>
     <width>150</width>
@@ -260,7 +228,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_19</name>
+    <name>Action_17</name>
     <x>595</x>
     <y>113</y>
     <width>80</width>
@@ -282,7 +250,7 @@
     </background_color>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_20</name>
+    <name>Readback_18</name>
     <x>32</x>
     <y>149</y>
     <width>642</width>
@@ -293,7 +261,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_21</name>
+    <name>Label_19</name>
     <x>710</x>
     <y>105</y>
     <width>670</width>
@@ -308,7 +276,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_22</name>
+    <name>Label_20</name>
     <x>722</x>
     <y>115</y>
     <width>70</width>
@@ -319,7 +287,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_23</name>
+    <name>Label_21</name>
     <x>810</x>
     <y>117</y>
     <width>50</width>
@@ -330,7 +298,7 @@
     </font>
   </widget>
   <widget type="led" version="2.0.0">
-    <name>StatusLED_24</name>
+    <name>StatusLED_22</name>
     <x>864</x>
     <y>114</y>
     <width>28</width>
@@ -345,7 +313,7 @@
     <border_alarm_sensitive>false</border_alarm_sensitive>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_25</name>
+    <name>Readback_23</name>
     <x>902</x>
     <y>114</y>
     <width>120</width>
@@ -356,7 +324,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_26</name>
+    <name>Label_24</name>
     <x>1034</x>
     <y>117</y>
     <width>92</width>
@@ -367,7 +335,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_27</name>
+    <name>Readback_25</name>
     <x>1130</x>
     <y>114</y>
     <width>150</width>
@@ -378,7 +346,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_28</name>
+    <name>Action_26</name>
     <x>1285</x>
     <y>113</y>
     <width>80</width>
@@ -400,7 +368,7 @@
     </background_color>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_29</name>
+    <name>Readback_27</name>
     <x>722</x>
     <y>149</y>
     <width>642</width>
@@ -411,7 +379,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_30</name>
+    <name>Label_28</name>
     <x>20</x>
     <y>205</y>
     <width>130</width>
@@ -422,7 +390,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_31</name>
+    <name>Label_29</name>
     <x>20</x>
     <y>245</y>
     <width>650</width>
@@ -437,7 +405,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_32</name>
+    <name>Label_30</name>
     <x>34</x>
     <y>255</y>
     <width>130</width>
@@ -448,7 +416,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_33</name>
+    <name>Label_31</name>
     <x>34</x>
     <y>293</y>
     <width>137</width>
@@ -459,7 +427,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_34</name>
+    <name>Readback_32</name>
     <x>34</x>
     <y>315</y>
     <width>112</width>
@@ -477,7 +445,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_35</name>
+    <name>Label_33</name>
     <x>152</x>
     <y>323</y>
     <width>34</width>
@@ -488,7 +456,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_36</name>
+    <name>Label_34</name>
     <x>194</x>
     <y>293</y>
     <width>137</width>
@@ -499,7 +467,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_37</name>
+    <name>Readback_35</name>
     <x>194</x>
     <y>315</y>
     <width>112</width>
@@ -517,7 +485,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_38</name>
+    <name>Label_36</name>
     <x>312</x>
     <y>323</y>
     <width>34</width>
@@ -528,7 +496,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_39</name>
+    <name>Label_37</name>
     <x>354</x>
     <y>293</y>
     <width>121</width>
@@ -539,7 +507,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_40</name>
+    <name>Readback_38</name>
     <x>354</x>
     <y>315</y>
     <width>96</width>
@@ -557,7 +525,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_41</name>
+    <name>Label_39</name>
     <x>456</x>
     <y>323</y>
     <width>34</width>
@@ -568,7 +536,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_42</name>
+    <name>Label_40</name>
     <x>490</x>
     <y>293</y>
     <width>121</width>
@@ -579,7 +547,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_43</name>
+    <name>Readback_41</name>
     <x>490</x>
     <y>315</y>
     <width>96</width>
@@ -597,7 +565,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_44</name>
+    <name>Label_42</name>
     <x>592</x>
     <y>323</y>
     <width>34</width>
@@ -608,7 +576,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_45</name>
+    <name>Label_43</name>
     <x>34</x>
     <y>371</y>
     <width>130</width>
@@ -619,7 +587,7 @@
     </font>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_46</name>
+    <name>Setpoint_44</name>
     <x>34</x>
     <y>393</y>
     <width>108</width>
@@ -629,7 +597,7 @@
     <precision>3</precision>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_47</name>
+    <name>Label_45</name>
     <x>147</x>
     <y>396</y>
     <width>22</width>
@@ -640,7 +608,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_48</name>
+    <name>Label_46</name>
     <x>178</x>
     <y>371</y>
     <width>130</width>
@@ -651,7 +619,7 @@
     </font>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_49</name>
+    <name>Setpoint_47</name>
     <x>178</x>
     <y>393</y>
     <width>108</width>
@@ -661,7 +629,7 @@
     <precision>3</precision>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_50</name>
+    <name>Label_48</name>
     <x>291</x>
     <y>396</y>
     <width>22</width>
@@ -672,7 +640,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_51</name>
+    <name>Action_49</name>
     <x>324</x>
     <y>391</y>
     <width>88</width>
@@ -692,7 +660,7 @@
     </background_color>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_52</name>
+    <name>Readback_50</name>
     <x>426</x>
     <y>391</y>
     <width>96</width>
@@ -703,7 +671,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_53</name>
+    <name>Readback_51</name>
     <x>526</x>
     <y>391</y>
     <width>128</width>
@@ -714,7 +682,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_54</name>
+    <name>Label_52</name>
     <x>34</x>
     <y>431</y>
     <width>58</width>
@@ -725,7 +693,7 @@
     </font>
   </widget>
   <widget type="led" version="2.0.0">
-    <name>StatusLED_55</name>
+    <name>StatusLED_53</name>
     <x>96</x>
     <y>429</y>
     <width>26</width>
@@ -740,7 +708,7 @@
     <border_alarm_sensitive>false</border_alarm_sensitive>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_56</name>
+    <name>Readback_54</name>
     <x>128</x>
     <y>429</y>
     <width>72</width>
@@ -751,7 +719,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_57</name>
+    <name>Action_55</name>
     <x>212</x>
     <y>429</y>
     <width>64</width>
@@ -773,7 +741,7 @@
     </background_color>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_58</name>
+    <name>Action_56</name>
     <x>282</x>
     <y>429</y>
     <width>64</width>
@@ -795,7 +763,7 @@
     </background_color>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_59</name>
+    <name>Label_57</name>
     <x>368</x>
     <y>433</y>
     <width>46</width>
@@ -806,7 +774,7 @@
     </font>
   </widget>
   <widget type="led" version="2.0.0">
-    <name>StatusLED_60</name>
+    <name>StatusLED_58</name>
     <x>417</x>
     <y>429</y>
     <width>26</width>
@@ -821,7 +789,7 @@
     <border_alarm_sensitive>false</border_alarm_sensitive>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_61</name>
+    <name>Readback_59</name>
     <x>450</x>
     <y>429</y>
     <width>204</width>
@@ -832,7 +800,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_62</name>
+    <name>Readback_60</name>
     <x>168</x>
     <y>257</y>
     <width>486</width>
@@ -843,7 +811,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_63</name>
+    <name>Label_61</name>
     <x>710</x>
     <y>245</y>
     <width>650</width>
@@ -858,7 +826,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_64</name>
+    <name>Label_62</name>
     <x>724</x>
     <y>255</y>
     <width>130</width>
@@ -869,7 +837,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_65</name>
+    <name>Label_63</name>
     <x>724</x>
     <y>293</y>
     <width>137</width>
@@ -880,7 +848,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_66</name>
+    <name>Readback_64</name>
     <x>724</x>
     <y>315</y>
     <width>112</width>
@@ -898,7 +866,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_67</name>
+    <name>Label_65</name>
     <x>842</x>
     <y>323</y>
     <width>34</width>
@@ -909,7 +877,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_68</name>
+    <name>Label_66</name>
     <x>884</x>
     <y>293</y>
     <width>137</width>
@@ -920,7 +888,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_69</name>
+    <name>Readback_67</name>
     <x>884</x>
     <y>315</y>
     <width>112</width>
@@ -938,7 +906,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_70</name>
+    <name>Label_68</name>
     <x>1002</x>
     <y>323</y>
     <width>34</width>
@@ -949,7 +917,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_71</name>
+    <name>Label_69</name>
     <x>1044</x>
     <y>293</y>
     <width>121</width>
@@ -960,7 +928,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_72</name>
+    <name>Readback_70</name>
     <x>1044</x>
     <y>315</y>
     <width>96</width>
@@ -978,7 +946,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_73</name>
+    <name>Label_71</name>
     <x>1146</x>
     <y>323</y>
     <width>34</width>
@@ -989,7 +957,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_74</name>
+    <name>Label_72</name>
     <x>1180</x>
     <y>293</y>
     <width>121</width>
@@ -1000,7 +968,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_75</name>
+    <name>Readback_73</name>
     <x>1180</x>
     <y>315</y>
     <width>96</width>
@@ -1018,7 +986,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_76</name>
+    <name>Label_74</name>
     <x>1282</x>
     <y>323</y>
     <width>34</width>
@@ -1029,7 +997,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_77</name>
+    <name>Label_75</name>
     <x>724</x>
     <y>371</y>
     <width>130</width>
@@ -1040,7 +1008,7 @@
     </font>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_78</name>
+    <name>Setpoint_76</name>
     <x>724</x>
     <y>393</y>
     <width>108</width>
@@ -1050,7 +1018,7 @@
     <precision>3</precision>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_79</name>
+    <name>Label_77</name>
     <x>837</x>
     <y>396</y>
     <width>22</width>
@@ -1061,7 +1029,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_80</name>
+    <name>Label_78</name>
     <x>868</x>
     <y>371</y>
     <width>130</width>
@@ -1072,7 +1040,7 @@
     </font>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_81</name>
+    <name>Setpoint_79</name>
     <x>868</x>
     <y>393</y>
     <width>108</width>
@@ -1082,7 +1050,7 @@
     <precision>3</precision>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_82</name>
+    <name>Label_80</name>
     <x>981</x>
     <y>396</y>
     <width>22</width>
@@ -1093,7 +1061,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_83</name>
+    <name>Action_81</name>
     <x>1014</x>
     <y>391</y>
     <width>88</width>
@@ -1113,7 +1081,7 @@
     </background_color>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_84</name>
+    <name>Readback_82</name>
     <x>1116</x>
     <y>391</y>
     <width>96</width>
@@ -1124,7 +1092,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_85</name>
+    <name>Readback_83</name>
     <x>1216</x>
     <y>391</y>
     <width>128</width>
@@ -1135,7 +1103,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_86</name>
+    <name>Label_84</name>
     <x>724</x>
     <y>431</y>
     <width>58</width>
@@ -1146,7 +1114,7 @@
     </font>
   </widget>
   <widget type="led" version="2.0.0">
-    <name>StatusLED_87</name>
+    <name>StatusLED_85</name>
     <x>786</x>
     <y>429</y>
     <width>26</width>
@@ -1161,7 +1129,7 @@
     <border_alarm_sensitive>false</border_alarm_sensitive>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_88</name>
+    <name>Readback_86</name>
     <x>818</x>
     <y>429</y>
     <width>72</width>
@@ -1172,7 +1140,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_89</name>
+    <name>Action_87</name>
     <x>902</x>
     <y>429</y>
     <width>64</width>
@@ -1194,7 +1162,7 @@
     </background_color>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_90</name>
+    <name>Action_88</name>
     <x>972</x>
     <y>429</y>
     <width>64</width>
@@ -1216,7 +1184,7 @@
     </background_color>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_91</name>
+    <name>Label_89</name>
     <x>1058</x>
     <y>433</y>
     <width>46</width>
@@ -1227,7 +1195,7 @@
     </font>
   </widget>
   <widget type="led" version="2.0.0">
-    <name>StatusLED_92</name>
+    <name>StatusLED_90</name>
     <x>1107</x>
     <y>429</y>
     <width>26</width>
@@ -1242,7 +1210,7 @@
     <border_alarm_sensitive>false</border_alarm_sensitive>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_93</name>
+    <name>Readback_91</name>
     <x>1140</x>
     <y>429</y>
     <width>204</width>
@@ -1253,7 +1221,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_94</name>
+    <name>Readback_92</name>
     <x>858</x>
     <y>257</y>
     <width>486</width>
@@ -1264,7 +1232,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_95</name>
+    <name>Label_93</name>
     <x>20</x>
     <y>505</y>
     <width>130</width>
@@ -1275,7 +1243,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_96</name>
+    <name>Label_94</name>
     <x>20</x>
     <y>545</y>
     <width>650</width>
@@ -1290,7 +1258,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_97</name>
+    <name>Label_95</name>
     <x>34</x>
     <y>555</y>
     <width>130</width>
@@ -1301,7 +1269,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_98</name>
+    <name>Label_96</name>
     <x>34</x>
     <y>593</y>
     <width>137</width>
@@ -1312,7 +1280,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_99</name>
+    <name>Readback_97</name>
     <x>34</x>
     <y>615</y>
     <width>112</width>
@@ -1330,7 +1298,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_100</name>
+    <name>Label_98</name>
     <x>152</x>
     <y>623</y>
     <width>34</width>
@@ -1341,7 +1309,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_101</name>
+    <name>Label_99</name>
     <x>194</x>
     <y>593</y>
     <width>137</width>
@@ -1352,7 +1320,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_102</name>
+    <name>Readback_100</name>
     <x>194</x>
     <y>615</y>
     <width>112</width>
@@ -1370,7 +1338,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_103</name>
+    <name>Label_101</name>
     <x>312</x>
     <y>623</y>
     <width>34</width>
@@ -1381,7 +1349,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_104</name>
+    <name>Label_102</name>
     <x>354</x>
     <y>593</y>
     <width>121</width>
@@ -1392,7 +1360,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_105</name>
+    <name>Readback_103</name>
     <x>354</x>
     <y>615</y>
     <width>96</width>
@@ -1410,7 +1378,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_106</name>
+    <name>Label_104</name>
     <x>456</x>
     <y>623</y>
     <width>34</width>
@@ -1421,7 +1389,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_107</name>
+    <name>Label_105</name>
     <x>490</x>
     <y>593</y>
     <width>121</width>
@@ -1432,7 +1400,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_108</name>
+    <name>Readback_106</name>
     <x>490</x>
     <y>615</y>
     <width>96</width>
@@ -1450,7 +1418,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_109</name>
+    <name>Label_107</name>
     <x>592</x>
     <y>623</y>
     <width>34</width>
@@ -1461,7 +1429,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_110</name>
+    <name>Label_108</name>
     <x>34</x>
     <y>671</y>
     <width>130</width>
@@ -1472,7 +1440,7 @@
     </font>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_111</name>
+    <name>Setpoint_109</name>
     <x>34</x>
     <y>693</y>
     <width>108</width>
@@ -1482,7 +1450,7 @@
     <precision>3</precision>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_112</name>
+    <name>Label_110</name>
     <x>147</x>
     <y>696</y>
     <width>22</width>
@@ -1493,7 +1461,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_113</name>
+    <name>Label_111</name>
     <x>178</x>
     <y>671</y>
     <width>130</width>
@@ -1504,7 +1472,7 @@
     </font>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_114</name>
+    <name>Setpoint_112</name>
     <x>178</x>
     <y>693</y>
     <width>108</width>
@@ -1514,7 +1482,7 @@
     <precision>3</precision>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_115</name>
+    <name>Label_113</name>
     <x>291</x>
     <y>696</y>
     <width>22</width>
@@ -1525,7 +1493,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_116</name>
+    <name>Action_114</name>
     <x>324</x>
     <y>691</y>
     <width>88</width>
@@ -1545,7 +1513,7 @@
     </background_color>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_117</name>
+    <name>Readback_115</name>
     <x>426</x>
     <y>691</y>
     <width>96</width>
@@ -1556,7 +1524,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_118</name>
+    <name>Readback_116</name>
     <x>526</x>
     <y>691</y>
     <width>128</width>
@@ -1567,7 +1535,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_119</name>
+    <name>Label_117</name>
     <x>34</x>
     <y>731</y>
     <width>58</width>
@@ -1578,7 +1546,7 @@
     </font>
   </widget>
   <widget type="led" version="2.0.0">
-    <name>StatusLED_120</name>
+    <name>StatusLED_118</name>
     <x>96</x>
     <y>729</y>
     <width>26</width>
@@ -1593,7 +1561,7 @@
     <border_alarm_sensitive>false</border_alarm_sensitive>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_121</name>
+    <name>Readback_119</name>
     <x>128</x>
     <y>729</y>
     <width>72</width>
@@ -1604,7 +1572,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_122</name>
+    <name>Action_120</name>
     <x>212</x>
     <y>729</y>
     <width>64</width>
@@ -1626,7 +1594,7 @@
     </background_color>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_123</name>
+    <name>Action_121</name>
     <x>282</x>
     <y>729</y>
     <width>64</width>
@@ -1648,7 +1616,7 @@
     </background_color>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_124</name>
+    <name>Label_122</name>
     <x>368</x>
     <y>733</y>
     <width>46</width>
@@ -1659,7 +1627,7 @@
     </font>
   </widget>
   <widget type="led" version="2.0.0">
-    <name>StatusLED_125</name>
+    <name>StatusLED_123</name>
     <x>417</x>
     <y>729</y>
     <width>26</width>
@@ -1674,7 +1642,7 @@
     <border_alarm_sensitive>false</border_alarm_sensitive>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_126</name>
+    <name>Readback_124</name>
     <x>450</x>
     <y>729</y>
     <width>204</width>
@@ -1685,7 +1653,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_127</name>
+    <name>Readback_125</name>
     <x>168</x>
     <y>557</y>
     <width>486</width>
@@ -1696,7 +1664,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_128</name>
+    <name>Label_126</name>
     <x>710</x>
     <y>545</y>
     <width>650</width>
@@ -1711,7 +1679,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_129</name>
+    <name>Label_127</name>
     <x>724</x>
     <y>555</y>
     <width>130</width>
@@ -1722,7 +1690,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_130</name>
+    <name>Label_128</name>
     <x>724</x>
     <y>593</y>
     <width>137</width>
@@ -1733,7 +1701,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_131</name>
+    <name>Readback_129</name>
     <x>724</x>
     <y>615</y>
     <width>112</width>
@@ -1751,7 +1719,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_132</name>
+    <name>Label_130</name>
     <x>842</x>
     <y>623</y>
     <width>34</width>
@@ -1762,7 +1730,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_133</name>
+    <name>Label_131</name>
     <x>884</x>
     <y>593</y>
     <width>137</width>
@@ -1773,7 +1741,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_134</name>
+    <name>Readback_132</name>
     <x>884</x>
     <y>615</y>
     <width>112</width>
@@ -1791,7 +1759,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_135</name>
+    <name>Label_133</name>
     <x>1002</x>
     <y>623</y>
     <width>34</width>
@@ -1802,7 +1770,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_136</name>
+    <name>Label_134</name>
     <x>1044</x>
     <y>593</y>
     <width>121</width>
@@ -1813,7 +1781,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_137</name>
+    <name>Readback_135</name>
     <x>1044</x>
     <y>615</y>
     <width>96</width>
@@ -1831,7 +1799,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_138</name>
+    <name>Label_136</name>
     <x>1146</x>
     <y>623</y>
     <width>34</width>
@@ -1842,7 +1810,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_139</name>
+    <name>Label_137</name>
     <x>1180</x>
     <y>593</y>
     <width>121</width>
@@ -1853,7 +1821,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_140</name>
+    <name>Readback_138</name>
     <x>1180</x>
     <y>615</y>
     <width>96</width>
@@ -1871,7 +1839,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_141</name>
+    <name>Label_139</name>
     <x>1282</x>
     <y>623</y>
     <width>34</width>
@@ -1882,7 +1850,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_142</name>
+    <name>Label_140</name>
     <x>724</x>
     <y>671</y>
     <width>130</width>
@@ -1893,7 +1861,7 @@
     </font>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_143</name>
+    <name>Setpoint_141</name>
     <x>724</x>
     <y>693</y>
     <width>108</width>
@@ -1903,7 +1871,7 @@
     <precision>3</precision>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_144</name>
+    <name>Label_142</name>
     <x>837</x>
     <y>696</y>
     <width>22</width>
@@ -1914,7 +1882,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_145</name>
+    <name>Label_143</name>
     <x>868</x>
     <y>671</y>
     <width>130</width>
@@ -1925,7 +1893,7 @@
     </font>
   </widget>
   <widget type="textentry" version="2.0.0">
-    <name>Setpoint_146</name>
+    <name>Setpoint_144</name>
     <x>868</x>
     <y>693</y>
     <width>108</width>
@@ -1935,7 +1903,7 @@
     <precision>3</precision>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_147</name>
+    <name>Label_145</name>
     <x>981</x>
     <y>696</y>
     <width>22</width>
@@ -1946,7 +1914,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_148</name>
+    <name>Action_146</name>
     <x>1014</x>
     <y>691</y>
     <width>88</width>
@@ -1966,7 +1934,7 @@
     </background_color>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_149</name>
+    <name>Readback_147</name>
     <x>1116</x>
     <y>691</y>
     <width>96</width>
@@ -1977,7 +1945,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_150</name>
+    <name>Readback_148</name>
     <x>1216</x>
     <y>691</y>
     <width>128</width>
@@ -1988,7 +1956,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_151</name>
+    <name>Label_149</name>
     <x>724</x>
     <y>731</y>
     <width>58</width>
@@ -1999,7 +1967,7 @@
     </font>
   </widget>
   <widget type="led" version="2.0.0">
-    <name>StatusLED_152</name>
+    <name>StatusLED_150</name>
     <x>786</x>
     <y>729</y>
     <width>26</width>
@@ -2014,7 +1982,7 @@
     <border_alarm_sensitive>false</border_alarm_sensitive>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_153</name>
+    <name>Readback_151</name>
     <x>818</x>
     <y>729</y>
     <width>72</width>
@@ -2025,7 +1993,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_154</name>
+    <name>Action_152</name>
     <x>902</x>
     <y>729</y>
     <width>64</width>
@@ -2047,7 +2015,7 @@
     </background_color>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_155</name>
+    <name>Action_153</name>
     <x>972</x>
     <y>729</y>
     <width>64</width>
@@ -2069,7 +2037,7 @@
     </background_color>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_156</name>
+    <name>Label_154</name>
     <x>1058</x>
     <y>733</y>
     <width>46</width>
@@ -2080,7 +2048,7 @@
     </font>
   </widget>
   <widget type="led" version="2.0.0">
-    <name>StatusLED_157</name>
+    <name>StatusLED_155</name>
     <x>1107</x>
     <y>729</y>
     <width>26</width>
@@ -2095,7 +2063,7 @@
     <border_alarm_sensitive>false</border_alarm_sensitive>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_158</name>
+    <name>Readback_156</name>
     <x>1140</x>
     <y>729</y>
     <width>204</width>
@@ -2106,7 +2074,7 @@
     </font>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_159</name>
+    <name>Readback_157</name>
     <x>858</x>
     <y>557</y>
     <width>486</width>
@@ -2117,7 +2085,7 @@
     </font>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_160</name>
+    <name>Label_158</name>
     <x>20</x>
     <y>805</y>
     <width>420</width>
@@ -2128,7 +2096,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>OpenFile_161</name>
+    <name>OpenFile_159</name>
     <x>540</x>
     <y>805</y>
     <width>150</width>
@@ -2143,7 +2111,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_162</name>
+    <name>DataBrowser_160</name>
     <x>20</x>
     <y>843</y>
     <width>670</width>
@@ -2152,7 +2120,7 @@
     <show_toolbar>true</show_toolbar>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_163</name>
+    <name>Label_161</name>
     <x>710</x>
     <y>805</y>
     <width>420</width>
@@ -2163,7 +2131,7 @@
     </font>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>OpenFile_164</name>
+    <name>OpenFile_162</name>
     <x>1230</x>
     <y>805</y>
     <width>150</width>
@@ -2178,7 +2146,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_165</name>
+    <name>DataBrowser_163</name>
     <x>710</x>
     <y>843</y>
     <width>670</width>

@@ -12,7 +12,7 @@ from typing import Sequence
 import xml.etree.ElementTree as ET
 from xml.sax.saxutils import escape
 
-from .config import DEFAULT_PROFILE_DIR
+from .config import DEFAULT_PROFILE_DIR, ConfigurationError
 from .prototype import build_prototype
 
 DEFAULT_TREND_RANGE = "10 minutes"
@@ -130,17 +130,16 @@ class AxisInfo:
     right: bool = False
 
 
-NAVIGATION = [
-    ("Overview", "overview.bob"),
-    ("PSU", "psu.bob"),
-    ("Chiller", "chiller.bob"),
-    ("Environment", "environment.bob"),
-    ("HV", "hv.bob"),
-    ("DAQ", "daq.bob"),
-    ("Global", "global.bob"),
-    ("Trends", "trends.bob"),
-    ("All PVs", "all_pvs.bob"),
-]
+SUBSYSTEM_NAVIGATION = {
+    "psu": ("PSU", "psu.bob"),
+    "chiller": ("Chiller", "chiller.bob"),
+    "environment": ("Environment", "environment.bob"),
+    "hv": ("HV", "hv.bob"),
+    "daq": ("DAQ", "daq.bob"),
+    "global": ("Global", "global.bob"),
+}
+
+SUBSYSTEM_NAVIGATION_ORDER = ("psu", "chiller", "environment", "hv", "daq", "global")
 
 GENERATABLE_TARGETS = (
     "overview",
@@ -479,6 +478,50 @@ def catalog(config_dir: Path) -> list[PVInfo]:
     return result
 
 
+def _resolve_catalog_profile_dir(catalog_path: Path, raw_path: str) -> Path:
+    path = Path(raw_path)
+    if path.is_absolute():
+        return path
+    return (catalog_path.parent / path).resolve()
+
+
+def display_catalog_profile_dirs(catalog_path: Path) -> tuple[Path, ...]:
+    """Return profile directories listed by a display-only catalog JSON file."""
+    try:
+        data = json.loads(catalog_path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise ConfigurationError(f"Display catalog not found: {catalog_path}") from exc
+    except json.JSONDecodeError as exc:
+        raise ConfigurationError(
+            f"Invalid JSON in {catalog_path}:{exc.lineno}:{exc.colno}: {exc.msg}"
+        ) from exc
+
+    profile_dirs = data.get("profile_dirs")
+    if (
+        not isinstance(profile_dirs, list)
+        or not profile_dirs
+        or not all(isinstance(item, str) and item.strip() for item in profile_dirs)
+    ):
+        raise ConfigurationError("Display catalog must define a non-empty profile_dirs list")
+    return tuple(_resolve_catalog_profile_dir(catalog_path, item) for item in profile_dirs)
+
+
+def catalog_from_profile_dirs(config_dirs: Sequence[Path]) -> list[PVInfo]:
+    """Compose a display PV catalog from multiple IOC profile directories."""
+    merged: list[PVInfo] = []
+    owners: dict[str, Path] = {}
+    for config_dir in config_dirs:
+        for pv in catalog(config_dir):
+            if pv.name in owners:
+                raise ConfigurationError(
+                    "Duplicate PV names across display catalog profiles: "
+                    f"{pv.name} ({owners[pv.name]} and {config_dir})"
+                )
+            owners[pv.name] = config_dir
+            merged.append(pv)
+    return sorted(merged, key=lambda pv: pv.name)
+
+
 def action_value_for_pv(pv: str, value: str) -> str:
     """Return a display-safe action value for known boolean command PVs."""
     if value == "1" and pv.endswith(
@@ -499,10 +542,28 @@ def action_value_for_pv(pv: str, value: str) -> str:
     return value
 
 
-def add_header(display: Display, title: str) -> None:
+def navigation_for_catalog(
+    pvs: Sequence[PVInfo],
+    groups: dict[str, list[TrendGroup]],
+) -> tuple[tuple[str, str], ...]:
+    active = {pv.subsystem for pv in pvs}
+    active.update(subsystem for subsystem, subsystem_groups in groups.items() if subsystem_groups)
+    entries: list[tuple[str, str]] = [("Overview", "overview.bob")]
+    for subsystem in SUBSYSTEM_NAVIGATION_ORDER:
+        if subsystem in active:
+            entries.append(SUBSYSTEM_NAVIGATION[subsystem])
+    entries.extend([("Trends", "trends.bob"), ("All PVs", "all_pvs.bob")])
+    return tuple(entries)
+
+
+def add_header(
+    display: Display,
+    title: str,
+    navigation: Sequence[tuple[str, str]],
+) -> None:
     display.label(title, 20, 12, 650, 38, size=24, bold=True)
     x = 20
-    for text, filename in NAVIGATION:
+    for text, filename in navigation:
         display.open_button(text, filename, x, 58, 112, 30)
         x += 118
 
@@ -628,6 +689,16 @@ def display_options(config_dir: Path) -> ProfileDisplayOptions:
         chiller_pressure_enabled=bool(device.get("pressure_enabled", False)),
         chiller_external_temperature_enabled=bool(
             device.get("external_temperature_enabled", False)
+        ),
+    )
+
+
+def display_options_from_profile_dirs(config_dirs: Sequence[Path]) -> ProfileDisplayOptions:
+    options = [display_options(config_dir) for config_dir in config_dirs]
+    return ProfileDisplayOptions(
+        chiller_pressure_enabled=any(option.chiller_pressure_enabled for option in options),
+        chiller_external_temperature_enabled=any(
+            option.chiller_external_temperature_enabled for option in options
         ),
     )
 
@@ -933,12 +1004,21 @@ def add_timing_controls(display: Display, y: int) -> int:
 def generate_overview(
     pvs: Sequence[PVInfo],
     output: Path,
-    options: ProfileDisplayOptions | None = None,
+    groups: dict[str, list[TrendGroup]],
+    navigation: Sequence[tuple[str, str]],
 ) -> None:
-    options = options or ProfileDisplayOptions()
     _remove_subsystem_plot_files(output, "overview")
-    display = Display("BDX Slow Control Overview", 1400, 980)
-    add_header(display, "BDX prototype slow control")
+
+    overview_groups: list[TrendGroup] = []
+    environment_group = environment_overview_group(pvs)
+    if environment_group:
+        overview_groups.append(environment_group)
+    overview_groups.extend(groups.get("chiller", []))
+    overview_groups.extend(groups.get("psu", []))
+
+    plot_rows = (len(overview_groups) + 1) // 2
+    display = Display("BDX Slow Control Overview", 1400, max(980, 300 + plot_rows * 405))
+    add_header(display, "BDX prototype slow control", navigation)
 
     y = 105
     display.label("Global state", 20, y, 160, 28, bold=True)
@@ -995,43 +1075,22 @@ def generate_overview(
             y += 58
     y += 70
 
-    environment_group = environment_overview_group(pvs)
-    if environment_group:
-        plt_filename = f"overview_{slug(environment_group.title)}.plt"
+    for index, group in enumerate(overview_groups):
+        column = index % 2
+        row = index // 2
+        plt_filename = f"overview_{slug(group.title)}.plt"
         write_databrowser_plt(
             output / plt_filename,
-            environment_group.title,
-            environment_group.traces,
-            environment_group.y_axis_title,
-            environment_group.resolved_axes(),
+            group.title,
+            group.traces,
+            group.y_axis_title,
+            group.resolved_axes(),
         )
-        display.databrowser(plt_filename, 20, y, 670, 360)
-
-    names = {pv.name for pv in pvs}
-    chiller_traces = [
-        name
-        for name in (
-            "BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV",
-            "BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV",
-            "BDX:CHILLER:CHILLER1:SETPOINT_RBV",
-        )
-        if name in names
-    ]
-    if options.chiller_pressure_enabled and "BDX:CHILLER:CHILLER1:PRESSURE_RBV" in names:
-        chiller_traces.append("BDX:CHILLER:CHILLER1:PRESSURE_RBV")
-    if (
-        options.chiller_external_temperature_enabled
-        and "BDX:CHILLER:CHILLER1:EXTERNAL_TEMPERATURE_RBV" in names
-    ):
-        chiller_traces.append("BDX:CHILLER:CHILLER1:EXTERNAL_TEMPERATURE_RBV")
-    if chiller_traces:
-        write_databrowser_plt(
-            output / "overview_chiller.plt",
-            "Chiller",
-            traces_for_pvs(chiller_traces),
-            "Value",
-        )
-        display.databrowser("overview_chiller.plt", 710, y, 670, 360)
+        x = 20 + column * 690
+        plot_y = y + row * 405
+        display.label(group.title, x, plot_y, 420, 28, size=15, bold=True)
+        display.open_file_button("Full history", plt_filename, x + 520, plot_y, 150, 30)
+        display.databrowser(plt_filename, x, plot_y + 38, 670, 320)
     display.write(output / "overview.bob")
 
 
@@ -1189,6 +1248,7 @@ def generate_psu_operator(
     pvs: Sequence[PVInfo],
     chart_groups: Sequence[TrendGroup],
     output: Path,
+    navigation: Sequence[tuple[str, str]],
 ) -> None:
     _remove_subsystem_plot_files(output, "psu")
     layout = _psu_layout(pvs)
@@ -1196,7 +1256,7 @@ def generate_psu_operator(
     plot_rows = (len(chart_groups) + 1) // 2
     height = max(960, 205 + rows * 245 + plot_rows * 360)
     display = Display("BDX PSU", 1400, height)
-    add_header(display, "BDX low-voltage power supplies")
+    add_header(display, "BDX low-voltage power supplies", navigation)
     display.open_button("Expert", "psu_expert.bob", 1220, 12, 140, 32)
 
     y = 105
@@ -1257,13 +1317,17 @@ def generate_psu_operator(
         display.databrowser(plt_filename, x, plot_y + 38, 670, 310)
 
     display.write(output / "psu.bob")
-    generate_psu_expert(pvs, output)
+    generate_psu_expert(pvs, output, navigation)
 
 
-def generate_psu_expert(pvs: Sequence[PVInfo], output: Path) -> None:
+def generate_psu_expert(
+    pvs: Sequence[PVInfo],
+    output: Path,
+    navigation: Sequence[tuple[str, str]],
+) -> None:
     height = 180 + len(pvs) * 29
     display = Display("BDX PSU EXPERT", 1400, max(760, height))
-    add_header(display, "BDX PSU EXPERT")
+    add_header(display, "BDX PSU EXPERT", navigation)
     display.open_button("Back to PSU", "psu.bob", 20, 105, 180, 32)
     add_pv_table(display, pvs, 150)
     display.write(output / "psu_expert.bob")
@@ -1280,13 +1344,14 @@ def generate_chiller_operator(
     pvs: Sequence[PVInfo],
     chart_groups: Sequence[TrendGroup],
     output: Path,
+    navigation: Sequence[tuple[str, str]],
 ) -> None:
     _remove_subsystem_plot_files(output, "chiller")
     prefix = _chiller_prefix(pvs)
     if prefix is None:
         return
     display = Display("BDX Chiller", 1400, max(980, 520 + len(chart_groups) * 360))
-    add_header(display, "BDX chiller")
+    add_header(display, "BDX chiller", navigation)
     display.open_button("Expert", "chiller_expert.bob", 1220, 12, 140, 32)
 
     y = 105
@@ -1412,13 +1477,17 @@ def generate_chiller_operator(
         display.databrowser(plt_filename, 20, plot_y + 38, 1360, 310)
 
     display.write(output / "chiller.bob")
-    generate_chiller_expert(pvs, output)
+    generate_chiller_expert(pvs, output, navigation)
 
 
-def generate_chiller_expert(pvs: Sequence[PVInfo], output: Path) -> None:
+def generate_chiller_expert(
+    pvs: Sequence[PVInfo],
+    output: Path,
+    navigation: Sequence[tuple[str, str]],
+) -> None:
     height = 180 + len(pvs) * 29
     display = Display("BDX CHILLER EXPERT", 1400, max(760, height))
-    add_header(display, "BDX CHILLER EXPERT")
+    add_header(display, "BDX CHILLER EXPERT", navigation)
     display.open_button("Back to chiller", "chiller.bob", 20, 105, 200, 32)
     add_pv_table(display, pvs, 150)
     display.write(output / "chiller_expert.bob")
@@ -1429,14 +1498,17 @@ def generate_subsystem(
     pvs: Sequence[PVInfo],
     groups: dict[str, list[TrendGroup]],
     output: Path,
+    navigation: Sequence[tuple[str, str]],
 ) -> None:
+    if subsystem not in {"psu", "chiller"}:
+        _remove_subsystem_plot_files(output, subsystem)
     selected = [pv for pv in pvs if pv.subsystem == subsystem]
     chart_groups = groups.get(subsystem, [])
     if subsystem == "psu":
-        generate_psu_operator(selected, chart_groups, output)
+        generate_psu_operator(selected, chart_groups, output, navigation)
         return
     if subsystem == "chiller":
-        generate_chiller_operator(selected, chart_groups, output)
+        generate_chiller_operator(selected, chart_groups, output, navigation)
         return
 
     summary_traces = temperature_traces(chart_groups) if subsystem == "environment" else []
@@ -1452,7 +1524,7 @@ def generate_subsystem(
     table_start = 118 + control_height + health_height + summary_height + plot_height
     height = table_start + table_height + 30
     display = Display(f"BDX {subsystem.upper()}", 1400, max(760, height))
-    add_header(display, f"BDX {subsystem.upper()}")
+    add_header(display, f"BDX {subsystem.upper()}", navigation)
 
     y = 105
     if subsystem == "global":
@@ -1537,13 +1609,17 @@ def generate_subsystem(
         add_pv_table(display, selected, y + 10)
     display.write(output / f"{subsystem}.bob")
     if subsystem == "environment":
-        generate_environment_expert(selected, output)
+        generate_environment_expert(selected, output, navigation)
 
 
-def generate_environment_expert(pvs: Sequence[PVInfo], output: Path) -> None:
+def generate_environment_expert(
+    pvs: Sequence[PVInfo],
+    output: Path,
+    navigation: Sequence[tuple[str, str]],
+) -> None:
     height = 170 + len(pvs) * 29
     display = Display("BDX ENVIRONMENT EXPERT", 1400, max(760, height))
-    add_header(display, "BDX ENVIRONMENT EXPERT")
+    add_header(display, "BDX ENVIRONMENT EXPERT", navigation)
     display.open_button("Back to environment", "environment.bob", 20, 105, 210, 32)
     add_pv_table(display, pvs, 150)
     display.write(output / "environment_expert.bob")
@@ -1552,6 +1628,7 @@ def generate_environment_expert(pvs: Sequence[PVInfo], output: Path) -> None:
 def generate_trends(
     groups: dict[str, list[TrendGroup]],
     output: Path,
+    navigation: Sequence[tuple[str, str]],
 ) -> None:
     _remove_subsystem_plot_files(output, "trends")
     all_groups: list[TrendGroup] = []
@@ -1559,7 +1636,7 @@ def generate_trends(
         all_groups.extend(groups.get(subsystem, []))
     rows = (len(all_groups) + 1) // 2
     display = Display("BDX Trends", 1400, 170 + rows * 360)
-    add_header(display, "BDX live trends")
+    add_header(display, "BDX live trends", navigation)
     y = add_timing_controls(display, 105)
     display.label(
         "Trend charts subscribe to live PV updates. Change the IOC update period above; "
@@ -1595,10 +1672,14 @@ def generate_trends(
     display.write(output / "trends.bob")
 
 
-def generate_all_pvs(pvs: Sequence[PVInfo], output: Path) -> None:
+def generate_all_pvs(
+    pvs: Sequence[PVInfo],
+    output: Path,
+    navigation: Sequence[tuple[str, str]],
+) -> None:
     height = 145 + len(pvs) * 29
     display = Display("BDX All PVs", 1200, height)
-    add_header(display, "BDX complete PV table")
+    add_header(display, "BDX complete PV table", navigation)
     add_pv_table(display, pvs, 105)
     display.write(output / "all_pvs.bob")
 
@@ -1725,40 +1806,83 @@ def write_pv_table(pvs: Sequence[PVInfo], output: Path) -> None:
     (output / "pv_list.pvs").write_text("\n".join(pv_table) + "\n", encoding="utf-8")
 
 
-def generate(config_dir: Path, output: Path, only: str | None = None) -> list[PVInfo]:
+def _active_subsystems(
+    pvs: Sequence[PVInfo],
+    groups: dict[str, list[TrendGroup]],
+) -> set[str]:
+    active = {pv.subsystem for pv in pvs}
+    active.update(subsystem for subsystem, subsystem_groups in groups.items() if subsystem_groups)
+    return active
+
+
+def _remove_inactive_subsystem_artifacts(output: Path, active_subsystems: set[str]) -> None:
+    for subsystem in SUBSYSTEM_NAVIGATION_ORDER:
+        if subsystem in active_subsystems:
+            continue
+        for filename in (f"{subsystem}.bob", f"{subsystem}_expert.bob"):
+            path = output / filename
+            if path.exists():
+                path.unlink()
+        _remove_subsystem_plot_files(output, subsystem)
+
+
+def generate(
+    config_dir: Path,
+    output: Path,
+    only: str | None = None,
+    *,
+    catalog_path: Path | None = None,
+) -> list[PVInfo]:
     if only is not None and only not in GENERATABLE_TARGETS:
         raise ValueError(f"Unsupported display generation target: {only}")
 
-    pvs = catalog(config_dir)
-    options = display_options(config_dir)
+    config_dirs = (
+        display_catalog_profile_dirs(catalog_path)
+        if catalog_path is not None
+        else (config_dir,)
+    )
+    pvs = catalog_from_profile_dirs(config_dirs)
+    options = display_options_from_profile_dirs(config_dirs)
     groups = trend_groups(pvs, options)
+    navigation = navigation_for_catalog(pvs, groups)
+    active_subsystems = _active_subsystems(pvs, groups)
     output.mkdir(parents=True, exist_ok=True)
     if only == "overview":
-        generate_overview(pvs, output, options)
+        generate_overview(pvs, output, groups, navigation)
         return pvs
     if only in {"psu", "chiller", "environment", "hv", "daq", "global"}:
-        generate_subsystem(only, pvs, groups, output)
+        if only in active_subsystems:
+            generate_subsystem(only, pvs, groups, output, navigation)
         return pvs
     if only == "trends":
-        generate_trends(groups, output)
+        generate_trends(groups, output, navigation)
         return pvs
     if only == "all-pvs":
-        generate_all_pvs(pvs, output)
+        generate_all_pvs(pvs, output, navigation)
         write_pv_table(pvs, output)
         return pvs
 
-    generate_overview(pvs, output, options)
-    for subsystem in ("psu", "chiller", "environment", "hv", "daq", "global"):
-        generate_subsystem(subsystem, pvs, groups, output)
-    generate_trends(groups, output)
-    generate_all_pvs(pvs, output)
+    _remove_inactive_subsystem_artifacts(output, active_subsystems)
+    generate_overview(pvs, output, groups, navigation)
+    for subsystem in SUBSYSTEM_NAVIGATION_ORDER:
+        if subsystem in active_subsystems:
+            generate_subsystem(subsystem, pvs, groups, output, navigation)
+    generate_trends(groups, output, navigation)
+    generate_all_pvs(pvs, output, navigation)
     write_pv_table(pvs, output)
     return pvs
 
 
 def main(argv: Sequence[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="bdx-generate-displays")
-    parser.add_argument("--config-dir", default=str(DEFAULT_PROFILE_DIR))
+    parser.add_argument(
+        "--config-dir",
+        help=f"IOC profile directory used as a display catalog (default: {DEFAULT_PROFILE_DIR})",
+    )
+    parser.add_argument(
+        "--catalog",
+        help="Display-only catalog JSON that composes one or more IOC profile directories",
+    )
     parser.add_argument("--output-dir", default="phoebus/displays")
     parser.add_argument(
         "--only",
@@ -1766,7 +1890,11 @@ def main(argv: Sequence[str] | None = None) -> None:
         help="Generate only one display or display artifact",
     )
     args = parser.parse_args(argv)
-    pvs = generate(Path(args.config_dir), Path(args.output_dir), only=args.only)
+    if args.config_dir and args.catalog:
+        parser.error("--config-dir and --catalog are mutually exclusive")
+    config_dir = Path(args.config_dir) if args.config_dir else DEFAULT_PROFILE_DIR
+    catalog_path = Path(args.catalog) if args.catalog else None
+    pvs = generate(config_dir, Path(args.output_dir), only=args.only, catalog_path=catalog_path)
     if args.only:
         print(f"Generated Phoebus {args.only} display for {len(pvs)} PVs in {args.output_dir}")
     else:

@@ -6,8 +6,13 @@ Regenerate with:
 
 ```bash
 bdx-generate-displays \
+  --catalog config/display-catalogs/deployed-prototype.json \
   --output-dir phoebus/displays
 ```
+
+The deployed-prototype catalog composes `config/profiles/default` for the main
+host and `config/profiles/raspberry` for the Raspberry environment IOC. It is a
+display-only catalog, not an IOC runtime profile.
 
 The deployed default PSU and chiller displays can be regenerated without
 overwriting unrelated subsystem displays:

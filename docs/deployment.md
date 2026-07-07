@@ -87,9 +87,9 @@ upgrade, and uninstall procedures.
 
 By default, the Archiver startup helper waits for the four Archiver Appliance
 components to become healthy and then retries registration of the operational
-PSU and chiller PV lists. Leave `BDX_ARCHIVER_PV_LISTS` empty to use those
-repository defaults, or set it explicitly to a whitespace-separated list of
-PV-list files.
+PSU, chiller, and Raspberry environment PV lists. Leave `BDX_ARCHIVER_PV_LISTS`
+empty to use those repository defaults, or set it explicitly to a
+whitespace-separated list of PV-list files.
 
 ## Channel Access interface
 
@@ -247,7 +247,7 @@ For a remote client, replace the address list with the IOC host address or the a
 For the deployed main-server plus Raspberry layout:
 
 ```bash
-BDX_CA_ADDR_LIST="<MAIN_SERVER_IP> <RASPBERRY_IP>"
+BDX_CA_ADDR_LIST="172.22.50.2 172.22.50.10"
 BDX_CA_AUTO_ADDR_LIST=false
 ```
 

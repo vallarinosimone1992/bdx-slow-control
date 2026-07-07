@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>BDX ENVIRONMENT EXPERT</name>
   <width>1400</width>
-  <height>1446</height>
+  <height>1852</height>
   <widget type="label" version="2.0.0">
     <name>Label_1</name>
     <x>20</x>
@@ -86,38 +86,6 @@
     <height>30</height>
     <actions>
       <action type="open_display">
-        <file>hv.bob</file>
-        <target>tab</target>
-        <description>Open HV</description>
-      </action>
-    </actions>
-    <text>HV</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>Navigation_7</name>
-    <x>610</x>
-    <y>58</y>
-    <width>112</width>
-    <height>30</height>
-    <actions>
-      <action type="open_display">
-        <file>daq.bob</file>
-        <target>tab</target>
-        <description>Open DAQ</description>
-      </action>
-    </actions>
-    <text>DAQ</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>Navigation_8</name>
-    <x>728</x>
-    <y>58</y>
-    <width>112</width>
-    <height>30</height>
-    <actions>
-      <action type="open_display">
         <file>global.bob</file>
         <target>tab</target>
         <description>Open Global</description>
@@ -127,8 +95,8 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Navigation_9</name>
-    <x>846</x>
+    <name>Navigation_7</name>
+    <x>610</x>
     <y>58</y>
     <width>112</width>
     <height>30</height>
@@ -143,8 +111,8 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Navigation_10</name>
-    <x>964</x>
+    <name>Navigation_8</name>
+    <x>728</x>
     <y>58</y>
     <width>112</width>
     <height>30</height>
@@ -159,7 +127,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Navigation_11</name>
+    <name>Navigation_9</name>
     <x>20</x>
     <y>105</y>
     <width>210</width>
@@ -175,7 +143,7 @@
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_12</name>
+    <name>Label_10</name>
     <x>20</x>
     <y>150</y>
     <width>570</width>
@@ -190,7 +158,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_13</name>
+    <name>Label_11</name>
     <x>600</x>
     <y>150</y>
     <width>250</width>
@@ -205,7 +173,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_14</name>
+    <name>Label_12</name>
     <x>870</x>
     <y>150</y>
     <width>270</width>
@@ -220,7 +188,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_15</name>
+    <name>Label_13</name>
     <x>20</x>
     <y>182</y>
     <width>570</width>
@@ -235,7 +203,7 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_16</name>
+    <name>Readback_14</name>
     <x>600</x>
     <y>182</y>
     <width>250</width>
@@ -243,348 +211,9 @@
     <pv_name>BDX:ENV:HEARTBEAT</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_17</name>
+    <name>Label_15</name>
     <x>20</x>
     <y>211</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:ENV:HUMIDITY:H01:CLEAR_ERROR_CMD</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
-    </font>
-    <background_color>
-      <color red="235" green="240" blue="244" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_18</name>
-    <x>600</x>
-    <y>211</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:ENV:HUMIDITY:H01:CLEAR_ERROR_CMD</pv_name>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>Action_19</name>
-    <x>870</x>
-    <y>211</y>
-    <width>135</width>
-    <height>25</height>
-    <pv_name>BDX:ENV:HUMIDITY:H01:CLEAR_ERROR_CMD</pv_name>
-    <actions>
-      <action type="write_pv">
-        <pv_name>BDX:ENV:HUMIDITY:H01:CLEAR_ERROR_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:ENV:HUMIDITY:H01:CLEAR_ERROR_CMD</description>
-      </action>
-    </actions>
-    <text>EXECUTE</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_20</name>
-    <x>20</x>
-    <y>240</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:ENV:HUMIDITY:H01:COMM_OK</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
-    </font>
-    <background_color>
-      <color red="247" green="249" blue="251" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_21</name>
-    <x>600</x>
-    <y>240</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:ENV:HUMIDITY:H01:COMM_OK</pv_name>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_22</name>
-    <x>20</x>
-    <y>269</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:ENV:HUMIDITY:H01:COMM_STATUS</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
-    </font>
-    <background_color>
-      <color red="235" green="240" blue="244" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_23</name>
-    <x>600</x>
-    <y>269</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:ENV:HUMIDITY:H01:COMM_STATUS</pv_name>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_24</name>
-    <x>20</x>
-    <y>298</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:ENV:HUMIDITY:H01:ERROR_CODE</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
-    </font>
-    <background_color>
-      <color red="247" green="249" blue="251" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_25</name>
-    <x>600</x>
-    <y>298</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:ENV:HUMIDITY:H01:ERROR_CODE</pv_name>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_26</name>
-    <x>20</x>
-    <y>327</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:ENV:HUMIDITY:H01:ERROR_MESSAGE</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
-    </font>
-    <background_color>
-      <color red="235" green="240" blue="244" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_27</name>
-    <x>600</x>
-    <y>327</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:ENV:HUMIDITY:H01:ERROR_MESSAGE</pv_name>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_28</name>
-    <x>20</x>
-    <y>356</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:ENV:HUMIDITY:H01:HEARTBEAT</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
-    </font>
-    <background_color>
-      <color red="247" green="249" blue="251" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_29</name>
-    <x>600</x>
-    <y>356</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:ENV:HUMIDITY:H01:HEARTBEAT</pv_name>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_30</name>
-    <x>20</x>
-    <y>385</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:ENV:HUMIDITY:H01:IOC_STATE</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
-    </font>
-    <background_color>
-      <color red="235" green="240" blue="244" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_31</name>
-    <x>600</x>
-    <y>385</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:ENV:HUMIDITY:H01:IOC_STATE</pv_name>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_32</name>
-    <x>20</x>
-    <y>414</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:ENV:HUMIDITY:H01:LAST_UPDATE</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
-    </font>
-    <background_color>
-      <color red="247" green="249" blue="251" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_33</name>
-    <x>600</x>
-    <y>414</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:ENV:HUMIDITY:H01:LAST_UPDATE</pv_name>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_34</name>
-    <x>20</x>
-    <y>443</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:ENV:HUMIDITY:H01:SENSOR_KIND</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
-    </font>
-    <background_color>
-      <color red="235" green="240" blue="244" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_35</name>
-    <x>600</x>
-    <y>443</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:ENV:HUMIDITY:H01:SENSOR_KIND</pv_name>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_36</name>
-    <x>20</x>
-    <y>472</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:ENV:HUMIDITY:H01:SIMULATION</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
-    </font>
-    <background_color>
-      <color red="247" green="249" blue="251" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_37</name>
-    <x>600</x>
-    <y>472</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:ENV:HUMIDITY:H01:SIMULATION</pv_name>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_38</name>
-    <x>20</x>
-    <y>501</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:ENV:HUMIDITY:H01:STATUS</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
-    </font>
-    <background_color>
-      <color red="235" green="240" blue="244" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_39</name>
-    <x>600</x>
-    <y>501</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:ENV:HUMIDITY:H01:STATUS</pv_name>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_40</name>
-    <x>20</x>
-    <y>530</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:ENV:HUMIDITY:H01:STATUS_OK</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
-    </font>
-    <background_color>
-      <color red="247" green="249" blue="251" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_41</name>
-    <x>600</x>
-    <y>530</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:ENV:HUMIDITY:H01:STATUS_OK</pv_name>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_42</name>
-    <x>20</x>
-    <y>559</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:ENV:HUMIDITY:H01:UNIT</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
-    </font>
-    <background_color>
-      <color red="235" green="240" blue="244" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_43</name>
-    <x>600</x>
-    <y>559</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:ENV:HUMIDITY:H01:UNIT</pv_name>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_44</name>
-    <x>20</x>
-    <y>588</y>
-    <width>570</width>
-    <height>25</height>
-    <text>BDX:ENV:HUMIDITY:H01:VALUE</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
-    </font>
-    <background_color>
-      <color red="247" green="249" blue="251" />
-    </background_color>
-    <transparent>false</transparent>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Readback_45</name>
-    <x>600</x>
-    <y>588</y>
-    <width>250</width>
-    <height>25</height>
-    <pv_name>BDX:ENV:HUMIDITY:H01:VALUE</pv_name>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_46</name>
-    <x>20</x>
-    <y>617</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:ENV:LAST_TEMPERATURE_UPDATE</text>
@@ -597,20 +226,20 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_47</name>
+    <name>Readback_16</name>
     <x>600</x>
-    <y>617</y>
+    <y>211</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:ENV:LAST_TEMPERATURE_UPDATE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_48</name>
+    <name>Label_17</name>
     <x>20</x>
-    <y>646</y>
+    <y>240</y>
     <width>570</width>
     <height>25</height>
-    <text>BDX:ENV:PRESSURE:P01:CLEAR_ERROR_CMD</text>
+    <text>BDX:ENV:TEMP:T00:CLEAR_ERROR_CMD</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -620,37 +249,37 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_49</name>
+    <name>Readback_18</name>
     <x>600</x>
-    <y>646</y>
+    <y>240</y>
     <width>250</width>
     <height>25</height>
-    <pv_name>BDX:ENV:PRESSURE:P01:CLEAR_ERROR_CMD</pv_name>
+    <pv_name>BDX:ENV:TEMP:T00:CLEAR_ERROR_CMD</pv_name>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_50</name>
+    <name>Action_19</name>
     <x>870</x>
-    <y>646</y>
+    <y>240</y>
     <width>135</width>
     <height>25</height>
-    <pv_name>BDX:ENV:PRESSURE:P01:CLEAR_ERROR_CMD</pv_name>
+    <pv_name>BDX:ENV:TEMP:T00:CLEAR_ERROR_CMD</pv_name>
     <actions>
       <action type="write_pv">
-        <pv_name>BDX:ENV:PRESSURE:P01:CLEAR_ERROR_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:ENV:PRESSURE:P01:CLEAR_ERROR_CMD</description>
+        <pv_name>BDX:ENV:TEMP:T00:CLEAR_ERROR_CMD</pv_name>
+        <value>On</value>
+        <description>Write On to BDX:ENV:TEMP:T00:CLEAR_ERROR_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_51</name>
+    <name>Label_20</name>
     <x>20</x>
-    <y>675</y>
+    <y>269</y>
     <width>570</width>
     <height>25</height>
-    <text>BDX:ENV:PRESSURE:P01:COMM_OK</text>
+    <text>BDX:ENV:TEMP:T00:COMM_OK</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -660,20 +289,20 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_52</name>
+    <name>Readback_21</name>
     <x>600</x>
-    <y>675</y>
+    <y>269</y>
     <width>250</width>
     <height>25</height>
-    <pv_name>BDX:ENV:PRESSURE:P01:COMM_OK</pv_name>
+    <pv_name>BDX:ENV:TEMP:T00:COMM_OK</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_53</name>
+    <name>Label_22</name>
     <x>20</x>
-    <y>704</y>
+    <y>298</y>
     <width>570</width>
     <height>25</height>
-    <text>BDX:ENV:PRESSURE:P01:COMM_STATUS</text>
+    <text>BDX:ENV:TEMP:T00:COMM_STATUS</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -683,20 +312,20 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_54</name>
+    <name>Readback_23</name>
     <x>600</x>
-    <y>704</y>
+    <y>298</y>
     <width>250</width>
     <height>25</height>
-    <pv_name>BDX:ENV:PRESSURE:P01:COMM_STATUS</pv_name>
+    <pv_name>BDX:ENV:TEMP:T00:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_55</name>
+    <name>Label_24</name>
     <x>20</x>
-    <y>733</y>
+    <y>327</y>
     <width>570</width>
     <height>25</height>
-    <text>BDX:ENV:PRESSURE:P01:ERROR_CODE</text>
+    <text>BDX:ENV:TEMP:T00:ERROR_CODE</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -706,20 +335,20 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_56</name>
+    <name>Readback_25</name>
     <x>600</x>
-    <y>733</y>
+    <y>327</y>
     <width>250</width>
     <height>25</height>
-    <pv_name>BDX:ENV:PRESSURE:P01:ERROR_CODE</pv_name>
+    <pv_name>BDX:ENV:TEMP:T00:ERROR_CODE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_57</name>
+    <name>Label_26</name>
     <x>20</x>
-    <y>762</y>
+    <y>356</y>
     <width>570</width>
     <height>25</height>
-    <text>BDX:ENV:PRESSURE:P01:ERROR_MESSAGE</text>
+    <text>BDX:ENV:TEMP:T00:ERROR_MESSAGE</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -729,20 +358,20 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_58</name>
+    <name>Readback_27</name>
     <x>600</x>
-    <y>762</y>
+    <y>356</y>
     <width>250</width>
     <height>25</height>
-    <pv_name>BDX:ENV:PRESSURE:P01:ERROR_MESSAGE</pv_name>
+    <pv_name>BDX:ENV:TEMP:T00:ERROR_MESSAGE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_59</name>
+    <name>Label_28</name>
     <x>20</x>
-    <y>791</y>
+    <y>385</y>
     <width>570</width>
     <height>25</height>
-    <text>BDX:ENV:PRESSURE:P01:HEARTBEAT</text>
+    <text>BDX:ENV:TEMP:T00:HEARTBEAT</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -752,20 +381,20 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_60</name>
+    <name>Readback_29</name>
     <x>600</x>
-    <y>791</y>
+    <y>385</y>
     <width>250</width>
     <height>25</height>
-    <pv_name>BDX:ENV:PRESSURE:P01:HEARTBEAT</pv_name>
+    <pv_name>BDX:ENV:TEMP:T00:HEARTBEAT</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_61</name>
+    <name>Label_30</name>
     <x>20</x>
-    <y>820</y>
+    <y>414</y>
     <width>570</width>
     <height>25</height>
-    <text>BDX:ENV:PRESSURE:P01:IOC_STATE</text>
+    <text>BDX:ENV:TEMP:T00:IOC_STATE</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -775,20 +404,20 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_62</name>
+    <name>Readback_31</name>
     <x>600</x>
-    <y>820</y>
+    <y>414</y>
     <width>250</width>
     <height>25</height>
-    <pv_name>BDX:ENV:PRESSURE:P01:IOC_STATE</pv_name>
+    <pv_name>BDX:ENV:TEMP:T00:IOC_STATE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_63</name>
+    <name>Label_32</name>
     <x>20</x>
-    <y>849</y>
+    <y>443</y>
     <width>570</width>
     <height>25</height>
-    <text>BDX:ENV:PRESSURE:P01:LAST_UPDATE</text>
+    <text>BDX:ENV:TEMP:T00:LAST_UPDATE</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -798,20 +427,20 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_64</name>
+    <name>Readback_33</name>
     <x>600</x>
-    <y>849</y>
+    <y>443</y>
     <width>250</width>
     <height>25</height>
-    <pv_name>BDX:ENV:PRESSURE:P01:LAST_UPDATE</pv_name>
+    <pv_name>BDX:ENV:TEMP:T00:LAST_UPDATE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_65</name>
+    <name>Label_34</name>
     <x>20</x>
-    <y>878</y>
+    <y>472</y>
     <width>570</width>
     <height>25</height>
-    <text>BDX:ENV:PRESSURE:P01:SENSOR_KIND</text>
+    <text>BDX:ENV:TEMP:T00:SENSOR_KIND</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -821,20 +450,20 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_66</name>
+    <name>Readback_35</name>
     <x>600</x>
-    <y>878</y>
+    <y>472</y>
     <width>250</width>
     <height>25</height>
-    <pv_name>BDX:ENV:PRESSURE:P01:SENSOR_KIND</pv_name>
+    <pv_name>BDX:ENV:TEMP:T00:SENSOR_KIND</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_67</name>
+    <name>Label_36</name>
     <x>20</x>
-    <y>907</y>
+    <y>501</y>
     <width>570</width>
     <height>25</height>
-    <text>BDX:ENV:PRESSURE:P01:SIMULATION</text>
+    <text>BDX:ENV:TEMP:T00:SIMULATION</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -844,20 +473,20 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_68</name>
+    <name>Readback_37</name>
     <x>600</x>
-    <y>907</y>
+    <y>501</y>
     <width>250</width>
     <height>25</height>
-    <pv_name>BDX:ENV:PRESSURE:P01:SIMULATION</pv_name>
+    <pv_name>BDX:ENV:TEMP:T00:SIMULATION</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_69</name>
+    <name>Label_38</name>
     <x>20</x>
-    <y>936</y>
+    <y>530</y>
     <width>570</width>
     <height>25</height>
-    <text>BDX:ENV:PRESSURE:P01:STATUS</text>
+    <text>BDX:ENV:TEMP:T00:STATUS</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -867,20 +496,20 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_70</name>
+    <name>Readback_39</name>
     <x>600</x>
-    <y>936</y>
+    <y>530</y>
     <width>250</width>
     <height>25</height>
-    <pv_name>BDX:ENV:PRESSURE:P01:STATUS</pv_name>
+    <pv_name>BDX:ENV:TEMP:T00:STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_71</name>
+    <name>Label_40</name>
     <x>20</x>
-    <y>965</y>
+    <y>559</y>
     <width>570</width>
     <height>25</height>
-    <text>BDX:ENV:PRESSURE:P01:STATUS_OK</text>
+    <text>BDX:ENV:TEMP:T00:STATUS_OK</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -890,20 +519,20 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_72</name>
+    <name>Readback_41</name>
     <x>600</x>
-    <y>965</y>
+    <y>559</y>
     <width>250</width>
     <height>25</height>
-    <pv_name>BDX:ENV:PRESSURE:P01:STATUS_OK</pv_name>
+    <pv_name>BDX:ENV:TEMP:T00:STATUS_OK</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_73</name>
+    <name>Label_42</name>
     <x>20</x>
-    <y>994</y>
+    <y>588</y>
     <width>570</width>
     <height>25</height>
-    <text>BDX:ENV:PRESSURE:P01:UNIT</text>
+    <text>BDX:ENV:TEMP:T00:UNIT</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -913,20 +542,20 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_74</name>
+    <name>Readback_43</name>
     <x>600</x>
-    <y>994</y>
+    <y>588</y>
     <width>250</width>
     <height>25</height>
-    <pv_name>BDX:ENV:PRESSURE:P01:UNIT</pv_name>
+    <pv_name>BDX:ENV:TEMP:T00:UNIT</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_75</name>
+    <name>Label_44</name>
     <x>20</x>
-    <y>1023</y>
+    <y>617</y>
     <width>570</width>
     <height>25</height>
-    <text>BDX:ENV:PRESSURE:P01:VALUE</text>
+    <text>BDX:ENV:TEMP:T00:VALUE</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -936,17 +565,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_76</name>
+    <name>Readback_45</name>
     <x>600</x>
-    <y>1023</y>
+    <y>617</y>
     <width>250</width>
     <height>25</height>
-    <pv_name>BDX:ENV:PRESSURE:P01:VALUE</pv_name>
+    <pv_name>BDX:ENV:TEMP:T00:VALUE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_77</name>
+    <name>Label_46</name>
     <x>20</x>
-    <y>1052</y>
+    <y>646</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:ENV:TEMP:T01:CLEAR_ERROR_CMD</text>
@@ -959,34 +588,34 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_78</name>
+    <name>Readback_47</name>
     <x>600</x>
-    <y>1052</y>
+    <y>646</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:ENV:TEMP:T01:CLEAR_ERROR_CMD</pv_name>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action_79</name>
+    <name>Action_48</name>
     <x>870</x>
-    <y>1052</y>
+    <y>646</y>
     <width>135</width>
     <height>25</height>
     <pv_name>BDX:ENV:TEMP:T01:CLEAR_ERROR_CMD</pv_name>
     <actions>
       <action type="write_pv">
         <pv_name>BDX:ENV:TEMP:T01:CLEAR_ERROR_CMD</pv_name>
-        <value>1</value>
-        <description>Write 1 to BDX:ENV:TEMP:T01:CLEAR_ERROR_CMD</description>
+        <value>On</value>
+        <description>Write On to BDX:ENV:TEMP:T01:CLEAR_ERROR_CMD</description>
       </action>
     </actions>
     <text>EXECUTE</text>
     <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_80</name>
+    <name>Label_49</name>
     <x>20</x>
-    <y>1081</y>
+    <y>675</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:ENV:TEMP:T01:COMM_OK</text>
@@ -999,17 +628,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_81</name>
+    <name>Readback_50</name>
     <x>600</x>
-    <y>1081</y>
+    <y>675</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:ENV:TEMP:T01:COMM_OK</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_82</name>
+    <name>Label_51</name>
     <x>20</x>
-    <y>1110</y>
+    <y>704</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:ENV:TEMP:T01:COMM_STATUS</text>
@@ -1022,17 +651,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_83</name>
+    <name>Readback_52</name>
     <x>600</x>
-    <y>1110</y>
+    <y>704</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:ENV:TEMP:T01:COMM_STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_84</name>
+    <name>Label_53</name>
     <x>20</x>
-    <y>1139</y>
+    <y>733</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:ENV:TEMP:T01:ERROR_CODE</text>
@@ -1045,17 +674,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_85</name>
+    <name>Readback_54</name>
     <x>600</x>
-    <y>1139</y>
+    <y>733</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:ENV:TEMP:T01:ERROR_CODE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_86</name>
+    <name>Label_55</name>
     <x>20</x>
-    <y>1168</y>
+    <y>762</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:ENV:TEMP:T01:ERROR_MESSAGE</text>
@@ -1068,17 +697,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_87</name>
+    <name>Readback_56</name>
     <x>600</x>
-    <y>1168</y>
+    <y>762</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:ENV:TEMP:T01:ERROR_MESSAGE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_88</name>
+    <name>Label_57</name>
     <x>20</x>
-    <y>1197</y>
+    <y>791</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:ENV:TEMP:T01:HEARTBEAT</text>
@@ -1091,17 +720,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_89</name>
+    <name>Readback_58</name>
     <x>600</x>
-    <y>1197</y>
+    <y>791</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:ENV:TEMP:T01:HEARTBEAT</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_90</name>
+    <name>Label_59</name>
     <x>20</x>
-    <y>1226</y>
+    <y>820</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:ENV:TEMP:T01:IOC_STATE</text>
@@ -1114,17 +743,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_91</name>
+    <name>Readback_60</name>
     <x>600</x>
-    <y>1226</y>
+    <y>820</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:ENV:TEMP:T01:IOC_STATE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_92</name>
+    <name>Label_61</name>
     <x>20</x>
-    <y>1255</y>
+    <y>849</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:ENV:TEMP:T01:LAST_UPDATE</text>
@@ -1137,17 +766,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_93</name>
+    <name>Readback_62</name>
     <x>600</x>
-    <y>1255</y>
+    <y>849</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:ENV:TEMP:T01:LAST_UPDATE</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_94</name>
+    <name>Label_63</name>
     <x>20</x>
-    <y>1284</y>
+    <y>878</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:ENV:TEMP:T01:SENSOR_KIND</text>
@@ -1160,17 +789,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_95</name>
+    <name>Readback_64</name>
     <x>600</x>
-    <y>1284</y>
+    <y>878</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:ENV:TEMP:T01:SENSOR_KIND</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_96</name>
+    <name>Label_65</name>
     <x>20</x>
-    <y>1313</y>
+    <y>907</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:ENV:TEMP:T01:SIMULATION</text>
@@ -1183,17 +812,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_97</name>
+    <name>Readback_66</name>
     <x>600</x>
-    <y>1313</y>
+    <y>907</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:ENV:TEMP:T01:SIMULATION</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_98</name>
+    <name>Label_67</name>
     <x>20</x>
-    <y>1342</y>
+    <y>936</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:ENV:TEMP:T01:STATUS</text>
@@ -1206,17 +835,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_99</name>
+    <name>Readback_68</name>
     <x>600</x>
-    <y>1342</y>
+    <y>936</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:ENV:TEMP:T01:STATUS</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_100</name>
+    <name>Label_69</name>
     <x>20</x>
-    <y>1371</y>
+    <y>965</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:ENV:TEMP:T01:STATUS_OK</text>
@@ -1229,17 +858,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_101</name>
+    <name>Readback_70</name>
     <x>600</x>
-    <y>1371</y>
+    <y>965</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:ENV:TEMP:T01:STATUS_OK</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_102</name>
+    <name>Label_71</name>
     <x>20</x>
-    <y>1400</y>
+    <y>994</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:ENV:TEMP:T01:UNIT</text>
@@ -1252,17 +881,17 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_103</name>
+    <name>Readback_72</name>
     <x>600</x>
-    <y>1400</y>
+    <y>994</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:ENV:TEMP:T01:UNIT</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_104</name>
+    <name>Label_73</name>
     <x>20</x>
-    <y>1429</y>
+    <y>1023</y>
     <width>570</width>
     <height>25</height>
     <text>BDX:ENV:TEMP:T01:VALUE</text>
@@ -1275,11 +904,689 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_105</name>
+    <name>Readback_74</name>
+    <x>600</x>
+    <y>1023</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T01:VALUE</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_75</name>
+    <x>20</x>
+    <y>1052</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T02:CLEAR_ERROR_CMD</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_76</name>
+    <x>600</x>
+    <y>1052</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T02:CLEAR_ERROR_CMD</pv_name>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_77</name>
+    <x>870</x>
+    <y>1052</y>
+    <width>135</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T02:CLEAR_ERROR_CMD</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:ENV:TEMP:T02:CLEAR_ERROR_CMD</pv_name>
+        <value>On</value>
+        <description>Write On to BDX:ENV:TEMP:T02:CLEAR_ERROR_CMD</description>
+      </action>
+    </actions>
+    <text>EXECUTE</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_78</name>
+    <x>20</x>
+    <y>1081</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T02:COMM_OK</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_79</name>
+    <x>600</x>
+    <y>1081</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T02:COMM_OK</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_80</name>
+    <x>20</x>
+    <y>1110</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T02:COMM_STATUS</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_81</name>
+    <x>600</x>
+    <y>1110</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T02:COMM_STATUS</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_82</name>
+    <x>20</x>
+    <y>1139</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T02:ERROR_CODE</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_83</name>
+    <x>600</x>
+    <y>1139</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T02:ERROR_CODE</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_84</name>
+    <x>20</x>
+    <y>1168</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T02:ERROR_MESSAGE</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_85</name>
+    <x>600</x>
+    <y>1168</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T02:ERROR_MESSAGE</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_86</name>
+    <x>20</x>
+    <y>1197</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T02:HEARTBEAT</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_87</name>
+    <x>600</x>
+    <y>1197</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T02:HEARTBEAT</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_88</name>
+    <x>20</x>
+    <y>1226</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T02:IOC_STATE</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_89</name>
+    <x>600</x>
+    <y>1226</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T02:IOC_STATE</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_90</name>
+    <x>20</x>
+    <y>1255</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T02:LAST_UPDATE</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_91</name>
+    <x>600</x>
+    <y>1255</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T02:LAST_UPDATE</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_92</name>
+    <x>20</x>
+    <y>1284</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T02:SENSOR_KIND</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_93</name>
+    <x>600</x>
+    <y>1284</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T02:SENSOR_KIND</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_94</name>
+    <x>20</x>
+    <y>1313</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T02:SIMULATION</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_95</name>
+    <x>600</x>
+    <y>1313</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T02:SIMULATION</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_96</name>
+    <x>20</x>
+    <y>1342</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T02:STATUS</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_97</name>
+    <x>600</x>
+    <y>1342</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T02:STATUS</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_98</name>
+    <x>20</x>
+    <y>1371</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T02:STATUS_OK</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_99</name>
+    <x>600</x>
+    <y>1371</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T02:STATUS_OK</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_100</name>
+    <x>20</x>
+    <y>1400</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T02:UNIT</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_101</name>
+    <x>600</x>
+    <y>1400</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T02:UNIT</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_102</name>
+    <x>20</x>
+    <y>1429</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T02:VALUE</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_103</name>
     <x>600</x>
     <y>1429</y>
     <width>250</width>
     <height>25</height>
-    <pv_name>BDX:ENV:TEMP:T01:VALUE</pv_name>
+    <pv_name>BDX:ENV:TEMP:T02:VALUE</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_104</name>
+    <x>20</x>
+    <y>1458</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T03:CLEAR_ERROR_CMD</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_105</name>
+    <x>600</x>
+    <y>1458</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T03:CLEAR_ERROR_CMD</pv_name>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action_106</name>
+    <x>870</x>
+    <y>1458</y>
+    <width>135</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T03:CLEAR_ERROR_CMD</pv_name>
+    <actions>
+      <action type="write_pv">
+        <pv_name>BDX:ENV:TEMP:T03:CLEAR_ERROR_CMD</pv_name>
+        <value>On</value>
+        <description>Write On to BDX:ENV:TEMP:T03:CLEAR_ERROR_CMD</description>
+      </action>
+    </actions>
+    <text>EXECUTE</text>
+    <tooltip>$(actions)</tooltip>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_107</name>
+    <x>20</x>
+    <y>1487</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T03:COMM_OK</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_108</name>
+    <x>600</x>
+    <y>1487</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T03:COMM_OK</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_109</name>
+    <x>20</x>
+    <y>1516</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T03:COMM_STATUS</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_110</name>
+    <x>600</x>
+    <y>1516</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T03:COMM_STATUS</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_111</name>
+    <x>20</x>
+    <y>1545</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T03:ERROR_CODE</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_112</name>
+    <x>600</x>
+    <y>1545</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T03:ERROR_CODE</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_113</name>
+    <x>20</x>
+    <y>1574</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T03:ERROR_MESSAGE</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_114</name>
+    <x>600</x>
+    <y>1574</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T03:ERROR_MESSAGE</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_115</name>
+    <x>20</x>
+    <y>1603</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T03:HEARTBEAT</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_116</name>
+    <x>600</x>
+    <y>1603</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T03:HEARTBEAT</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_117</name>
+    <x>20</x>
+    <y>1632</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T03:IOC_STATE</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_118</name>
+    <x>600</x>
+    <y>1632</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T03:IOC_STATE</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_119</name>
+    <x>20</x>
+    <y>1661</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T03:LAST_UPDATE</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_120</name>
+    <x>600</x>
+    <y>1661</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T03:LAST_UPDATE</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_121</name>
+    <x>20</x>
+    <y>1690</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T03:SENSOR_KIND</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_122</name>
+    <x>600</x>
+    <y>1690</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T03:SENSOR_KIND</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_123</name>
+    <x>20</x>
+    <y>1719</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T03:SIMULATION</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_124</name>
+    <x>600</x>
+    <y>1719</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T03:SIMULATION</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_125</name>
+    <x>20</x>
+    <y>1748</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T03:STATUS</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_126</name>
+    <x>600</x>
+    <y>1748</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T03:STATUS</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_127</name>
+    <x>20</x>
+    <y>1777</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T03:STATUS_OK</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_128</name>
+    <x>600</x>
+    <y>1777</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T03:STATUS_OK</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_129</name>
+    <x>20</x>
+    <y>1806</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T03:UNIT</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_130</name>
+    <x>600</x>
+    <y>1806</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T03:UNIT</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_131</name>
+    <x>20</x>
+    <y>1835</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:ENV:TEMP:T03:VALUE</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_132</name>
+    <x>600</x>
+    <y>1835</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:ENV:TEMP:T03:VALUE</pv_name>
   </widget>
 </display>
