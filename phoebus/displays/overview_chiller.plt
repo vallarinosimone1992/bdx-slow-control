@@ -47,6 +47,11 @@
             <period>1.0</period>
             <ring_size>5000</ring_size>
             <request>RAW</request>
+            <archive>
+                <name>BDX Archiver</name>
+                <url>pbraw://127.0.0.1:17668/retrieval</url>
+                <key>1</key>
+            </archive>
         </pv>
         <pv>
             <display_name>BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV</display_name>
@@ -67,6 +72,11 @@
             <period>1.0</period>
             <ring_size>5000</ring_size>
             <request>RAW</request>
+            <archive>
+                <name>BDX Archiver</name>
+                <url>pbraw://127.0.0.1:17668/retrieval</url>
+                <key>1</key>
+            </archive>
         </pv>
         <pv>
             <display_name>BDX:CHILLER:CHILLER1:SETPOINT_RBV</display_name>
@@ -87,26 +97,11 @@
             <period>1.0</period>
             <ring_size>5000</ring_size>
             <request>RAW</request>
-        </pv>
-        <pv>
-            <display_name>BDX:CHILLER:CHILLER1:PRESSURE_RBV</display_name>
-            <visible>true</visible>
-            <name>BDX:CHILLER:CHILLER1:PRESSURE_RBV</name>
-            <axis>0</axis>
-            <color>
-                <red>117</red>
-                <green>107</green>
-                <blue>177</blue>
-            </color>
-            <trace_type>SINGLE_LINE</trace_type>
-            <linewidth>2</linewidth>
-            <line_style>SOLID</line_style>
-            <point_type>NONE</point_type>
-            <point_size>6</point_size>
-            <waveform_index>0</waveform_index>
-            <period>1.0</period>
-            <ring_size>5000</ring_size>
-            <request>RAW</request>
+            <archive>
+                <name>BDX Archiver</name>
+                <url>pbraw://127.0.0.1:17668/retrieval</url>
+                <key>1</key>
+            </archive>
         </pv>
     </pvlist>
 </databrowser>

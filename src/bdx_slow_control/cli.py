@@ -9,6 +9,7 @@ from caproto.server import run
 
 from .builders import BUILDERS
 from .config import (
+    DEFAULT_CHILLER_CONFIG,
     DEFAULT_PROFILE_DIR,
     DEFAULT_PSU_CONFIG,
     ConfigurationError,
@@ -42,14 +43,12 @@ def _run(builder_name: str, default_config: str, argv=None) -> None:
         log_pv_names=settings.log_pv_names,
     )
 
-
-
 def psu_main(argv=None) -> None:
     _run("psu", str(DEFAULT_PSU_CONFIG), argv)
 
 
 def chiller_main(argv=None) -> None:
-    _run("chiller", "config/profiles/prototype/chiller.json", argv)
+    _run("chiller", str(DEFAULT_CHILLER_CONFIG), argv)
 
 
 def environment_main(argv=None) -> None:

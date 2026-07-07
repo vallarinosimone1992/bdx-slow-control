@@ -99,13 +99,24 @@ The default operational profile is `config/profiles/default`. It contains only
 the subsystems currently ready for routine laboratory operation:
 
 - `global`;
-- `psu`.
+- `psu`;
+- `chiller`.
 
 The PSU profile instantiates LV1 at `172.22.50.20:9221` and LV2 at
 `172.22.50.21:9221`, using the CPX400DP hardware driver, channels 1 and 2, and
-a 1.0 s polling period. The default profile does not include the chiller yet.
-Startup does not enable PSU outputs or write operator setpoints; outputs change
-only after explicit operator commands.
+a 1.0 s polling period. The chiller profile instantiates CHILLER1 at
+`172.22.50.60:54321`, using the LAUDA ECO Silver RE 1225 S hardware driver and
+the same shared 1.0 s runtime monitoring period. Chiller TCP communication is
+offloaded from the caproto asyncio event loop and serialized so a slow or
+disconnected chiller does not block PSU polling or unrelated Channel Access
+traffic. If a chiller poll takes longer than the configured period, the IOC
+finishes that poll and then waits for the next period; it does not queue
+overlapping chiller polls.
+
+Startup does not enable PSU outputs, start or stop the chiller, or write PSU or
+chiller setpoints. Outputs and chiller operation change only after explicit
+operator commands. The chiller must be started through the confirmed `START`
+button or an equivalent explicit write to `RUN_SET`.
 
 Run the default aggregated IOC:
 
@@ -117,6 +128,12 @@ Run only the default PSU IOC:
 
 ```bash
 bdx-psu-ioc
+```
+
+Run only the default chiller IOC:
+
+```bash
+bdx-chiller-ioc
 ```
 
 The default PV-list and display-generation commands also use
@@ -229,6 +246,9 @@ runtimes, WAR/JAR files, credentials, logs, databases, or archive data.
 See `deploy/archiver-appliance/README.md` for the pinned release, storage
 layout, local evaluation commands, provisional Ubuntu 22.04 deployment commands,
 PV registration, health checks, retrieval tests, and backup procedure.
+The default Archiver startup helper registers the operational PSU and chiller
+PV lists unless `BDX_ARCHIVER_AUTO_REGISTER=false` or an explicit
+`BDX_ARCHIVER_PV_LISTS` override is configured.
 
 ## Phoebus displays
 
@@ -420,8 +440,7 @@ bdx-generate-displays \
   --only environment
 ```
 
-To update only the deployed PSU display or the not-yet-default main-server
-chiller display:
+To update only the deployed PSU or chiller display:
 
 ```bash
 bdx-generate-displays \
@@ -430,7 +449,7 @@ bdx-generate-displays \
   --only psu
 
 bdx-generate-displays \
-  --config-dir config/profiles/main-server \
+  --config-dir config/profiles/default \
   --output-dir phoebus/displays \
   --only chiller
 ```

@@ -175,10 +175,11 @@ readbacks, output state, OVP/OCP readbacks, communication state, IOC state,
 all-outputs-off state, and error diagnostics.
 
 `pv-lists/chiller.txt` archives controlled temperature, bath temperature,
-applied setpoint, run/fault state, pump stage, cooling mode, deviation
-diagnostics, communication state, IOC state, and error diagnostics. Pressure and
-external-temperature PVs remain excluded while they are disabled in the
-main-server profile.
+applied setpoint, run/fault state, pump stage, cooling mode, Safe Mode readback
+status, safe setpoint readback, communication-timeout readback, standby status,
+deviation diagnostics, communication state, IOC state, and error diagnostics.
+Pressure and external-temperature PVs remain excluded while they are disabled in
+the default and main-server profiles.
 
 `pv-lists/prototype.txt` is the duplicate-free union of the enabled subsystem
 lists. Validate the PV lists with:
@@ -233,10 +234,11 @@ Start and stop manually:
 
 With the default configuration, `start.sh` also launches a background
 auto-registration helper after the four Archiver Appliance components start.
-For `--user-local`, the default PV list resolves to:
+For `--user-local`, the default PV lists resolve to:
 
 ```text
 ~/.local/share/bdx-archiver/app/pv-lists/psu.txt
+~/.local/share/bdx-archiver/app/pv-lists/chiller.txt
 ```
 
 ## Provisional Ubuntu 22.04 Deployment
@@ -294,12 +296,16 @@ BDX_ARCHIVER_REGISTER_RETRY_SECONDS=30
 ```
 
 When `BDX_ARCHIVER_PV_LISTS` is empty, the startup scripts use
-`$BDX_ARCHIVER_APP_DIR/pv-lists/psu.txt`, matching the current default
+`$BDX_ARCHIVER_APP_DIR/pv-lists/psu.txt` and
+`$BDX_ARCHIVER_APP_DIR/pv-lists/chiller.txt`, matching the current default
 laboratory IOC profile. After `mgmt`, `engine`, `etl`, and `retrieval` respond
-on component-specific BPL operations, the helper runs:
+on component-specific BPL operations, the helper runs an equivalent of:
 
 ```bash
-register-pvs.py --mgmt-url "$BDX_ARCHIVER_MGMT_URL" "$BDX_ARCHIVER_APP_DIR/pv-lists/psu.txt"
+register-pvs.py \
+  --mgmt-url "$BDX_ARCHIVER_MGMT_URL" \
+  "$BDX_ARCHIVER_APP_DIR/pv-lists/psu.txt" \
+  "$BDX_ARCHIVER_APP_DIR/pv-lists/chiller.txt"
 ```
 
 Registration is idempotent; PVs reported as already registered are treated as

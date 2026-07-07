@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import math
+from functools import partial
 
 from caproto import ChannelType
 from caproto.server import pvproperty
@@ -52,6 +55,7 @@ class ChillerIOC(ManagedIOC):
         maximum_setpoint_c: float = 40.0,
         warning_deviation_c: float = 0.2,
         alarm_deviation_c: float = 0.5,
+        driver_executor: ThreadPoolExecutor | None = None,
         **kwargs,
     ) -> None:
         self.minimum_setpoint_c = float(minimum_setpoint_c)
@@ -59,11 +63,39 @@ class ChillerIOC(ManagedIOC):
         self.warning_deviation_c = float(warning_deviation_c)
         self.alarm_deviation_c = float(alarm_deviation_c)
         self._setpoint_request_initialized = False
+        self._driver_executor = driver_executor or ThreadPoolExecutor(
+            max_workers=1,
+            thread_name_prefix="bdx-chiller",
+        )
+        self._owns_driver_executor = driver_executor is None
+        self._poll_lock = asyncio.Lock()
         super().__init__(*args, **kwargs)
 
+    async def _run_driver(self, method_name: str, *args):
+        loop = asyncio.get_running_loop()
+        method = getattr(self.driver, method_name)
+        return await loop.run_in_executor(
+            self._driver_executor,
+            partial(method, *args),
+        )
+
+    async def check_driver_communication(self) -> None:
+        if not await self._run_driver("ping"):
+            last_error = getattr(self.driver, "last_error", None)
+            if last_error is not None:
+                raise ConnectionError(
+                    f"Driver communication check failed: {last_error}"
+                ) from last_error
+            raise ConnectionError("Driver communication check failed")
+
     async def poll_device(self) -> None:
-        state = self.driver.read_state()
-        await self._write_state(state)
+        async with self._poll_lock:
+            state = await self._run_driver("read_state")
+            await self._write_state(state)
+
+    def close(self) -> None:
+        if self._owns_driver_executor:
+            self._driver_executor.shutdown(wait=False, cancel_futures=True)
 
     async def _write_state(self, state) -> None:
         await self.TEMPERATURE_RBV.write(value=state.temperature_c)
@@ -119,7 +151,7 @@ class ChillerIOC(ManagedIOC):
         value = float(value)
         self._validate_setpoint(value)
         try:
-            self.driver.set_setpoint(value)
+            await self._run_driver("set_setpoint", value)
         except Exception as exc:
             await self.mark_failure(exc)
             raise
@@ -139,8 +171,8 @@ class ChillerIOC(ManagedIOC):
             return False
 
         try:
-            self.driver.set_setpoint(requested)
-            state = self.driver.read_state()
+            await self._run_driver("set_setpoint", requested)
+            state = await self._run_driver("read_state")
         except Exception as exc:
             await self.APPLY_STATUS.write(value="FAILED")
             await self.APPLY_MESSAGE.write(value=f"Setpoint apply failed: {exc}")
@@ -157,7 +189,7 @@ class ChillerIOC(ManagedIOC):
     @RUN_SET.putter
     async def RUN_SET(self, instance, value):
         try:
-            self.driver.set_running(bool(value))
+            await self._run_driver("set_running", bool(value))
         except Exception as exc:
             await self.mark_failure(exc)
             raise
@@ -166,7 +198,7 @@ class ChillerIOC(ManagedIOC):
     @SAFE_SETPOINT_SET.putter
     async def SAFE_SETPOINT_SET(self, instance, value):
         try:
-            self.driver.set_safe_setpoint(float(value))
+            await self._run_driver("set_safe_setpoint", float(value))
         except Exception as exc:
             await self.mark_failure(exc)
             raise
@@ -175,7 +207,7 @@ class ChillerIOC(ManagedIOC):
     @COMM_TIMEOUT_SET.putter
     async def COMM_TIMEOUT_SET(self, instance, value):
         try:
-            self.driver.set_communication_timeout(float(value))
+            await self._run_driver("set_communication_timeout", float(value))
         except Exception as exc:
             await self.mark_failure(exc)
             raise

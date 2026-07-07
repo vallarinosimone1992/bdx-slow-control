@@ -1340,7 +1340,15 @@ def generate_chiller_operator(
     display.label("", 470, y, 430, 240, background=(245, 248, 250))
     display.label("Setpoint request", 486, y + 12, 220, 28, size=18, bold=True)
     display.label("Requested setpoint", 486, y + 58, 150, 22, size=11, bold=True)
-    display.text_entry(_pv(prefix, "SETPOINT_REQUEST"), 486, y + 84, 126, 30)
+    display.text_entry(
+        _pv(prefix, "SETPOINT_REQUEST"),
+        486,
+        y + 84,
+        126,
+        30,
+        precision=2,
+        format_code=1,
+    )
     display.label("degC", 620, y + 88, 45, 24, size=12, bold=True)
     display.action_button(
         "APPLY",

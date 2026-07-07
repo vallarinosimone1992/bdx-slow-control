@@ -12,6 +12,7 @@ from typing import Any
 DEFAULT_PROFILE_DIR = Path("config/profiles/default")
 PROTOTYPE_PROFILE_DIR = Path("config/profiles/prototype")
 DEFAULT_PSU_CONFIG = DEFAULT_PROFILE_DIR / "psu.json"
+DEFAULT_CHILLER_CONFIG = DEFAULT_PROFILE_DIR / "chiller.json"
 
 
 class ConfigurationError(ValueError):

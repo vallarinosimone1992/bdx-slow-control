@@ -26,7 +26,7 @@ bdx-generate-displays \
 ```
 
 Without `--config-dir`, the generator uses `config/profiles/default`, the
-current laboratory operational profile containing global and PSU only. Use
+current laboratory operational profile containing global, PSU, and chiller. Use
 `--config-dir config/profiles/prototype` for the full simulated profile.
 
 Generate a single deployed subsystem without overwriting unrelated displays:
@@ -43,7 +43,7 @@ bdx-generate-displays \
   --only psu
 
 bdx-generate-displays \
-  --config-dir config/profiles/main-server \
+  --config-dir config/profiles/default \
   --output-dir phoebus/displays \
   --only chiller
 ```
@@ -83,11 +83,16 @@ live Channel Access plotting unless `BDX_ARCHIVER_STRICT_CHECK=true` and the
 optional preflight check fails.
 
 Generate the default PSU `.plt` files with the default local archive source:
+The same default applies to chiller `.plt` files.
 
 ```bash
 bdx-generate-displays \
   --output-dir phoebus/displays \
   --only psu
+
+bdx-generate-displays \
+  --output-dir phoebus/displays \
+  --only chiller
 ```
 
 Override the archive source at generation time:

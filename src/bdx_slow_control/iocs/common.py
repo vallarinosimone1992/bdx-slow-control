@@ -31,13 +31,12 @@ class ManagedIOC(PVGroup):
         *args,
         driver,
         runtime_settings: RuntimeSettings | None = None,
-        poll_interval: float = 5.0,
+        poll_interval: float = 1.0,
         **kwargs,
     ) -> None:
         self.driver = driver
         self.runtime_settings = runtime_settings or RuntimeSettings(
             initial_update_period=float(poll_interval),
-            minimum_update_period=0.1,
         )
         self._poll_failed = False
         self._last_failure_message = ""
@@ -46,6 +45,21 @@ class ManagedIOC(PVGroup):
     async def poll_device(self) -> None:
         """Poll the device and update subsystem-specific PVs."""
         raise NotImplementedError
+
+    @property
+    def poll_period(self) -> float:
+        """Return the effective polling period for this IOC group."""
+        return self.runtime_settings.update_period
+
+    async def check_driver_communication(self) -> None:
+        """Check driver communication before polling the device."""
+        if not self.driver.ping():
+            last_error = getattr(self.driver, "last_error", None)
+            if last_error is not None:
+                raise ConnectionError(
+                    f"Driver communication check failed: {last_error}"
+                ) from last_error
+            raise ConnectionError("Driver communication check failed")
 
     async def mark_success(self) -> None:
         status = "SIMULATION" if bool(getattr(self.driver, "simulation", False)) else "OK"
@@ -85,18 +99,12 @@ class ManagedIOC(PVGroup):
             counter = (counter + 1) % 2_147_483_647
             await instance.write(value=counter)
             try:
-                if not self.driver.ping():
-                    last_error = getattr(self.driver, "last_error", None)
-                    if last_error is not None:
-                        raise ConnectionError(
-                            f"Driver communication check failed: {last_error}"
-                        ) from last_error
-                    raise ConnectionError("Driver communication check failed")
+                await self.check_driver_communication()
                 await self.poll_device()
                 await self.mark_success()
             except Exception as exc:
                 await self.mark_failure(exc)
-            await async_lib.library.sleep(self.runtime_settings.update_period)
+            await async_lib.library.sleep(self.poll_period)
 
     @CLEAR_ERROR_CMD.putter
     async def CLEAR_ERROR_CMD(self, instance, value):

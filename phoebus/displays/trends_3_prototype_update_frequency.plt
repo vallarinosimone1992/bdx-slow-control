@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <databrowser>
-    <title>Environment pressure</title>
+    <title>Prototype update frequency</title>
     <save_changes>false</save_changes>
     <show_legend>true</show_legend>
     <show_toolbar>true</show_toolbar>
@@ -14,7 +14,7 @@
     <axes>
         <axis>
             <visible>true</visible>
-            <name>Pressure</name>
+            <name>Value</name>
             <use_axis_name>true</use_axis_name>
             <use_trace_names>false</use_trace_names>
             <right>false</right>
@@ -29,9 +29,9 @@
     </annotations>
     <pvlist>
         <pv>
-            <display_name>P01</display_name>
+            <display_name>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</display_name>
             <visible>true</visible>
-            <name>BDX:ENV:PRESSURE:P01:VALUE</name>
+            <name>BDX:GLOBAL:UPDATE_FREQUENCY_RBV</name>
             <axis>0</axis>
             <color>
                 <red>33</red>
@@ -47,6 +47,11 @@
             <period>1.0</period>
             <ring_size>5000</ring_size>
             <request>RAW</request>
+            <archive>
+                <name>BDX Archiver</name>
+                <url>pbraw://127.0.0.1:17668/retrieval</url>
+                <key>1</key>
+            </archive>
         </pv>
     </pvlist>
 </databrowser>

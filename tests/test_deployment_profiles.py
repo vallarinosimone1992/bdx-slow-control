@@ -5,6 +5,7 @@ import pytest
 
 from bdx_slow_control import cli
 from bdx_slow_control.config import (
+    DEFAULT_CHILLER_CONFIG,
     DEFAULT_PROFILE_DIR,
     DEFAULT_PSU_CONFIG,
     ConfigurationError,
@@ -30,9 +31,10 @@ def test_main_server_profile_excludes_environment_ioc():
     assert "BDX:ENV:TEMP:T01:VALUE" not in pvdb
 
 
-def test_default_operational_profile_contains_only_global_and_psu():
+def test_default_operational_profile_contains_global_psu_and_chiller():
     profile = DEFAULT_PROFILE_DIR
     assert {path.name for path in profile.glob("*.json")} == {
+        "chiller.json",
         "global.json",
         "psu.json",
     }
@@ -42,7 +44,8 @@ def test_default_operational_profile_contains_only_global_and_psu():
     assert "BDX:GLOBAL:SYSTEM_STATE" in pvdb
     assert "BDX:PSU:LV1:COMM_STATUS" in pvdb
     assert "BDX:PSU:LV2:COMM_STATUS" in pvdb
-    assert not any(name.startswith("BDX:CHILLER:") for name in pvdb)
+    assert "BDX:CHILLER:CHILLER1:COMM_STATUS" in pvdb
+    assert "BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV" in pvdb
     assert not any(name.startswith("BDX:ENV:") for name in pvdb)
     assert not any(name.startswith("BDX:HV:") for name in pvdb)
     assert not any(name.startswith("BDX:DAQ:") for name in pvdb)
@@ -72,6 +75,37 @@ def test_default_operational_psu_profile_uses_lv_hardware_without_startup_setpoi
         assert "initial_ovp" not in device
         assert "initial_ocp" not in device
         assert "OUTPUT_SET" not in device
+
+
+def test_default_operational_chiller_profile_uses_ecosilver_hardware():
+    chiller = load_json(DEFAULT_CHILLER_CONFIG)
+    device = chiller["device"]
+
+    assert chiller["server"]["poll_interval"] == 1.0
+    assert device["name"] == "CHILLER1"
+    assert device["prefix"] == "BDX:CHILLER:CHILLER1:"
+    assert device["mode"] == "hardware"
+    assert device["driver"] == "ecosilver_re_1225s"
+    assert device["host"] == "172.22.50.60"
+    assert device["port"] == 54321
+    assert device["timeout"] == 5.0
+    assert device["pressure_enabled"] is False
+    assert device["external_temperature_enabled"] is False
+    assert device["pressure_required"] is False
+    assert device["external_temperature_required"] is False
+    assert device["minimum_setpoint_c"] == 5.0
+    assert device["maximum_setpoint_c"] == 40.0
+    assert device["nominal_setpoint_c"] == 20.0
+    assert device["warning_deviation_c"] == 0.2
+    assert device["alarm_deviation_c"] == 0.5
+    for key in (
+        "initial_setpoint_c",
+        "initial_running",
+        "startup_setpoint",
+        "startup_safe_setpoint",
+        "startup_communication_timeout",
+    ):
+        assert key not in device
 
 
 def test_operational_cli_defaults_use_default_profile(monkeypatch, capsys):
@@ -106,6 +140,35 @@ def test_psu_standalone_cli_default_uses_operational_psu_profile(monkeypatch):
     cli.psu_main([])
 
     assert captured == [("psu", str(DEFAULT_PSU_CONFIG), [])]
+
+
+def test_chiller_standalone_cli_default_uses_operational_chiller_profile(monkeypatch):
+    captured = []
+    monkeypatch.setattr(
+        cli,
+        "_run",
+        lambda builder_name, default_config, argv=None: captured.append(
+            (builder_name, default_config, argv)
+        ),
+    )
+
+    cli.chiller_main([])
+
+    assert captured == [("chiller", str(DEFAULT_CHILLER_CONFIG), [])]
+
+
+def test_building_default_profile_performs_no_chiller_transport_io(monkeypatch):
+    from bdx_slow_control.drivers.hardware.ecosilver_re_1225s import LAUDAConnection
+
+    def fail_transport_call(*args, **kwargs):
+        raise AssertionError("Default profile construction must not contact hardware")
+
+    monkeypatch.setattr(LAUDAConnection, "query", fail_transport_call)
+    monkeypatch.setattr(LAUDAConnection, "command", fail_transport_call)
+
+    pvdb, _ = build_prototype(DEFAULT_PROFILE_DIR)
+
+    assert "BDX:CHILLER:CHILLER1:COMM_STATUS" in pvdb
 
 
 def test_raspberry_profile_contains_only_environment_ioc():

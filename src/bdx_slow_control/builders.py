@@ -35,7 +35,6 @@ def _context_or_default(
     return context or PrototypeContext(
         RuntimeSettings(
             initial_update_period=float(poll_interval),
-            minimum_update_period=0.1,
         )
     )
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <databrowser>
-    <title>LV2 actual voltage and current</title>
+    <title>Chiller temperature</title>
     <save_changes>false</save_changes>
     <show_legend>true</show_legend>
     <show_toolbar>true</show_toolbar>
@@ -14,22 +14,10 @@
     <axes>
         <axis>
             <visible>true</visible>
-            <name>Voltage [V]</name>
+            <name>Temperature [degC]</name>
             <use_axis_name>true</use_axis_name>
             <use_trace_names>false</use_trace_names>
             <right>false</right>
-            <min>0.0</min>
-            <max>100.0</max>
-            <grid>true</grid>
-            <autoscale>true</autoscale>
-            <log_scale>false</log_scale>
-        </axis>
-        <axis>
-            <visible>true</visible>
-            <name>Current [A]</name>
-            <use_axis_name>true</use_axis_name>
-            <use_trace_names>false</use_trace_names>
-            <right>true</right>
             <min>0.0</min>
             <max>100.0</max>
             <grid>true</grid>
@@ -41,9 +29,9 @@
     </annotations>
     <pvlist>
         <pv>
-            <display_name>LV2 CH1 voltage</display_name>
+            <display_name>BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV</display_name>
             <visible>true</visible>
-            <name>BDX:PSU:LV2:CH1:VOLTAGE_RBV</name>
+            <name>BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV</name>
             <axis>0</axis>
             <color>
                 <red>33</red>
@@ -59,12 +47,17 @@
             <period>1.0</period>
             <ring_size>5000</ring_size>
             <request>RAW</request>
+            <archive>
+                <name>BDX Archiver</name>
+                <url>pbraw://127.0.0.1:17668/retrieval</url>
+                <key>1</key>
+            </archive>
         </pv>
         <pv>
-            <display_name>LV2 CH1 current</display_name>
+            <display_name>BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV</display_name>
             <visible>true</visible>
-            <name>BDX:PSU:LV2:CH1:CURRENT_RBV</name>
-            <axis>1</axis>
+            <name>BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV</name>
+            <axis>0</axis>
             <color>
                 <red>230</red>
                 <green>85</green>
@@ -79,11 +72,16 @@
             <period>1.0</period>
             <ring_size>5000</ring_size>
             <request>RAW</request>
+            <archive>
+                <name>BDX Archiver</name>
+                <url>pbraw://127.0.0.1:17668/retrieval</url>
+                <key>1</key>
+            </archive>
         </pv>
         <pv>
-            <display_name>LV2 CH2 voltage</display_name>
+            <display_name>BDX:CHILLER:CHILLER1:SETPOINT_RBV</display_name>
             <visible>true</visible>
-            <name>BDX:PSU:LV2:CH2:VOLTAGE_RBV</name>
+            <name>BDX:CHILLER:CHILLER1:SETPOINT_RBV</name>
             <axis>0</axis>
             <color>
                 <red>49</red>
@@ -99,26 +97,11 @@
             <period>1.0</period>
             <ring_size>5000</ring_size>
             <request>RAW</request>
-        </pv>
-        <pv>
-            <display_name>LV2 CH2 current</display_name>
-            <visible>true</visible>
-            <name>BDX:PSU:LV2:CH2:CURRENT_RBV</name>
-            <axis>1</axis>
-            <color>
-                <red>117</red>
-                <green>107</green>
-                <blue>177</blue>
-            </color>
-            <trace_type>SINGLE_LINE</trace_type>
-            <linewidth>2</linewidth>
-            <line_style>SOLID</line_style>
-            <point_type>NONE</point_type>
-            <point_size>6</point_size>
-            <waveform_index>0</waveform_index>
-            <period>1.0</period>
-            <ring_size>5000</ring_size>
-            <request>RAW</request>
+            <archive>
+                <name>BDX Archiver</name>
+                <url>pbraw://127.0.0.1:17668/retrieval</url>
+                <key>1</key>
+            </archive>
         </pv>
     </pvlist>
 </databrowser>

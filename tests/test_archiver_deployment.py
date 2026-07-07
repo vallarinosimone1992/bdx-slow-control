@@ -195,7 +195,7 @@ def test_archiver_env_path_generation_is_configurable(tmp_path: Path):
     assert f"ARCHAPPL_SHORT_TERM_FOLDER={tmp_path / 'state' / 'sts'}" in result.stdout
 
 
-def test_archiver_auto_registration_command_defaults_to_deployed_psu_list(
+def test_archiver_auto_registration_command_defaults_to_deployed_psu_and_chiller_lists(
     tmp_path: Path,
 ):
     env_file = _write_minimal_archiver_env(tmp_path)
@@ -215,6 +215,34 @@ def test_archiver_auto_registration_command_defaults_to_deployed_psu_list(
     assert "register-pvs.py" in result.stdout
     assert "--mgmt-url http://127.0.0.1:17665/mgmt/bpl" in result.stdout
     assert f"{tmp_path / 'app' / 'pv-lists' / 'psu.txt'}" in result.stdout
+    assert f"{tmp_path / 'app' / 'pv-lists' / 'chiller.txt'}" in result.stdout
+
+
+def test_archiver_auto_registration_explicit_pv_lists_override_defaults(tmp_path: Path):
+    env_file = _write_minimal_archiver_env(tmp_path)
+    override_a = tmp_path / "custom-a.txt"
+    override_b = tmp_path / "custom-b.txt"
+    override_a.write_text("BDX:TEST:A\n", encoding="utf-8")
+    override_b.write_text("BDX:TEST:B\n", encoding="utf-8")
+    with env_file.open("a", encoding="utf-8") as stream:
+        stream.write(f'BDX_ARCHIVER_PV_LISTS="{override_a} {override_b}"\n')
+
+    result = subprocess.run(
+        [
+            str(SCRIPTS / "auto-register-pvs.sh"),
+            "--env",
+            str(env_file),
+            "--print-command",
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    assert str(override_a) in result.stdout
+    assert str(override_b) in result.stdout
+    assert f"{tmp_path / 'app' / 'pv-lists' / 'psu.txt'}" not in result.stdout
+    assert f"{tmp_path / 'app' / 'pv-lists' / 'chiller.txt'}" not in result.stdout
 
 
 def test_archiver_auto_registration_duplicate_start_is_ignored(tmp_path: Path):
@@ -364,6 +392,10 @@ def test_archiver_chiller_list_includes_approved_operational_pvs():
         "BDX:CHILLER:CHILLER1:RUN_RBV",
         "BDX:CHILLER:CHILLER1:RUN_STATE",
         "BDX:CHILLER:CHILLER1:FAULT",
+        "BDX:CHILLER:CHILLER1:SAFE_MODE_STATUS",
+        "BDX:CHILLER:CHILLER1:SAFE_SETPOINT_RBV",
+        "BDX:CHILLER:CHILLER1:COMM_TIMEOUT_RBV",
+        "BDX:CHILLER:CHILLER1:STANDBY_STATUS",
         "BDX:CHILLER:CHILLER1:COMM_OK",
         "BDX:CHILLER:CHILLER1:COMM_STATUS",
         "BDX:CHILLER:CHILLER1:IOC_STATE",

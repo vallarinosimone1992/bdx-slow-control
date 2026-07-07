@@ -185,7 +185,10 @@ bdx_archiver_register_log_file() {
 bdx_archiver_resolved_pv_lists() {
     bdx_require_env BDX_ARCHIVER_APP_DIR
     local raw item
-    raw="${BDX_ARCHIVER_PV_LISTS:-$BDX_ARCHIVER_APP_DIR/pv-lists/psu.txt}"
+    raw="${BDX_ARCHIVER_PV_LISTS:-}"
+    if [[ -z "${raw//[[:space:]]/}" ]]; then
+        raw="$BDX_ARCHIVER_APP_DIR/pv-lists/psu.txt $BDX_ARCHIVER_APP_DIR/pv-lists/chiller.txt"
+    fi
     for item in $raw; do
         [[ -n "$item" ]] || continue
         printf "%s\n" "$item"

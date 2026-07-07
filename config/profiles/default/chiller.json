@@ -1,0 +1,42 @@
+{
+  "server": {
+    "interfaces": [
+      "0.0.0.0"
+    ],
+    "poll_interval": 1.0,
+    "log_pv_names": false
+  },
+  "device": {
+    "name": "CHILLER1",
+    "prefix": "BDX:CHILLER:CHILLER1:",
+    "mode": "hardware",
+    "driver": "ecosilver_re_1225s",
+    "host": "172.22.50.60",
+    "port": 54321,
+    "timeout": 5.0,
+    "bath_temperature_command": "IN_PV_00",
+    "controlled_temperature_command": "IN_PV_01",
+    "pressure_command": "IN_PV_02",
+    "external_temperature_command": "IN_PV_03",
+    "pump_stage_command": "IN_SP_01",
+    "cooling_mode_command": "IN_SP_02",
+    "safe_setpoint_read_command": "IN_SP_07",
+    "safe_setpoint_write_prefix": "OUT_SP_07",
+    "communication_timeout_read_command": "IN_SP_08",
+    "communication_timeout_write_prefix": "OUT_SP_08",
+    "setpoint_read_command": "IN_SP_00",
+    "setpoint_write_prefix": "OUT_SP_00",
+    "standby_command": "IN_MODE_02",
+    "device_status_command": "STATUS",
+    "fault_command": "STAT",
+    "pressure_enabled": false,
+    "external_temperature_enabled": false,
+    "pressure_required": false,
+    "external_temperature_required": false,
+    "minimum_setpoint_c": 5.0,
+    "maximum_setpoint_c": 40.0,
+    "nominal_setpoint_c": 20.0,
+    "warning_deviation_c": 0.2,
+    "alarm_deviation_c": 0.5
+  }
+}

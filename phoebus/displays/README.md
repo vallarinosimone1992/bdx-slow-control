@@ -6,21 +6,20 @@ Regenerate with:
 
 ```bash
 bdx-generate-displays \
-  --config-dir config/profiles/prototype \
   --output-dir phoebus/displays
 ```
 
-The deployed main-server PSU and chiller displays can be regenerated without
+The deployed default PSU and chiller displays can be regenerated without
 overwriting unrelated subsystem displays:
 
 ```bash
 bdx-generate-displays \
-  --config-dir config/profiles/main-server \
+  --config-dir config/profiles/default \
   --output-dir phoebus/displays \
   --only psu
 
 bdx-generate-displays \
-  --config-dir config/profiles/main-server \
+  --config-dir config/profiles/default \
   --output-dir phoebus/displays \
   --only chiller
 ```
@@ -39,8 +38,9 @@ the live Data Browser ring buffer. Set `BDX_TREND_ARCHIVE_REQUEST=OPTIMIZED`
 before regeneration for long historical windows where optimized Archiver
 Appliance retrieval is preferred; the default request is `RAW`.
 
-By default, generated `.plt` files contain live Channel Access traces without
-archive sources:
+By default, generated `.plt` files include the local BDX Archiver Appliance
+retrieval source while retaining live Channel Access traces. Disable archive
+sources explicitly for live-only files:
 
 ```bash
 BDX_ARCHIVER_ENABLED=false bdx-generate-displays \
@@ -48,22 +48,21 @@ BDX_ARCHIVER_ENABLED=false bdx-generate-displays \
   --output-dir phoebus/displays
 ```
 
-To embed an EPICS Archiver Appliance retrieval source in generated `.plt` files:
+To embed a non-default EPICS Archiver Appliance retrieval source in generated
+`.plt` files:
 
 ```bash
 BDX_ARCHIVER_ENABLED=true \
 BDX_ARCHIVER_URL=http://<ARCHIVER_HOST>:17668/retrieval \
 BDX_ARCHIVER_NAME="BDX Archiver" \
 bdx-generate-displays \
-  --config-dir config/profiles/main-server \
+  --config-dir config/profiles/default \
   --output-dir phoebus/displays \
   --only psu
 ```
 
 Phoebus uses `pbraw://` archive URLs for Archiver Appliance retrieval. The
-launcher can also provide the archive source through runtime preferences, so
-the checked-in plots may remain live-only while a deployed Phoebus session uses
-historical data.
+launcher also provides the archive source through runtime preferences.
 
 `psu.bob` and `chiller.bob` are operator pages. Complete subsystem PV tables
 are generated in `psu_expert.bob` and `chiller_expert.bob`.

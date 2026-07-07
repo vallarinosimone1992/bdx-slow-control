@@ -140,6 +140,34 @@ def test_ecosilver_disabled_external_temperature_and_pressure_are_not_queried():
     assert state.running is False
 
 
+def test_ecosilver_ping_and_read_state_perform_no_control_writes():
+    connection = FakeConnection(
+        {
+            "TYPE": "ECO SILVER",
+            "IN_SP_00": "20.00",
+            "IN_PV_00": "19.90",
+            "IN_PV_01": "20.10",
+            "IN_MODE_02": "1",
+            "IN_SP_01": "2",
+            "IN_SP_02": "AUTO",
+            "IN_SP_07": "18.00",
+            "IN_SP_08": "10.00",
+            "STATUS": "OK",
+            "STAT": "0000",
+        }
+    )
+    driver = ECOSilverRE1225SDriver(connection=connection)
+
+    assert driver.ping() is True
+    driver.read_state()
+
+    assert not any(call[0] == "command" for call in connection.calls)
+    assert not any(
+        call[1] in {"START", "STOP"} or call[1].startswith("OUT_SP_")
+        for call in connection.calls
+    )
+
+
 def test_ecosilver_ping_reports_type_failure():
     connection = FakeConnection({"TYPE": OSError("network unreachable")})
     driver = ECOSilverRE1225SDriver(connection=connection)

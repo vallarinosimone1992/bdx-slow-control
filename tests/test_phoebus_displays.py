@@ -549,8 +549,8 @@ def test_generate_only_psu_does_not_overwrite_unrelated_displays(tmp_path: Path)
     assert environment_display.read_text(encoding="utf-8") == "keep environment"
 
 
-def test_chiller_operator_and_expert_displays_from_main_server_profile(tmp_path: Path):
-    pvs = generate(MAIN_SERVER_PROFILE, tmp_path, only="chiller")
+def test_chiller_operator_and_expert_displays_from_default_profile(tmp_path: Path):
+    pvs = generate(DEFAULT_PROFILE, tmp_path, only="chiller")
 
     operator = tmp_path / "chiller.bob"
     expert = tmp_path / "chiller_expert.bob"
@@ -568,7 +568,7 @@ def test_chiller_operator_and_expert_displays_from_main_server_profile(tmp_path:
 
 
 def test_chiller_operator_start_stop_actions_are_confirmed(tmp_path: Path):
-    generate(MAIN_SERVER_PROFILE, tmp_path, only="chiller")
+    generate(DEFAULT_PROFILE, tmp_path, only="chiller")
 
     assert _confirmed_button_texts_for_pv(
         tmp_path / "chiller.bob",
@@ -576,10 +576,22 @@ def test_chiller_operator_start_stop_actions_are_confirmed(tmp_path: Path):
     ) == {"START", "STOP"}
 
 
+def test_chiller_setpoint_request_uses_decimal_precision(tmp_path: Path):
+    generate(DEFAULT_PROFILE, tmp_path, only="chiller")
+
+    entries = {
+        widget.findtext("pv_name"): widget
+        for widget in _text_entries(tmp_path / "chiller.bob")
+    }
+    widget = entries["BDX:CHILLER:CHILLER1:SETPOINT_REQUEST"]
+    assert widget.findtext("precision") == "2"
+    assert widget.findtext("format") == "1"
+
+
 def test_chiller_temperature_plot_excludes_duplicate_and_disabled_measurements(
     tmp_path: Path,
 ):
-    generate(MAIN_SERVER_PROFILE, tmp_path, only="chiller")
+    generate(DEFAULT_PROFILE, tmp_path, only="chiller")
 
     plot_files = sorted(tmp_path.glob("chiller_*.plt"))
     assert len(plot_files) == 1
@@ -591,8 +603,18 @@ def test_chiller_temperature_plot_excludes_duplicate_and_disabled_measurements(
     }
 
 
+def test_default_chiller_plot_contains_default_archive_source(tmp_path: Path):
+    generate(DEFAULT_PROFILE, tmp_path, only="chiller")
+
+    plot_files = sorted(tmp_path.glob("chiller_*.plt"))
+    assert len(plot_files) == 1
+    root = _plt(plot_files[0])
+    assert _plt_archive_count(root) == _plt_trace_count(root)
+    assert _plt_archive_urls(root) == {"pbraw://127.0.0.1:17668/retrieval"}
+
+
 def test_chiller_operator_links_to_full_historical_databrowser_resource(tmp_path: Path):
-    generate(MAIN_SERVER_PROFILE, tmp_path, only="chiller")
+    generate(DEFAULT_PROFILE, tmp_path, only="chiller")
 
     targets = _open_file_targets(tmp_path / "chiller.bob")
     assert targets == {"chiller_0_chiller_temperature.plt"}
@@ -605,12 +627,28 @@ def test_generate_only_chiller_does_not_overwrite_unrelated_displays(tmp_path: P
     psu_display.write_text("keep psu", encoding="utf-8")
     environment_display.write_text("keep environment", encoding="utf-8")
 
-    generate(MAIN_SERVER_PROFILE, tmp_path, only="chiller")
+    generate(DEFAULT_PROFILE, tmp_path, only="chiller")
 
     assert ET.parse(tmp_path / "chiller.bob").getroot().tag == "display"
     assert ET.parse(tmp_path / "chiller_expert.bob").getroot().tag == "display"
     assert psu_display.read_text(encoding="utf-8") == "keep psu"
     assert environment_display.read_text(encoding="utf-8") == "keep environment"
+
+
+def test_default_overview_chiller_navigation_opens_existing_display(tmp_path: Path):
+    generate(DEFAULT_PROFILE, tmp_path)
+
+    targets = _open_file_targets(tmp_path / "overview.bob")
+    assert "overview_chiller.plt" in targets or (tmp_path / "overview_chiller.plt").exists()
+    open_targets = {
+        element.text
+        for element in ET.parse(tmp_path / "overview.bob")
+        .getroot()
+        .findall(".//action[@type='open_display']/file")
+        if element.text
+    }
+    assert "chiller.bob" in open_targets
+    assert ET.parse(tmp_path / "chiller.bob").getroot().tag == "display"
 
 
 def test_phoebus_launcher_uses_live_only_databrowser_settings_when_archive_disabled(

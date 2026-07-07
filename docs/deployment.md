@@ -85,6 +85,12 @@ Then follow `deploy/archiver-appliance/README.md` for the local evaluation,
 provisional Ubuntu, PV registration, health-check, retrieval-test, backup,
 upgrade, and uninstall procedures.
 
+By default, the Archiver startup helper waits for the four Archiver Appliance
+components to become healthy and then retries registration of the operational
+PSU and chiller PV lists. Leave `BDX_ARCHIVER_PV_LISTS` empty to use those
+repository defaults, or set it explicitly to a whitespace-separated list of
+PV-list files.
+
 ## Channel Access interface
 
 Set the interface in `/etc/bdx-slow-control/bdx.env`:
@@ -101,7 +107,7 @@ Do not bind production IOCs to unrelated VPN, container, or loopback interfaces.
 Deployment profiles live under `config/profiles/`:
 
 ```text
-config/profiles/default/       current lab operation: global and PSU only
+config/profiles/default/       current lab operation: global, PSU, and chiller
 config/profiles/prototype/     all simulated subsystems
 config/profiles/main-server/   global, PSU, chiller, HV, DAQ; no environment IOC
 config/profiles/raspberry/     environment MCP9808 IOC only
@@ -132,6 +138,34 @@ caput BDX:PSU:LV1:CH1:CURRENT_LIMIT_REQUEST 0.5
 caput BDX:PSU:LV1:CH1:APPLY_CMD 1
 ```
 
+The default laboratory chiller is CHILLER1 at `172.22.50.60:54321`. It uses the
+LAUDA ECO Silver RE 1225 S driver with the same shared runtime monitoring period
+as the PSU. The default period is 1.0 s, and changing
+`BDX:GLOBAL:UPDATE_PERIOD_SET` changes both PSU and chiller polling in the
+aggregated IOC. Blocking TCP communication is performed in a serialized worker
+thread so a disconnected chiller does not block unrelated Channel Access
+searches, gets, monitors, puts, or PSU polling. If a chiller poll takes longer
+than the configured period, the IOC finishes that poll and then waits for the
+next period; it does not queue overlapping chiller polls. IOC startup only reads
+the current state; it does not send `START`, `STOP`, setpoint writes, Safe Mode
+writes, or communication-timeout writes. The operator must explicitly start the
+chiller through the confirmed `START` action.
+
+Safe readback checks:
+
+```bash
+caget BDX:CHILLER:CHILLER1:COMM_OK
+caget BDX:CHILLER:CHILLER1:COMM_STATUS
+caget BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV
+caget BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV
+caget BDX:CHILLER:CHILLER1:SETPOINT_RBV
+caget BDX:CHILLER:CHILLER1:RUN_STATE
+```
+
+If the chiller is disconnected, its communication and error PVs report the
+failure and the IOC retries on the next shared runtime poll while other
+subsystems remain responsive.
+
 After deploying backend changes on the main server:
 
 ```bash
@@ -143,7 +177,7 @@ sudo systemctl --no-pager --full status bdx-main-server-ioc
 journalctl -u bdx-main-server-ioc -f
 ```
 
-Regenerate only the main-server PSU and chiller operator displays when their
+Regenerate only the default PSU and chiller operator displays when their
 profiles or PV contracts change:
 
 ```bash
@@ -153,7 +187,7 @@ bdx-generate-displays \
   --only psu
 
 bdx-generate-displays \
-  --config-dir config/profiles/main-server \
+  --config-dir config/profiles/default \
   --output-dir phoebus/displays \
   --only chiller
 ```
@@ -182,7 +216,7 @@ The chiller operator page uses `SETPOINT_REQUEST` and `APPLY_SETPOINT_CMD`.
 `STOP` command and places the unit in standby; Safe Mode configuration is a
 separate expert-only setpoint/communication-timeout mechanism.
 
-The main-server chiller profile sets `pressure_enabled=false` and
+The default and main-server chiller profiles set `pressure_enabled=false` and
 `external_temperature_enabled=false`. Disabled optional measurements are not
 queried, plotted, archived, or shown as valid operator values.
 

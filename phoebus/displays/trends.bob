@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>BDX Trends</name>
   <width>1400</width>
-  <height>1970</height>
+  <height>890</height>
   <widget type="label" version="2.0.0">
     <name>Label_1</name>
     <x>20</x>
@@ -314,7 +314,7 @@
     <y>185</y>
     <width>420</width>
     <height>28</height>
-    <text>Environment temperatures</text>
+    <text>Chiller temperature</text>
     <font>
       <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
     </font>
@@ -327,7 +327,7 @@
     <height>30</height>
     <actions>
       <action type="open_file">
-        <file>trends_0_environment_temperatures.plt</file>
+        <file>trends_0_chiller_temperature.plt</file>
         <description>Open Full history</description>
       </action>
     </actions>
@@ -340,7 +340,7 @@
     <y>223</y>
     <width>670</width>
     <height>310</height>
-    <file>trends_0_environment_temperatures.plt</file>
+    <file>trends_0_chiller_temperature.plt</file>
     <show_toolbar>true</show_toolbar>
   </widget>
   <widget type="label" version="2.0.0">
@@ -349,7 +349,7 @@
     <y>185</y>
     <width>420</width>
     <height>28</height>
-    <text>Environment humidity</text>
+    <text>LV1 actual voltage and current</text>
     <font>
       <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
     </font>
@@ -362,7 +362,7 @@
     <height>30</height>
     <actions>
       <action type="open_file">
-        <file>trends_1_environment_humidity.plt</file>
+        <file>trends_1_lv1_actual_voltage_and_current.plt</file>
         <description>Open Full history</description>
       </action>
     </actions>
@@ -375,7 +375,7 @@
     <y>223</y>
     <width>670</width>
     <height>310</height>
-    <file>trends_1_environment_humidity.plt</file>
+    <file>trends_1_lv1_actual_voltage_and_current.plt</file>
     <show_toolbar>true</show_toolbar>
   </widget>
   <widget type="label" version="2.0.0">
@@ -384,7 +384,7 @@
     <y>545</y>
     <width>420</width>
     <height>28</height>
-    <text>Environment pressure</text>
+    <text>LV2 actual voltage and current</text>
     <font>
       <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
     </font>
@@ -397,7 +397,7 @@
     <height>30</height>
     <actions>
       <action type="open_file">
-        <file>trends_2_environment_pressure.plt</file>
+        <file>trends_2_lv2_actual_voltage_and_current.plt</file>
         <description>Open Full history</description>
       </action>
     </actions>
@@ -410,7 +410,7 @@
     <y>583</y>
     <width>670</width>
     <height>310</height>
-    <file>trends_2_environment_pressure.plt</file>
+    <file>trends_2_lv2_actual_voltage_and_current.plt</file>
     <show_toolbar>true</show_toolbar>
   </widget>
   <widget type="label" version="2.0.0">
@@ -419,7 +419,7 @@
     <y>545</y>
     <width>420</width>
     <height>28</height>
-    <text>Chiller temperature</text>
+    <text>Prototype update frequency</text>
     <font>
       <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
     </font>
@@ -432,7 +432,7 @@
     <height>30</height>
     <actions>
       <action type="open_file">
-        <file>trends_3_chiller_temperature.plt</file>
+        <file>trends_3_prototype_update_frequency.plt</file>
         <description>Open Full history</description>
       </action>
     </actions>
@@ -445,217 +445,7 @@
     <y>583</y>
     <width>670</width>
     <height>310</height>
-    <file>trends_3_chiller_temperature.plt</file>
-    <show_toolbar>true</show_toolbar>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_35</name>
-    <x>20</x>
-    <y>905</y>
-    <width>420</width>
-    <height>28</height>
-    <text>Chiller pressure</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
-    </font>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>OpenFile_36</name>
-    <x>540</x>
-    <y>905</y>
-    <width>150</width>
-    <height>30</height>
-    <actions>
-      <action type="open_file">
-        <file>trends_4_chiller_pressure.plt</file>
-        <description>Open Full history</description>
-      </action>
-    </actions>
-    <text>Full history</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_37</name>
-    <x>20</x>
-    <y>943</y>
-    <width>670</width>
-    <height>310</height>
-    <file>trends_4_chiller_pressure.plt</file>
-    <show_toolbar>true</show_toolbar>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_38</name>
-    <x>710</x>
-    <y>905</y>
-    <width>420</width>
-    <height>28</height>
-    <text>LV1 actual voltage and current</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
-    </font>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>OpenFile_39</name>
-    <x>1230</x>
-    <y>905</y>
-    <width>150</width>
-    <height>30</height>
-    <actions>
-      <action type="open_file">
-        <file>trends_5_lv1_actual_voltage_and_current.plt</file>
-        <description>Open Full history</description>
-      </action>
-    </actions>
-    <text>Full history</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_40</name>
-    <x>710</x>
-    <y>943</y>
-    <width>670</width>
-    <height>310</height>
-    <file>trends_5_lv1_actual_voltage_and_current.plt</file>
-    <show_toolbar>true</show_toolbar>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_41</name>
-    <x>20</x>
-    <y>1265</y>
-    <width>420</width>
-    <height>28</height>
-    <text>LV2 actual voltage and current</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
-    </font>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>OpenFile_42</name>
-    <x>540</x>
-    <y>1265</y>
-    <width>150</width>
-    <height>30</height>
-    <actions>
-      <action type="open_file">
-        <file>trends_6_lv2_actual_voltage_and_current.plt</file>
-        <description>Open Full history</description>
-      </action>
-    </actions>
-    <text>Full history</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_43</name>
-    <x>20</x>
-    <y>1303</y>
-    <width>670</width>
-    <height>310</height>
-    <file>trends_6_lv2_actual_voltage_and_current.plt</file>
-    <show_toolbar>true</show_toolbar>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_44</name>
-    <x>710</x>
-    <y>1265</y>
-    <width>420</width>
-    <height>28</height>
-    <text>HV voltage and protection</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
-    </font>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>OpenFile_45</name>
-    <x>1230</x>
-    <y>1265</y>
-    <width>150</width>
-    <height>30</height>
-    <actions>
-      <action type="open_file">
-        <file>trends_7_hv_voltage_and_protection.plt</file>
-        <description>Open Full history</description>
-      </action>
-    </actions>
-    <text>Full history</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_46</name>
-    <x>710</x>
-    <y>1303</y>
-    <width>670</width>
-    <height>310</height>
-    <file>trends_7_hv_voltage_and_protection.plt</file>
-    <show_toolbar>true</show_toolbar>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_47</name>
-    <x>20</x>
-    <y>1625</y>
-    <width>420</width>
-    <height>28</height>
-    <text>HV current and protection</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
-    </font>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>OpenFile_48</name>
-    <x>540</x>
-    <y>1625</y>
-    <width>150</width>
-    <height>30</height>
-    <actions>
-      <action type="open_file">
-        <file>trends_8_hv_current_and_protection.plt</file>
-        <description>Open Full history</description>
-      </action>
-    </actions>
-    <text>Full history</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_49</name>
-    <x>20</x>
-    <y>1663</y>
-    <width>670</width>
-    <height>310</height>
-    <file>trends_8_hv_current_and_protection.plt</file>
-    <show_toolbar>true</show_toolbar>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label_50</name>
-    <x>710</x>
-    <y>1625</y>
-    <width>420</width>
-    <height>28</height>
-    <text>Prototype update frequency</text>
-    <font>
-      <font name="Default" family="Liberation Sans" style="BOLD" size="15.0" />
-    </font>
-  </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>OpenFile_51</name>
-    <x>1230</x>
-    <y>1625</y>
-    <width>150</width>
-    <height>30</height>
-    <actions>
-      <action type="open_file">
-        <file>trends_9_prototype_update_frequency.plt</file>
-        <description>Open Full history</description>
-      </action>
-    </actions>
-    <text>Full history</text>
-    <tooltip>$(actions)</tooltip>
-  </widget>
-  <widget type="databrowser" version="2.0.0">
-    <name>DataBrowser_52</name>
-    <x>710</x>
-    <y>1663</y>
-    <width>670</width>
-    <height>310</height>
-    <file>trends_9_prototype_update_frequency.plt</file>
+    <file>trends_3_prototype_update_frequency.plt</file>
     <show_toolbar>true</show_toolbar>
   </widget>
 </display>
