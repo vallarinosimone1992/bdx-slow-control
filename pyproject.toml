@@ -34,8 +34,9 @@ bdx-prototype-ioc = "bdx_slow_control.cli:prototype_main"
 bdx-pv-list = "bdx_slow_control.cli:pv_list_main"
 bdx-generate-displays = "bdx_slow_control.phoebus_generator:main"
 bdx-environment-check = "bdx_slow_control.environment_check:main"
-launch-bdx-slow-control = "bdx_slow_control.screen_launchers:slow_control_main"
+launch-bdx-slow-control = "bdx_slow_control.operator_commands:slow_control_main"
 launch-bdx-phoebus = "bdx_slow_control.screen_launchers:phoebus_main"
+start-bdx-raspberry-ioc = "bdx_slow_control.operator_commands:raspberry_ioc_main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
