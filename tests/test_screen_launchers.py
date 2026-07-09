@@ -8,19 +8,57 @@ from bdx_slow_control import screen_launchers as launchers
 
 def test_screen_session_detection(monkeypatch):
     monkeypatch.setattr(launchers, "_require_program", lambda name: "/usr/bin/screen")
-    monkeypatch.setattr(
-        subprocess,
-        "run",
-        lambda *args, **kwargs: subprocess.CompletedProcess(
-            args[0],
+
+    def fake_run(command, **kwargs):
+        if command[-1] == "-wipe":
+            return subprocess.CompletedProcess(command, 0, "", "")
+        return subprocess.CompletedProcess(
+            command,
             0,
             "There is a screen on:\n\t1234.bdx-slow-control\t(Detached)\n",
             "",
-        ),
-    )
+        )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
 
     assert launchers._screen_session_exists("bdx-slow-control") is True
     assert launchers._screen_session_exists("bdx-phoebus") is False
+
+
+def test_dead_screen_session_is_removed_before_detection(monkeypatch):
+    monkeypatch.setattr(launchers, "_require_program", lambda name: "/usr/bin/screen")
+    commands = []
+
+    def fake_run(command, **kwargs):
+        commands.append(command)
+        if command[-1] == "-wipe":
+            return subprocess.CompletedProcess(command, 0, "", "")
+        return subprocess.CompletedProcess(command, 1, "No Sockets found.\n", "")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    assert launchers._screen_session_exists("bdx-slow-control") is False
+    assert commands[0][-1] == "-wipe"
+    assert commands[1][-1] == "-ls"
+
+
+def test_dead_screen_session_remaining_after_wipe_is_reported(monkeypatch):
+    monkeypatch.setattr(launchers, "_require_program", lambda name: "/usr/bin/screen")
+
+    def fake_run(command, **kwargs):
+        if command[-1] == "-wipe":
+            return subprocess.CompletedProcess(command, 0, "", "")
+        return subprocess.CompletedProcess(
+            command,
+            1,
+            "There is a screen on:\n\t1234.bdx-slow-control\t(Dead ???)\n",
+            "",
+        )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    with pytest.raises(launchers.LauncherError, match="Stale GNU Screen socket"):
+        launchers._screen_session_exists("bdx-slow-control")
 
 
 def test_slow_control_creates_archiver_and_ioc_windows(monkeypatch, tmp_path: Path):
