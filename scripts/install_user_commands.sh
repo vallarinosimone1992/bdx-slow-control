@@ -17,10 +17,12 @@ fi
 mkdir -p "$USER_BIN"
 ln -sfn "$VENV_BIN/launch-bdx-slow-control" "$USER_BIN/launch-bdx-slow-control"
 ln -sfn "$VENV_BIN/launch-bdx-phoebus" "$USER_BIN/launch-bdx-phoebus"
+ln -sfn "$VENV_BIN/start-bdx-raspberry-ioc" "$USER_BIN/start-bdx-raspberry-ioc"
 
 echo "Installed user commands:"
 echo "  $USER_BIN/launch-bdx-slow-control"
 echo "  $USER_BIN/launch-bdx-phoebus"
+echo "  $USER_BIN/start-bdx-raspberry-ioc"
 
 case ":$PATH:" in
     *":$USER_BIN:"*)
