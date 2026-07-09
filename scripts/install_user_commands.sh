@@ -15,14 +15,28 @@ fi
 "$VENV_PYTHON" -m pip install -e "$ROOT_DIR"
 
 mkdir -p "$USER_BIN"
-ln -sfn "$VENV_BIN/launch-bdx-slow-control" "$USER_BIN/launch-bdx-slow-control"
-ln -sfn "$VENV_BIN/launch-bdx-phoebus" "$USER_BIN/launch-bdx-phoebus"
-ln -sfn "$VENV_BIN/start-bdx-raspberry-ioc" "$USER_BIN/start-bdx-raspberry-ioc"
+
+commands=(
+    bdx_slow_control_start
+    bdx_slow_control_kill_ioc
+    bdx_slow_control_kill_archiver
+    bdx_slow_control_kill_phoebus
+    start-bdx-raspberry-ioc
+)
+
+for command in "${commands[@]}"; do
+    ln -sfn "$VENV_BIN/$command" "$USER_BIN/$command"
+done
+
+# Remove obsolete Screen-based user links from earlier installations.
+rm -f \
+    "$USER_BIN/launch-bdx-slow-control" \
+    "$USER_BIN/launch-bdx-phoebus"
 
 echo "Installed user commands:"
-echo "  $USER_BIN/launch-bdx-slow-control"
-echo "  $USER_BIN/launch-bdx-phoebus"
-echo "  $USER_BIN/start-bdx-raspberry-ioc"
+for command in "${commands[@]}"; do
+    echo "  $USER_BIN/$command"
+done
 
 case ":$PATH:" in
     *":$USER_BIN:"*)
