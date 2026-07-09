@@ -183,10 +183,10 @@ def test_component_ready_urls_are_component_specific():
     )
 
     assert result.stdout.splitlines() == [
-        "http://127.0.0.1:17665/mgmt/bpl/getApplianceInfo",
-        "http://127.0.0.1:17666/engine/bpl/getApplianceMetrics",
-        "http://127.0.0.1:17667/etl/bpl/getApplianceMetrics",
-        "http://127.0.0.1:17668/retrieval/bpl/getApplianceMetrics",
+        "http://127.0.0.1:17665/mgmt/bpl/getVersions",
+        "http://127.0.0.1:17666/engine/bpl/getVersion",
+        "http://127.0.0.1:17667/etl/bpl/getVersion",
+        "http://127.0.0.1:17668/retrieval/bpl/getVersion",
     ]
 
 
@@ -215,7 +215,7 @@ def test_archiver_state_healthy_with_four_processes_and_component_ready_endpoint
         "\n".join(
             [
                 'case "${*: -1}" in',
-                '  *"/mgmt/bpl/getApplianceInfo"|*"/engine/bpl/getApplianceMetrics"|*"/etl/bpl/getApplianceMetrics"|*"/retrieval/bpl/getApplianceMetrics") exit 0 ;;',
+                '  *"/mgmt/bpl/getVersions"|*"/engine/bpl/getVersion"|*"/etl/bpl/getVersion"|*"/retrieval/bpl/getVersion") exit 0 ;;',
                 "  *) exit 1 ;;",
                 "esac",
             ]
@@ -263,7 +263,7 @@ def test_archiver_state_starting_when_all_processes_exist_but_endpoint_is_not_re
         "\n".join(
             [
                 'case "${*: -1}" in',
-                '  *"/mgmt/bpl/getApplianceInfo"|*"/engine/bpl/getApplianceMetrics"|*"/retrieval/bpl/getApplianceMetrics") exit 0 ;;',
+                '  *"/mgmt/bpl/getVersions"|*"/engine/bpl/getVersion"|*"/retrieval/bpl/getVersion") exit 0 ;;',
                 "  *) exit 1 ;;",
                 "esac",
             ]
@@ -286,7 +286,7 @@ def test_archiver_state_starting_when_all_processes_exist_but_endpoint_is_not_re
 
     assert result.stdout.splitlines() == [
         "starting",
-        "etl endpoint is not ready: http://127.0.0.1:17667/etl/bpl/getApplianceMetrics",
+        "etl endpoint is not ready: http://127.0.0.1:17667/etl/bpl/getVersion",
     ]
 
 
@@ -327,7 +327,7 @@ def test_archiver_state_partial_when_only_subset_of_processes_exists(tmp_path: P
     assert result.stdout.strip() == "partial"
 
 
-def test_observed_get_appliance_info_404_case_is_healthy_with_metrics_endpoints(
+def test_archiver_state_is_healthy_with_version_endpoints(
     tmp_path: Path,
 ):
     fake_bin = tmp_path / "bin"
@@ -355,8 +355,8 @@ def test_observed_get_appliance_info_404_case_is_healthy_with_metrics_endpoints(
                 'url="${*: -1}"',
                 f'printf "%s\\n" "$url" >> "{curl_log}"',
                 'case "$url" in',
-                '  *"/mgmt/bpl/getApplianceInfo"|*"/engine/bpl/getApplianceMetrics"|*"/etl/bpl/getApplianceMetrics"|*"/retrieval/bpl/getApplianceMetrics") exit 0 ;;',
-                '  *"/engine/bpl/getApplianceInfo"|*"/etl/bpl/getApplianceInfo"|*"/retrieval/bpl/getApplianceInfo") exit 22 ;;',
+                '  *"/mgmt/bpl/getVersions"|*"/engine/bpl/getVersion"|*"/etl/bpl/getVersion"|*"/retrieval/bpl/getVersion") exit 0 ;;',
+                '  *"/engine/bpl/getVersions"|*"/etl/bpl/getVersions"|*"/retrieval/bpl/getVersions") exit 22 ;;',
                 "  *) exit 1 ;;",
                 "esac",
             ]
@@ -378,13 +378,13 @@ def test_observed_get_appliance_info_404_case_is_healthy_with_metrics_endpoints(
 
     requested_urls = curl_log.read_text(encoding="utf-8")
     assert result.stdout.strip() == "healthy"
-    assert "/mgmt/bpl/getApplianceInfo" in requested_urls
-    assert "/engine/bpl/getApplianceMetrics" in requested_urls
-    assert "/etl/bpl/getApplianceMetrics" in requested_urls
-    assert "/retrieval/bpl/getApplianceMetrics" in requested_urls
-    assert "/engine/bpl/getApplianceInfo" not in requested_urls
-    assert "/etl/bpl/getApplianceInfo" not in requested_urls
-    assert "/retrieval/bpl/getApplianceInfo" not in requested_urls
+    assert "/mgmt/bpl/getVersions" in requested_urls
+    assert "/engine/bpl/getVersion" in requested_urls
+    assert "/etl/bpl/getVersion" in requested_urls
+    assert "/retrieval/bpl/getVersion" in requested_urls
+    assert "/engine/bpl/getVersions" not in requested_urls
+    assert "/etl/bpl/getVersions" not in requested_urls
+    assert "/retrieval/bpl/getVersions" not in requested_urls
 
 
 def test_stack_does_not_start_duplicate_ioc_when_requested_address_is_listening(

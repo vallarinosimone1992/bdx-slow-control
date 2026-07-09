@@ -142,19 +142,19 @@ bdx_component_ready_url() {
     case "$component" in
         mgmt)
             base="$BDX_ARCHIVER_MGMT_URL"
-            path="${BDX_ARCHIVER_MGMT_READY_PATH:-getApplianceInfo}"
+            path="${BDX_ARCHIVER_MGMT_READY_PATH:-getVersions}"
             ;;
         engine)
             base="$BDX_ARCHIVER_ENGINE_URL"
-            path="${BDX_ARCHIVER_ENGINE_READY_PATH:-getApplianceMetrics}"
+            path="${BDX_ARCHIVER_ENGINE_READY_PATH:-getVersion}"
             ;;
         etl)
             base="$BDX_ARCHIVER_ETL_URL"
-            path="${BDX_ARCHIVER_ETL_READY_PATH:-getApplianceMetrics}"
+            path="${BDX_ARCHIVER_ETL_READY_PATH:-getVersion}"
             ;;
         retrieval)
             base="$BDX_ARCHIVER_RETRIEVAL_BPL_URL"
-            path="${BDX_ARCHIVER_RETRIEVAL_READY_PATH:-getApplianceMetrics}"
+            path="${BDX_ARCHIVER_RETRIEVAL_READY_PATH:-getVersion}"
             ;;
         *)
             bdx_die "Unknown Archiver Appliance component: $component"

@@ -297,10 +297,10 @@ def test_archiver_readiness_checks_use_functional_bpl_endpoints(tmp_path: Path):
 
     urls = result.stdout.splitlines()
     assert urls == [
-        "http://127.0.0.1:17665/mgmt/bpl/getApplianceInfo",
-        "http://127.0.0.1:17666/engine/bpl/getApplianceMetrics",
-        "http://127.0.0.1:17667/etl/bpl/getApplianceMetrics",
-        "http://127.0.0.1:17668/retrieval/bpl/getApplianceMetrics",
+        "http://127.0.0.1:17665/mgmt/bpl/getVersions",
+        "http://127.0.0.1:17666/engine/bpl/getVersion",
+        "http://127.0.0.1:17667/etl/bpl/getVersion",
+        "http://127.0.0.1:17668/retrieval/bpl/getVersion",
     ]
     assert all(not url.endswith("/bpl") for url in urls)
 
