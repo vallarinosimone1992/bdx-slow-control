@@ -66,14 +66,35 @@ def _require_program(name: str) -> str:
 
 def _screen_session_exists(session: str) -> bool:
     screen = _require_program("screen")
-    result = subprocess.run(
-        [screen, "-ls"],
-        text=True,
-        capture_output=True,
-        check=False,
-    )
+    try:
+        subprocess.run(
+            [screen, "-wipe"],
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=5,
+        )
+        result = subprocess.run(
+            [screen, "-ls"],
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=5,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise LauncherError("GNU Screen did not respond within 5 seconds.") from exc
+
     pattern = re.compile(rf"\b\d+\.{re.escape(session)}\s")
-    return bool(pattern.search(result.stdout + result.stderr))
+    for line in (result.stdout + result.stderr).splitlines():
+        if not pattern.search(line):
+            continue
+        if "(Dead" in line:
+            raise LauncherError(
+                f"Stale GNU Screen socket remains for {session!r} after screen -wipe. "
+                "Remove it manually with: screen -wipe"
+            )
+        return True
+    return False
 
 
 def _attach_screen(session: str) -> None:
