@@ -92,7 +92,11 @@ def slow_control_main(argv: Sequence[str] | None = None) -> None:
     screen_launchers._run_cli(_slow_control, argv)
 
 
-def _wait_for_raspberry_ioc(caproto_get: Path, timeout: int) -> None:
+def _wait_for_raspberry_ioc(
+    caproto_get: Path,
+    timeout: int,
+    ssh_host: str,
+) -> None:
     deadline = time.monotonic() + timeout
     print(f"Waiting for Raspberry IOC PV: {RASPBERRY_READY_PV}")
     while time.monotonic() < deadline:
@@ -102,8 +106,7 @@ def _wait_for_raspberry_ioc(caproto_get: Path, timeout: int) -> None:
         time.sleep(1)
     raise screen_launchers.LauncherError(
         f"Timed out after {timeout} seconds waiting for {RASPBERRY_READY_PV}. "
-        f"Inspect the remote service with: ssh -t "
-        f"{os.environ.get('BDX_RASPBERRY_SSH_HOST', DEFAULT_RASPBERRY_SSH_HOST)} "
+        f"Inspect the remote service with: ssh -t {ssh_host} "
         f"sudo journalctl -u {RASPBERRY_SERVICE} -n 100 --no-pager"
     )
 
@@ -160,7 +163,7 @@ def _start_raspberry_ioc(argv: Sequence[str] | None) -> None:
         [ssh, "-t", args.ssh_host, remote_command],
         check=True,
     )
-    _wait_for_raspberry_ioc(caproto_get, args.timeout)
+    _wait_for_raspberry_ioc(caproto_get, args.timeout, args.ssh_host)
 
 
 def raspberry_ioc_main(argv: Sequence[str] | None = None) -> None:
