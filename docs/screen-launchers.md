@@ -1,10 +1,11 @@
 # GNU Screen Operator Launchers
 
-The Ubuntu operator host provides two user commands:
+The Ubuntu operator host provides three user commands:
 
 ```bash
 launch-bdx-slow-control
 launch-bdx-phoebus
+start-bdx-raspberry-ioc
 ```
 
 Install or refresh the commands after cloning or pulling repository changes:
@@ -24,7 +25,25 @@ The installer refreshes the editable package installation and creates links in
 launch-bdx-slow-control
 ```
 
-This creates the detached Screen session `bdx-slow-control` with two windows:
+Before creating the local Screen session, the launcher checks the Raspberry
+readiness PV:
+
+```text
+BDX:ENV:TEMP:T00:VALUE
+```
+
+The check uses Channel Access directed only to `172.22.50.10`. When the PV does
+not respond, the launcher prints:
+
+```text
+Start it with: start-bdx-raspberry-ioc
+```
+
+The missing Raspberry IOC does not prevent the main IOC and Archiver from
+starting; it is reported as an explicit degraded condition.
+
+The command creates the detached Screen session `bdx-slow-control` with two
+windows:
 
 ```text
 archiver  starts or validates the user-local Archiver Appliance deployment
@@ -55,6 +74,54 @@ attach immediately after launching:
 
 ```bash
 launch-bdx-slow-control --attach
+```
+
+## Raspberry environment IOC
+
+Start the installed Raspberry systemd service remotely and verify its readiness
+PV from the Ubuntu host:
+
+```bash
+start-bdx-raspberry-ioc
+```
+
+The default SSH destination is:
+
+```text
+pi@172.22.50.10
+```
+
+The command is idempotent. When `BDX:ENV:TEMP:T00:VALUE` already responds, it
+returns without invoking SSH. Otherwise it runs:
+
+```text
+sudo systemctl start bdx-environment-ioc
+sudo systemctl --no-pager --full status bdx-environment-ioc
+```
+
+and waits up to 30 seconds for the Channel Access PV. SSH authentication and any
+required `sudo` password remain interactive. The Raspberry must already contain
+the service installed by `scripts/install_raspberry.sh`; this command does not
+install software, configure networking, or power on a switched-off Raspberry.
+
+Override the SSH destination when the administration address or username is
+different:
+
+```bash
+start-bdx-raspberry-ioc --ssh-host USER@HOST
+```
+
+The same value can be made persistent in the shell environment:
+
+```bash
+export BDX_RASPBERRY_SSH_HOST=USER@HOST
+```
+
+Force a service restart and wait longer for the PV when diagnosing the remote
+IOC:
+
+```bash
+start-bdx-raspberry-ioc --restart --timeout 60
 ```
 
 ## Phoebus session
