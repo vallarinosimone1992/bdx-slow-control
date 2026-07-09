@@ -28,10 +28,12 @@ for command in "${commands[@]}"; do
     ln -sfn "$VENV_BIN/$command" "$USER_BIN/$command"
 done
 
-# Remove obsolete Screen-based user links from earlier installations.
+# Remove obsolete Screen-based commands from earlier installations.
 rm -f \
     "$USER_BIN/launch-bdx-slow-control" \
-    "$USER_BIN/launch-bdx-phoebus"
+    "$USER_BIN/launch-bdx-phoebus" \
+    "$VENV_BIN/launch-bdx-slow-control" \
+    "$VENV_BIN/launch-bdx-phoebus"
 
 echo "Installed user commands:"
 for command in "${commands[@]}"; do
