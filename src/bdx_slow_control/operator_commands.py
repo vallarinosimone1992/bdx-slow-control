@@ -1,29 +1,124 @@
-"""Operator commands that coordinate the main host and Raspberry IOC."""
+"""Operator commands for the BDX Ubuntu slow-control host."""
 
 from __future__ import annotations
 
 import argparse
+import ipaddress
 import os
 from pathlib import Path
+import shlex
 import shutil
+import socket
 import subprocess
 import sys
 import time
 from typing import Sequence
 
-from . import screen_launchers
 
-
+DEFAULT_MAIN_HOST = "172.22.50.2"
 RASPBERRY_HOST = "172.22.50.10"
 RASPBERRY_READY_PV = "BDX:ENV:TEMP:T00:VALUE"
 RASPBERRY_SERVICE = "bdx-environment-ioc"
 DEFAULT_RASPBERRY_SSH_HOST = "pi@172.22.50.10"
+DEFAULT_PHOEBUS_HOME = Path.home() / "SlowControl" / "css" / "phoebus-4.7.4-SNAPSHOT"
+
+
+class OperatorCommandError(RuntimeError):
+    """Raised for an operator-actionable command failure."""
+
+
+def _repository_root() -> Path:
+    override = os.environ.get("BDX_SLOW_CONTROL_ROOT")
+    candidates: list[Path] = []
+    if override:
+        candidates.append(Path(override).expanduser())
+
+    current = Path.cwd().resolve()
+    candidates.extend([current, *current.parents])
+    candidates.append(Path(__file__).resolve().parents[2])
+    candidates.append(Path.home() / "SlowControl" / "app" / "bdx-slow-control")
+
+    seen: set[Path] = set()
+    for candidate in candidates:
+        candidate = candidate.resolve()
+        if candidate in seen:
+            continue
+        seen.add(candidate)
+        if (
+            (candidate / "pyproject.toml").is_file()
+            and (candidate / "scripts" / "start_bdx_stack.sh").is_file()
+            and (candidate / "scripts" / "launch_phoebus.sh").is_file()
+        ):
+            return candidate
+
+    raise OperatorCommandError(
+        "BDX repository root not found. Set BDX_SLOW_CONTROL_ROOT to the "
+        "bdx-slow-control checkout."
+    )
+
+
+def _run_cli(function, argv: Sequence[str] | None) -> None:
+    try:
+        function(argv)
+    except OperatorCommandError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        raise SystemExit(2) from exc
+    except subprocess.CalledProcessError as exc:
+        print(f"error: command failed with status {exc.returncode}", file=sys.stderr)
+        raise SystemExit(exc.returncode) from exc
+
+
+def _read_main_host(root: Path, explicit: str | None) -> str:
+    if explicit:
+        host = explicit
+    elif os.environ.get("BDX_MAIN_HOST", "").strip():
+        host = os.environ["BDX_MAIN_HOST"].strip()
+    else:
+        runtime_env = Path(
+            os.environ.get("BDX_RUNTIME_ENV", root / "config" / "runtime.env")
+        ).expanduser()
+        if not runtime_env.is_file():
+            raise OperatorCommandError(
+                f"Runtime environment not found: {runtime_env}. "
+                f"Create it with BDX_MAIN_HOST={DEFAULT_MAIN_HOST}."
+            )
+        command = (
+            f"source {shlex.quote(str(runtime_env))}; "
+            'printf "%s" "${BDX_MAIN_HOST:-}"'
+        )
+        result = subprocess.run(
+            ["bash", "-lc", command],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        host = result.stdout.strip()
+        if result.returncode != 0 or not host:
+            raise OperatorCommandError(f"BDX_MAIN_HOST is not set in {runtime_env}.")
+
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError as exc:
+        raise OperatorCommandError(f"BDX_MAIN_HOST is not a valid IP address: {host}") from exc
+    if address.is_unspecified or address.is_loopback:
+        raise OperatorCommandError(
+            f"BDX_MAIN_HOST must be the operational slow-control address, not {host}."
+        )
+    return host
+
+
+def _port_is_listening(host: str, port: int) -> bool:
+    try:
+        with socket.create_connection((host, port), timeout=1.0):
+            return True
+    except OSError:
+        return False
 
 
 def _caproto_get(root: Path) -> Path:
     command = root / ".venv" / "bin" / "caproto-get"
     if not command.is_file():
-        raise screen_launchers.LauncherError(
+        raise OperatorCommandError(
             f"caproto-get not found: {command}. Run scripts/bootstrap.sh first."
         )
     return command
@@ -48,48 +143,214 @@ def raspberry_ioc_responding(caproto_get: Path, *, timeout: float = 2.0) -> bool
     return result.returncode == 0
 
 
-def _parse_slow_control_probe_args(argv: Sequence[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(add_help=False)
+def _runtime_dir(root: Path) -> Path:
+    return Path(
+        os.environ.get("BDX_STACK_RUNTIME_DIR", root / ".runtime" / "bdx-stack")
+    ).expanduser()
+
+
+def _recorded_process_running(pid_file: Path, markers: Sequence[str]) -> bool:
+    try:
+        pid = int(pid_file.read_text(encoding="utf-8").strip())
+    except (FileNotFoundError, ValueError, OSError):
+        return False
+
+    proc_dir = Path("/proc") / str(pid)
+    try:
+        command_line = (proc_dir / "cmdline").read_bytes().replace(b"\0", b" ").decode(
+            errors="replace"
+        )
+    except OSError:
+        pid_file.unlink(missing_ok=True)
+        return False
+
+    lowered = command_line.lower()
+    if any(marker.lower() in lowered for marker in markers):
+        return True
+
+    pid_file.unlink(missing_ok=True)
+    return False
+
+
+def _resolve_phoebus_home(explicit: str | None) -> Path:
+    raw = explicit or os.environ.get("BDX_PHOEBUS_HOME")
+    home = Path(raw).expanduser().resolve() if raw else DEFAULT_PHOEBUS_HOME
+    launcher = home / "phoebus.sh"
+    if not launcher.is_file():
+        raise OperatorCommandError(
+            f"Phoebus launcher not found: {launcher}. "
+            "Set BDX_PHOEBUS_HOME or pass --phoebus-home."
+        )
+    return home
+
+
+def _terminal_program() -> tuple[str, str]:
+    explicit = os.environ.get("BDX_TERMINAL", "").strip()
+    if explicit:
+        path = shutil.which(explicit) or explicit
+        if Path(path).is_file():
+            return path, "xterm"
+        raise OperatorCommandError(f"Configured terminal was not found: {explicit}")
+
+    gnome_terminal = shutil.which("gnome-terminal")
+    if gnome_terminal:
+        return gnome_terminal, "gnome"
+
+    generic_terminal = shutil.which("x-terminal-emulator")
+    if generic_terminal:
+        return generic_terminal, "xterm"
+
+    raise OperatorCommandError(
+        "No supported graphical terminal found. Install gnome-terminal or set BDX_TERMINAL."
+    )
+
+
+def _open_terminal(title: str, command: str) -> None:
+    terminal, mode = _terminal_program()
+    if mode == "gnome":
+        invocation = [
+            terminal,
+            "--window",
+            f"--title={title}",
+            "--",
+            "bash",
+            "-lc",
+            command,
+        ]
+    else:
+        invocation = [terminal, "-T", title, "-e", "bash", "-lc", command]
+
+    subprocess.Popen(
+        invocation,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+
+
+def _ioc_terminal_command(root: Path, host: str) -> str:
+    ioc = root / ".venv" / "bin" / "bdx-prototype-ioc"
+    if not ioc.is_file():
+        raise OperatorCommandError(f"BDX IOC command not found: {ioc}")
+
+    runtime_dir = _runtime_dir(root)
+    pid_file = runtime_dir / "ioc.pid"
+    q = shlex.quote
+    return "\n".join(
+        [
+            "set -euo pipefail",
+            f"cd {q(str(root))}",
+            f"mkdir -p {q(str(runtime_dir))}",
+            f"printf '%s\\n' \"$$\" > {q(str(pid_file))}",
+            f"export BDX_MAIN_HOST={q(host)}",
+            f"export BDX_EPICS_INTERFACE={q(host)}",
+            f"export EPICS_CA_ADDR_LIST={q(f'{host} {RASPBERRY_HOST}')} ",
+            "export EPICS_CA_AUTO_ADDR_LIST=NO",
+            'export BDX_LOG_LEVEL="${BDX_LOG_LEVEL:-INFO}"',
+            'echo "Starting the BDX main IOC on $BDX_EPICS_INTERFACE:5064"',
+            f"exec {q(str(ioc))}",
+        ]
+    )
+
+
+def _archiver_phoebus_terminal_command(
+    root: Path,
+    host: str,
+    display: str,
+    phoebus_home: Path,
+) -> str:
+    stack_script = root / "scripts" / "start_bdx_stack.sh"
+    q = shlex.quote
+    return "\n".join(
+        [
+            f"cd {q(str(root))}",
+            f"export BDX_PHOEBUS_HOME={q(str(phoebus_home))}",
+            "export BDX_ARCHIVER_STRICT_CHECK=true",
+            "(",
+            "  set -euo pipefail",
+            f"  source {q(str(stack_script))}",
+            f"  bdx_stack_parse_args --main-host {q(host)} {q(display)}",
+            "  bdx_stack_load_runtime_environment",
+            "  bdx_stack_validate_installation",
+            "  bdx_stack_print_summary",
+            "  bdx_stack_wait_for_ioc_listener 90",
+            '  bdx_stack_wait_for_pv_read "$IOC_READY_PV" 90',
+            "  bdx_stack_ensure_archiver",
+            '  bdx_stack_wait_for_archiver_pv_connection "$ARCHIVER_READY_PV" 180',
+            '  bdx_stack_launch_phoebus "$BDX_STACK_DISPLAY"',
+            ")",
+            "status=$?",
+            "echo",
+            'echo "Archiver/Phoebus workflow exited with status $status."',
+            'echo "This terminal remains open for inspection."',
+            "exec bash",
+        ]
+    )
+
+
+def _start_slow_control(argv: Sequence[str] | None) -> None:
+    parser = argparse.ArgumentParser(
+        prog="bdx_slow_control_start",
+        description=(
+            "Open one terminal for the main IOC and one terminal for Archiver startup "
+            "followed by Phoebus."
+        ),
+    )
+    parser.add_argument("display", nargs="?", default="overview")
     parser.add_argument("--main-host")
-    parser.add_argument("--session", default=screen_launchers.DEFAULT_MAIN_SESSION)
-    parser.add_argument("--attach", action="store_true")
-    args, _unknown = parser.parse_known_args(argv)
-    return args
+    parser.add_argument("--phoebus-home")
+    args = parser.parse_args(argv)
+
+    if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
+        raise OperatorCommandError(
+            "No graphical desktop display is available. Run this command from a terminal "
+            "opened in the Ubuntu desktop session."
+        )
+
+    root = _repository_root()
+    host = _read_main_host(root, args.main_host)
+    caproto_get = _caproto_get(root)
+    phoebus_home = _resolve_phoebus_home(args.phoebus_home)
+    _terminal_program()
+
+    if raspberry_ioc_responding(caproto_get):
+        print(f"Raspberry environment IOC: responding ({RASPBERRY_READY_PV})")
+    else:
+        print(
+            f"Warning: Raspberry environment IOC is not responding: {RASPBERRY_READY_PV}",
+            file=sys.stderr,
+        )
+        print("Start it with: start-bdx-raspberry-ioc", file=sys.stderr)
+        print("Continuing with the local slow-control startup.", file=sys.stderr)
+
+    if _port_is_listening(host, 5064):
+        print(f"BDX main IOC is already listening on {host}:5064; not opening another IOC.")
+    else:
+        _open_terminal("BDX Main IOC", _ioc_terminal_command(root, host))
+        print("Opened terminal: BDX Main IOC")
+
+    phoebus_pid_file = _runtime_dir(root) / "phoebus.pid"
+    if _recorded_process_running(
+        phoebus_pid_file,
+        ("phoebus", "org.phoebus", "javafx"),
+    ):
+        print("Phoebus is already running; not opening another instance.")
+    else:
+        _open_terminal(
+            "BDX Archiver and Phoebus",
+            _archiver_phoebus_terminal_command(
+                root,
+                host,
+                args.display,
+                phoebus_home,
+            ),
+        )
+        print("Opened terminal: BDX Archiver and Phoebus")
 
 
-def _slow_control(argv: Sequence[str] | None) -> None:
-    arguments = list(sys.argv[1:] if argv is None else argv)
-    if "-h" in arguments or "--help" in arguments:
-        screen_launchers._slow_control(arguments)
-        return
-
-    args = _parse_slow_control_probe_args(arguments)
-    root = screen_launchers._repository_root()
-
-    if not screen_launchers._screen_session_exists(args.session):
-        caproto_get = _caproto_get(root)
-        if raspberry_ioc_responding(caproto_get):
-            print(f"Raspberry environment IOC: responding ({RASPBERRY_READY_PV})")
-        else:
-            print(
-                f"Warning: Raspberry environment IOC is not responding: "
-                f"{RASPBERRY_READY_PV}",
-                file=sys.stderr,
-            )
-            print(
-                "Start it with: start-bdx-raspberry-ioc",
-                file=sys.stderr,
-            )
-            print(
-                "Continuing with the main IOC and Archiver startup.",
-                file=sys.stderr,
-            )
-
-    screen_launchers._slow_control(arguments)
-
-
-def slow_control_main(argv: Sequence[str] | None = None) -> None:
-    screen_launchers._run_cli(_slow_control, argv)
+def slow_control_start_main(argv: Sequence[str] | None = None) -> None:
+    _run_cli(_start_slow_control, argv)
 
 
 def _wait_for_raspberry_ioc(
@@ -104,7 +365,7 @@ def _wait_for_raspberry_ioc(
             print(f"Raspberry environment IOC: responding ({RASPBERRY_READY_PV})")
             return
         time.sleep(1)
-    raise screen_launchers.LauncherError(
+    raise OperatorCommandError(
         f"Timed out after {timeout} seconds waiting for {RASPBERRY_READY_PV}. "
         f"Inspect the remote service with: ssh -t {ssh_host} "
         f"sudo journalctl -u {RASPBERRY_SERVICE} -n 100 --no-pager"
@@ -140,9 +401,9 @@ def _start_raspberry_ioc(argv: Sequence[str] | None) -> None:
     args = parser.parse_args(argv)
 
     if args.timeout < 1:
-        raise screen_launchers.LauncherError("--timeout must be at least 1 second.")
+        raise OperatorCommandError("--timeout must be at least 1 second.")
 
-    root = screen_launchers._repository_root()
+    root = _repository_root()
     caproto_get = _caproto_get(root)
 
     if not args.restart and raspberry_ioc_responding(caproto_get):
@@ -151,7 +412,7 @@ def _start_raspberry_ioc(argv: Sequence[str] | None) -> None:
 
     ssh = shutil.which("ssh")
     if ssh is None:
-        raise screen_launchers.LauncherError("Required program not found in PATH: ssh")
+        raise OperatorCommandError("Required program not found in PATH: ssh")
 
     action = "restart" if args.restart else "start"
     remote_command = (
@@ -159,12 +420,36 @@ def _start_raspberry_ioc(argv: Sequence[str] | None) -> None:
         f"sudo systemctl --no-pager --full status {RASPBERRY_SERVICE}"
     )
     print(f"Running on {args.ssh_host}: systemctl {action} {RASPBERRY_SERVICE}")
-    subprocess.run(
-        [ssh, "-t", args.ssh_host, remote_command],
-        check=True,
-    )
+    subprocess.run([ssh, "-t", args.ssh_host, remote_command], check=True)
     _wait_for_raspberry_ioc(caproto_get, args.timeout, args.ssh_host)
 
 
 def raspberry_ioc_main(argv: Sequence[str] | None = None) -> None:
-    screen_launchers._run_cli(_start_raspberry_ioc, argv)
+    _run_cli(_start_raspberry_ioc, argv)
+
+
+def _exec_shutdown_script(script_name: str, argv: Sequence[str] | None) -> None:
+    root = _repository_root()
+    script = root / "scripts" / script_name
+    if not script.is_file():
+        raise OperatorCommandError(f"Shutdown script not found: {script}")
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    os.execv(str(script), [str(script), *arguments])
+
+
+def kill_ioc_main(argv: Sequence[str] | None = None) -> None:
+    _run_cli(lambda values: _exec_shutdown_script("kill_slow_control_ioc.sh", values), argv)
+
+
+def kill_archiver_main(argv: Sequence[str] | None = None) -> None:
+    _run_cli(
+        lambda values: _exec_shutdown_script("kill_slow_control_archiver.sh", values),
+        argv,
+    )
+
+
+def kill_phoebus_main(argv: Sequence[str] | None = None) -> None:
+    _run_cli(
+        lambda values: _exec_shutdown_script("kill_slow_control_phoebus.sh", values),
+        argv,
+    )
