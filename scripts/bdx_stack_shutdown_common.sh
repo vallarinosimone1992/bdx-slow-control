@@ -64,6 +64,49 @@ bdx_shutdown_command_line() {
     ps -p "$pid" -o command= 2>/dev/null || true
 }
 
+bdx_shutdown_process_listing() {
+    local uid
+    uid="$(id -u)"
+    ps -U "$uid" -o pid=,command= 2>/dev/null \
+        || ps -u "$uid" -o pid=,command= 2>/dev/null \
+        || true
+}
+
+bdx_shutdown_find_pids_by_all_markers() {
+    local listing pid command marker matched
+    listing="$(bdx_shutdown_process_listing)"
+    while read -r pid command; do
+        [[ "$pid" =~ ^[0-9]+$ ]] || continue
+        [[ "$pid" -ne "$$" && "$pid" -ne "$PPID" ]] || continue
+        matched=1
+        for marker in "$@"; do
+            if [[ "$command" != *"$marker"* ]]; then
+                matched=0
+                break
+            fi
+        done
+        if [[ "$matched" -eq 1 ]]; then
+            printf "%s\n" "$pid"
+        fi
+    done <<<"$listing"
+}
+
+bdx_shutdown_pid_matches_all_markers() {
+    local pid="$1"
+    shift
+    local command marker
+    command="$(bdx_shutdown_command_line "$pid")"
+    [[ -n "$command" ]] || return 1
+    for marker in "$@"; do
+        [[ "$command" == *"$marker"* ]] || return 1
+    done
+    return 0
+}
+
+bdx_shutdown_unique_pids() {
+    awk '/^[0-9]+$/ && !seen[$1]++ { print $1 }'
+}
+
 bdx_shutdown_wait_for_exit() {
     local pid="$1"
     local timeout="$2"
@@ -100,4 +143,20 @@ bdx_shutdown_terminate_pid() {
 
     echo "$label did not stop within ${timeout} s. Re-run with --force to use SIGKILL." >&2
     return 1
+}
+
+bdx_shutdown_terminate_pid_list() {
+    local label="$1"
+    local timeout="$2"
+    local force="$3"
+    shift 3
+    local pid failed=0
+
+    for pid in "$@"; do
+        bdx_shutdown_pid_exists "$pid" || continue
+        if ! bdx_shutdown_terminate_pid "$pid" "$label" "$timeout" "$force"; then
+            failed=1
+        fi
+    done
+    return "$failed"
 }
