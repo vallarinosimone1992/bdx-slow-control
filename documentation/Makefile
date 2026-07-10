@@ -6,7 +6,7 @@ ROOT_DIR := ..
 QUICKSTART_SOURCE := quickstart_guide.tex
 DEVELOPER_SOURCE := developer_manual.tex
 QUICKSTART_PDF := $(ROOT_DIR)/BDX_Slow_Control_Quickstart.pdf
-DEVELOPER_PDF := $(ROOT_DIR)/BDX_Slow_Control_Developer_Manual.pdf
+DEVELOPER_PDF := $(ROOT_DIR)/BDX_Slow_Control_User_and_Developer_Manual.pdf
 
 .PHONY: all quickstart developer clean
 
