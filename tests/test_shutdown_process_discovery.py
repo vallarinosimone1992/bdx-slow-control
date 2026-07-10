@@ -44,7 +44,8 @@ def test_ioc_shutdown_discovers_unrecorded_ioc_without_touching_daq(tmp_path: Pa
     runtime.mkdir()
     state.mkdir()
     fake_bin.mkdir()
-    (state / "alive_24680").write_text("", encoding="utf-8")
+    ioc_alive = state / "alive_24680"
+    ioc_alive.write_text("", encoding="utf-8")
 
     _write_executable(
         fake_bin / "ps",
@@ -56,7 +57,7 @@ def test_ioc_shutdown_discovers_unrecorded_ioc_without_touching_daq(tmp_path: Pa
                 "  exit 0",
                 "fi",
                 'if [[ "$*" == *"-p 24680"* && "$*" == *"-o stat="* ]]; then',
-                f'  [[ -f "{state / "alive_24680"}" ]] && echo "S"',
+                f'  [[ -f "{ioc_alive}" ]] && echo "S"',
                 "  exit 0",
                 "fi",
                 'if [[ "$*" == *"-p 24680"* && "$*" == *"-o command="* ]]; then',
@@ -122,10 +123,11 @@ def test_phoebus_shutdown_discovers_all_slow_control_sessions_only(tmp_path: Pat
         "fi",
     ]
     for pid, command in commands.items():
+        alive_path = state / f"alive_{pid}"
         ps_lines.extend(
             [
                 f'if [[ "$*" == *"-p {pid}"* && "$*" == *"-o stat="* ]]; then',
-                f'  [[ -f "{state / f"alive_{pid}"}" ]] && echo "S"',
+                f'  [[ -f "{alive_path}" ]] && echo "S"',
                 "  exit 0",
                 "fi",
                 f'if [[ "$*" == *"-p {pid}"* && "$*" == *"-o command="* ]]; then',
