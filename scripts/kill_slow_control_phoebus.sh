@@ -51,33 +51,46 @@ append_pid() {
     pids+=("$candidate")
 }
 
+is_phoebus_command() {
+    local command_line="$1"
+    case "$command_line" in
+        *Phoebus*|*phoebus*|*org.phoebus*|*"product-"*".jar"*)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 is_bdx_slow_control_phoebus_command() {
     local command_line="$1"
-    local is_phoebus=0
-    local is_slow_control=0
-
-    case "$command_line" in
-        *"product-"*".jar"*|*"org.phoebus"*|*"phoebus.sh"*)
-            is_phoebus=1
-            ;;
-    esac
+    is_phoebus_command "$command_line" || return 1
     case "$command_line" in
         *"bdx-phoebus/settings.ini"*|*"bdx-slow-control/phoebus/displays/"*)
-            is_slow_control=1
+            return 0
+            ;;
+        *)
+            return 1
             ;;
     esac
-
-    [[ "$is_phoebus" -eq 1 && "$is_slow_control" -eq 1 ]]
 }
 
 if recorded_pid="$(bdx_shutdown_read_pid_file "$pid_file" 2>/dev/null)"; then
     if bdx_shutdown_pid_exists "$recorded_pid"; then
         recorded_command="$(bdx_shutdown_command_line "$recorded_pid")"
-        if is_bdx_slow_control_phoebus_command "$recorded_command"; then
+        if is_phoebus_command "$recorded_command"; then
             append_pid "$recorded_pid"
         else
-            echo "Ignoring stale Phoebus PID file for unrelated PID $recorded_pid." >&2
+            cat >&2 <<EOF
+Refusing to stop PID $recorded_pid because it does not look like Phoebus.
+Recorded command line:
+  $recorded_command
+EOF
+            exit 2
         fi
+    else
+        rm -f "$pid_file"
     fi
 fi
 
@@ -102,7 +115,7 @@ for pid in "${pids[@]}"; do
         continue
     fi
     command_line="$(bdx_shutdown_command_line "$pid")"
-    if ! is_bdx_slow_control_phoebus_command "$command_line"; then
+    if ! is_phoebus_command "$command_line"; then
         echo "Refusing to stop PID $pid because its command changed during discovery:" >&2
         echo "  $command_line" >&2
         overall=1
@@ -121,7 +134,8 @@ done
 
 rm -f "$pid_file" "$mode_file"
 
+echo "Stopped $stopped BDX slow-control Phoebus process(es)."
 if [[ "$overall" -eq 0 ]]; then
-    echo "Stopped $stopped BDX slow-control Phoebus process(es)."
+    echo "Phoebus stopped."
 fi
 exit "$overall"
