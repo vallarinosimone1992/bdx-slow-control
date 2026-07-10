@@ -1,4 +1,4 @@
-"""Ubuntu startup command with subsystem-level Archiver validation."""
+"""Ubuntu startup command with subsystem-level Archiver status checks."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ def _archiver_phoebus_terminal_command(
         [
             f"cd {q(str(root))}",
             f"export BDX_PHOEBUS_HOME={q(str(phoebus_home))}",
-            "export BDX_ARCHIVER_STRICT_CHECK=true",
+            "export BDX_ARCHIVER_STRICT_CHECK=false",
             "(",
             "  set -euo pipefail",
             f"  source {q(str(stack_script))}",
@@ -35,36 +35,32 @@ def _archiver_phoebus_terminal_command(
             "  bdx_stack_wait_for_ioc_listener 90",
             '  bdx_stack_wait_for_pv_read "$IOC_READY_PV" 90',
             "  bdx_stack_ensure_archiver",
-            "  bdx_stack_stop_archiver_registration_helper",
             "  bdx_stack_check_archiver_subsystem() {",
             '      local label="$1"',
             '      local representative_pv="$2"',
-            '      local pv_list="$3"',
             '      echo "Checking Archiver status for $label: $representative_pv"',
             '      if bdx_stack_archiver_pv_connected "$representative_pv"; then',
-            '          echo "$label Archiver status: ready; skipping per-PV catalog scan."',
+            '          echo "$label Archiver status: ready"',
             "          return 0",
             "      fi",
-            '      echo "$label Archiver status: incomplete; registering its PV catalog."',
             (
-                '      bdx_stack_register_pv_lists "$ARCHIVER_REGISTER_DELAY_SECONDS" '
-                '"$pv_list"'
+                '      echo "Warning: $label Archiver status: not ready '
+                '($representative_pv)." >&2'
             ),
-            '      bdx_stack_wait_for_archiver_pv_connection "$representative_pv" 180',
+            (
+                '      echo "Continuing without catalog registration; Phoebus will use '
+                'live Channel Access where archive data are unavailable." >&2'
+            ),
+            "      return 0",
             "  }",
-            (
-                '  bdx_stack_check_archiver_subsystem "PSU" "$ARCHIVER_READY_PV" '
-                '"$ARCHIVER_APP_DIR/pv-lists/psu.txt"'
-            ),
+            '  bdx_stack_check_archiver_subsystem "PSU" "$ARCHIVER_READY_PV"',
             (
                 '  bdx_stack_check_archiver_subsystem "Chiller" '
-                '"$ARCHIVER_CHILLER_READY_PV" '
-                '"$ARCHIVER_APP_DIR/pv-lists/chiller.txt"'
+                '"$ARCHIVER_CHILLER_READY_PV"'
             ),
             (
                 '  bdx_stack_check_archiver_subsystem "Environment" '
-                '"$ARCHIVER_ENV_READY_PV" '
-                '"$ARCHIVER_APP_DIR/pv-lists/environment.txt"'
+                '"$ARCHIVER_ENV_READY_PV"'
             ),
             '  bdx_stack_launch_phoebus "$BDX_STACK_DISPLAY"',
             ")",
