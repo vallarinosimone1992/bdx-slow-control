@@ -1,0 +1,137 @@
+\section{Testing strategy}
+
+\subsection{Required test categories}
+
+The existing suite checks driver behavior, PV naming and aggregation, update-period limits, XML validity of generated \file{.bob} resources, complete PV coverage, and controls for writable PVs. Extend the suite when changing any of those contracts.
+
+For a new feature, include as applicable:
+
+\begin{itemize}
+  \item pure parsing and command-format tests;
+  \item driver tests with fake transports;
+  \item IOC putter and polling tests;
+  \item configuration validation tests;
+  \item duplicate-PV and profile-composition tests;
+  \item generated-display contract tests;
+  \item operator script tests with fake processes or commands;
+  \item a documented manual hardware acceptance test.
+\end{itemize}
+
+\subsection{Pre-commit checklist}
+
+\begin{lstlisting}[style=shell]
+source .venv/bin/activate
+ruff check src tests
+pytest
+bdx-pv-list --config-dir config/profiles/default > /tmp/bdx-default.pvs
+bdx-generate-displays --config-dir config/profiles/default \
+  --output-dir phoebus/displays
+
+git status --short
+git diff --check
+\end{lstlisting}
+
+Inspect generated XML diffs rather than committing them blindly. Confirm that no local runtime file, credentials, logs, databases, or archive data are staged.
+
+\section{Logging and diagnostics}
+
+The package configures Python logging centrally. Set \code{BDX_LOG_LEVEL} to increase verbosity during diagnosis:
+
+\begin{lstlisting}[style=shell]
+BDX_LOG_LEVEL=DEBUG bdx-prototype-ioc \
+  --config-dir config/profiles/default
+\end{lstlisting}
+
+Useful diagnostic principles:
+
+\begin{itemize}
+  \item start with read-only network checks;
+  \item distinguish a failed TCP connection from a protocol parse failure;
+  \item report the device, channel, attempted operation, and underlying exception;
+  \item avoid repeated identical log floods during a persistent poll failure;
+  \item log recovery when communication becomes healthy again;
+  \item never print credentials or private keys.
+\end{itemize}
+
+For Channel Access checks, set an explicit address list and disable automatic broadcast discovery when diagnosing a split-host system:
+
+\begin{lstlisting}[style=shell]
+export EPICS_CA_ADDR_LIST="172.22.50.2 172.22.50.10"
+export EPICS_CA_AUTO_ADDR_LIST=NO
+caproto-get BDX:GLOBAL:SYSTEM_STATE
+caproto-get BDX:ENV:TEMP:T00:VALUE
+\end{lstlisting}
+
+\section{Git workflow and stable releases}
+
+Routine development should occur on \code{devel}. Use focused commits with tests and documentation in the same change. Promote to \code{main} only after the intended hardware/simulation workflow and generated resources have been validated.
+
+Recommended workflow:
+
+\begin{lstlisting}[style=shell]
+git switch devel
+git pull --ff-only
+
+# edit, test, regenerate, document
+
+git status --short
+git diff --check
+git add <reviewed paths>
+git commit -m "Describe the focused change"
+git push origin devel
+\end{lstlisting}
+
+For a stable promotion:
+
+\begin{enumerate}
+  \item ensure \code{devel} is clean and pushed;
+  \item run the complete automated test suite;
+  \item perform the relevant hardware acceptance checks;
+  \item verify generated Phoebus resources and Archiver lists;
+  \item update manuals and version/revision notes;
+  \item build and inspect the two PDF manuals;
+  \item merge or fast-forward the validated state to \code{main} according to the chosen repository policy;
+  \item tag the release if a durable deployment reference is required.
+\end{enumerate}
+
+Avoid committing directly to \code{main} for ordinary development.
+
+\section{Building these manuals}
+
+The LaTeX sources are in \file{documentation}. From the repository root:
+
+\begin{lstlisting}[style=shell]
+make -C documentation
+\end{lstlisting}
+
+The build places the final operator and developer PDFs in the repository root:
+
+\begin{lstlisting}
+BDX_Slow_Control_Quickstart.pdf
+BDX_Slow_Control_Developer_Manual.pdf
+\end{lstlisting}
+
+Intermediate LaTeX files remain under \file{documentation/build} and are ignored or removed with:
+
+\begin{lstlisting}[style=shell]
+make -C documentation clean
+\end{lstlisting}
+
+Before committing exported PDFs, render and inspect every page. Check for clipped code, overfull lines, broken links, stale addresses, and inconsistency with the current branch.
+
+\section{Change checklist}
+
+Use this compact checklist for modifications that affect operation or the PV contract.
+
+\begin{enumerate}
+  \item Update or add the driver interface, simulation, hardware backend, IOC, builder, factory, CLI, and profile as required.
+  \item Preserve request/setpoint/readback semantics and common health PV behavior.
+  \item Add or update automated tests.
+  \item Regenerate only the affected Phoebus resources, then inspect all diffs.
+  \item Update Archiver PV lists for newly archived PVs.
+  \item Update the quickstart guide if operator behavior changes.
+  \item Update this manual and focused deployment documents if architecture or maintenance changes.
+  \item Run Ruff, pytest, PV-list generation, and display generation.
+  \item Perform a controlled hardware acceptance test when hardware behavior changed.
+  \item Commit to \code{devel}; promote to \code{main} only after validation.
+\end{enumerate}
