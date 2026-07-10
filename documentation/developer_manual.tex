@@ -1,0 +1,24 @@
+\documentclass[11pt]{article}
+\newcommand{\manualtitle}{BDX Slow Control Developer Manual}
+\newcommand{\manualshorttitle}{Developer Manual}
+\input{common/preamble}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+\makemanualtitle
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+
+\input{developer/01_overview_and_architecture}
+\input{developer/02_configuration_and_pv_contract}
+\input{developer/03_drivers_iocs_and_builders}
+\input{developer/04_phoebus_archiver_and_operations}
+\input{developer/05_testing_and_release_workflow}
+
+\appendix
+\input{developer/06_reference_appendices}
+
+\end{document}
