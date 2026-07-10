@@ -277,7 +277,7 @@ def _archiver_phoebus_terminal_command(
             "  bdx_stack_wait_for_ioc_listener 90",
             '  bdx_stack_wait_for_pv_read "$IOC_READY_PV" 90',
             "  bdx_stack_ensure_archiver",
-            '  bdx_stack_wait_for_archiver_pv_connection "$ARCHIVER_READY_PV" 180',
+            "  bdx_stack_controlled_archiver_registration",
             '  bdx_stack_launch_phoebus "$BDX_STACK_DISPLAY"',
             ")",
             "status=$?",
