@@ -46,18 +46,26 @@ def _archiver_phoebus_terminal_command(
             "          return 0",
             "      fi",
             '      echo "$label Archiver status: incomplete; registering its PV catalog."',
-            "      bdx_stack_register_pv_lists \\",
-            '          "$ARCHIVER_REGISTER_DELAY_SECONDS" "$pv_list"',
+            (
+                '      bdx_stack_register_pv_lists "$ARCHIVER_REGISTER_DELAY_SECONDS" '
+                '"$pv_list"'
+            ),
             '      bdx_stack_wait_for_archiver_pv_connection "$representative_pv" 180',
             "  }",
-            "  bdx_stack_check_archiver_subsystem \\",
-            '      "PSU" "$ARCHIVER_READY_PV" "$ARCHIVER_APP_DIR/pv-lists/psu.txt"',
-            "  bdx_stack_check_archiver_subsystem \\",
-            '      "Chiller" "$ARCHIVER_CHILLER_READY_PV" \\",
-            '      "$ARCHIVER_APP_DIR/pv-lists/chiller.txt"',
-            "  bdx_stack_check_archiver_subsystem \\",
-            '      "Environment" "$ARCHIVER_ENV_READY_PV" \\",
-            '      "$ARCHIVER_APP_DIR/pv-lists/environment.txt"',
+            (
+                '  bdx_stack_check_archiver_subsystem "PSU" "$ARCHIVER_READY_PV" '
+                '"$ARCHIVER_APP_DIR/pv-lists/psu.txt"'
+            ),
+            (
+                '  bdx_stack_check_archiver_subsystem "Chiller" '
+                '"$ARCHIVER_CHILLER_READY_PV" '
+                '"$ARCHIVER_APP_DIR/pv-lists/chiller.txt"'
+            ),
+            (
+                '  bdx_stack_check_archiver_subsystem "Environment" '
+                '"$ARCHIVER_ENV_READY_PV" '
+                '"$ARCHIVER_APP_DIR/pv-lists/environment.txt"'
+            ),
             '  bdx_stack_launch_phoebus "$BDX_STACK_DISPLAY"',
             ")",
             "status=$?",
