@@ -21,7 +21,9 @@ $(QUICKSTART_PDF): $(QUICKSTART_SOURCE) common/preamble.tex
 	$(LATEXMK) $(LATEXFLAGS) -outdir=$(BUILD_DIR) $(QUICKSTART_SOURCE)
 	cp $(BUILD_DIR)/quickstart_guide.pdf $@
 
-$(DEVELOPER_PDF): $(DEVELOPER_SOURCE) common/preamble.tex
+DEVELOPER_PARTS := $(wildcard developer/*.tex)
+
+$(DEVELOPER_PDF): $(DEVELOPER_SOURCE) common/preamble.tex $(DEVELOPER_PARTS)
 	mkdir -p $(BUILD_DIR)
 	$(LATEXMK) $(LATEXFLAGS) -outdir=$(BUILD_DIR) $(DEVELOPER_SOURCE)
 	cp $(BUILD_DIR)/developer_manual.pdf $@
