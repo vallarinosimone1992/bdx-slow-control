@@ -23,6 +23,7 @@ fi
 
 pid_file="$BDX_STACK_RUNTIME_DIR/ioc.pid"
 pids=()
+invalid_recorded_pid=0
 
 append_pid() {
     local candidate="$1"
@@ -45,8 +46,15 @@ if recorded_pid="$(bdx_shutdown_read_pid_file "$pid_file" 2>/dev/null)"; then
         if is_slow_control_ioc_command "$recorded_command"; then
             append_pid "$recorded_pid"
         else
-            echo "Ignoring stale IOC PID file for unrelated PID $recorded_pid." >&2
+            cat >&2 <<EOF
+Refusing to stop PID $recorded_pid because it does not look like bdx-prototype-ioc.
+Recorded command line:
+  $recorded_command
+EOF
+            invalid_recorded_pid=1
         fi
+    else
+        rm -f "$pid_file"
     fi
 fi
 
@@ -59,12 +67,18 @@ while read -r candidate_pid command_line; do
 done < <(ps -u "$(id -u)" -o pid=,args=)
 
 if [[ "${#pids[@]}" -eq 0 ]]; then
+    if [[ "$invalid_recorded_pid" -eq 1 ]]; then
+        exit 2
+    fi
     rm -f "$pid_file"
     echo "BDX main IOC is already stopped."
     exit 0
 fi
 
 overall=0
+if [[ "$invalid_recorded_pid" -eq 1 ]]; then
+    overall=2
+fi
 stopped=0
 for pid in "${pids[@]}"; do
     if ! bdx_shutdown_pid_exists "$pid"; then
@@ -74,7 +88,7 @@ for pid in "${pids[@]}"; do
     if ! is_slow_control_ioc_command "$command_line"; then
         echo "Refusing to stop PID $pid because its command changed during discovery:" >&2
         echo "  $command_line" >&2
-        overall=1
+        [[ "$overall" -ne 2 ]] && overall=1
         continue
     fi
     if bdx_shutdown_terminate_pid \
@@ -84,13 +98,16 @@ for pid in "${pids[@]}"; do
         "$BDX_SHUTDOWN_FORCE"; then
         stopped=$((stopped + 1))
     else
-        overall=1
+        [[ "$overall" -ne 2 ]] && overall=1
     fi
 done
 
-rm -f "$pid_file"
+if [[ "$invalid_recorded_pid" -eq 0 ]]; then
+    rm -f "$pid_file"
+fi
 
+echo "Stopped $stopped BDX main IOC process(es)."
 if [[ "$overall" -eq 0 ]]; then
-    echo "Stopped $stopped BDX main IOC process(es)."
+    echo "BDX main IOC stopped."
 fi
 exit "$overall"
