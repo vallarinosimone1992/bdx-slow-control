@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import time
 import urllib.error
 from pathlib import Path
 
@@ -18,6 +19,13 @@ from archiver_common import (
     pv_already_registered,
     read_pv_list,
 )
+
+
+def non_negative_float(value: str) -> float:
+    parsed = float(value)
+    if parsed < 0:
+        raise argparse.ArgumentTypeError("value must be non-negative")
+    return parsed
 
 
 def parse_args() -> argparse.Namespace:
@@ -35,6 +43,14 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--dry-run", action="store_true", help="Print actions without API calls.")
     parser.add_argument("--timeout", type=float, default=10.0, help="HTTP timeout in seconds.")
+    parser.add_argument(
+        "--delay-seconds",
+        type=non_negative_float,
+        default=non_negative_float(
+            os.environ.get("BDX_ARCHIVER_REGISTER_DELAY_SECONDS", "0")
+        ),
+        help="Delay after each newly submitted PV (default: 0 seconds).",
+    )
     return parser.parse_args()
 
 
@@ -72,6 +88,8 @@ def main() -> int:
 
         if ok:
             print(f"submitted {pv} policy={policy}: {message}")
+            if args.delay_seconds > 0:
+                time.sleep(args.delay_seconds)
         else:
             print(f"failed {pv}: {message}", file=sys.stderr)
             failures += 1

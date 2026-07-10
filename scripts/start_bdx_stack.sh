@@ -26,14 +26,19 @@ ARCHIVER_HEALTHCHECK="$ARCHIVER_SCRIPT_DIR/healthcheck.sh"
 ARCHIVER_START="$ARCHIVER_SCRIPT_DIR/start.sh"
 ARCHIVER_STATUS="$ARCHIVER_SCRIPT_DIR/status.sh"
 ARCHIVER_AUTOREGISTER="$ARCHIVER_SCRIPT_DIR/auto-register-pvs.sh"
+ARCHIVER_REGISTER="$ARCHIVER_SCRIPT_DIR/register-pvs.py"
 ARCHIVER_MGMT_URL="http://127.0.0.1:17665/mgmt/bpl"
 ARCHIVER_ENGINE_URL="http://127.0.0.1:17666/engine/bpl"
 ARCHIVER_ETL_URL="http://127.0.0.1:17667/etl/bpl"
 ARCHIVER_RETRIEVAL_BPL_URL="http://127.0.0.1:17668/retrieval/bpl"
 ARCHIVER_RETRIEVAL_URL="http://127.0.0.1:17668/retrieval"
+ARCHIVER_START_ENV_FILE="$BDX_STACK_RUNTIME_DIR/archappl-no-auto-register.env"
 
 IOC_READY_PV="BDX:PSU:LV1:CH1:VOLTAGE_RBV"
 ARCHIVER_READY_PV="BDX:PSU:LV1:CH1:VOLTAGE_RBV"
+ARCHIVER_CHILLER_READY_PV="BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV"
+ARCHIVER_ENV_READY_PV="BDX:ENV:TEMP:T00:VALUE"
+ARCHIVER_REGISTER_DELAY_SECONDS="${BDX_ARCHIVER_REGISTER_DELAY_SECONDS:-2.0}"
 PHOEBUS_PREFLIGHT_PV="BDX:ENV:TEMP:T00:VALUE"
 BDX_MAIN_HOST_SOURCE=""
 BDX_MAIN_HOST_CLI=""
@@ -229,6 +234,7 @@ bdx_stack_validate_installation() {
     [[ -x "$ARCHIVER_START" ]] || bdx_stack_die "Archiver start script not found or not executable: $ARCHIVER_START"
     [[ -x "$ARCHIVER_STATUS" ]] || bdx_stack_die "Archiver status script not found or not executable: $ARCHIVER_STATUS"
     [[ -x "$ARCHIVER_AUTOREGISTER" ]] || bdx_stack_die "Archiver auto-register script not found or not executable: $ARCHIVER_AUTOREGISTER"
+    [[ -x "$ARCHIVER_REGISTER" ]] || bdx_stack_die "Archiver register script not found or not executable: $ARCHIVER_REGISTER"
     [[ -x "$PHOEBUS_LAUNCHER" ]] || bdx_stack_die "Phoebus launcher not found or not executable: $PHOEBUS_LAUNCHER"
     command -v pgrep >/dev/null 2>&1 || bdx_stack_die "pgrep is required."
     command -v curl >/dev/null 2>&1 || bdx_stack_die "curl is required."
@@ -453,6 +459,19 @@ bdx_stack_wait_for_archiver_healthy() {
     done
 }
 
+bdx_stack_prepare_archiver_start_environment() {
+    mkdir -p "$BDX_STACK_RUNTIME_DIR"
+    cp "$ARCHIVER_ENV_FILE" "$ARCHIVER_START_ENV_FILE"
+    cat >>"$ARCHIVER_START_ENV_FILE" <<EOF
+
+BDX_ARCHIVER_AUTO_REGISTER=false
+EPICS_CA_ADDR_LIST="$EPICS_CA_ADDR_LIST"
+EPICS_CA_AUTO_ADDR_LIST=$EPICS_CA_AUTO_ADDR_LIST
+EPICS_CA_SERVER_PORT=5064
+EPICS_CA_REPEATER_PORT=5065
+EOF
+}
+
 bdx_stack_ensure_archiver() {
     local state
     state="$(bdx_stack_archiver_state)"
@@ -466,10 +485,11 @@ bdx_stack_ensure_archiver() {
             ;;
         inactive)
             echo "Archiver Appliance is inactive; starting the user-local deployment."
+            bdx_stack_prepare_archiver_start_environment
             BDX_MAIN_HOST="$BDX_MAIN_HOST" \
             EPICS_CA_ADDR_LIST="$EPICS_CA_ADDR_LIST" \
             EPICS_CA_AUTO_ADDR_LIST="$EPICS_CA_AUTO_ADDR_LIST" \
-                "$ARCHIVER_START" --env "$ARCHIVER_ENV_FILE" --user-local
+                "$ARCHIVER_START" --env "$ARCHIVER_START_ENV_FILE" --user-local
             bdx_stack_wait_for_archiver_healthy 180
             ;;
         partial)
@@ -492,12 +512,43 @@ bdx_stack_ensure_archiver() {
             bdx_stack_die "Unexpected Archiver Appliance state: $state"
             ;;
     esac
-    bdx_stack_ensure_archiver_registration
 }
 
-bdx_stack_ensure_archiver_registration() {
-    echo "Ensuring automatic Archiver PV registration retry helper is running."
-    SCRIPT_DIR="$ARCHIVER_SCRIPT_DIR" bdx_archiver_start_registration_retry "$ARCHIVER_ENV_FILE" 1
+bdx_stack_stop_archiver_registration_helper() {
+    SCRIPT_DIR="$ARCHIVER_SCRIPT_DIR" bdx_archiver_stop_registration_retry
+}
+
+bdx_stack_register_pv_lists() {
+    local delay_seconds="$1"
+    shift
+    "$VENV_DIR/bin/python" "$ARCHIVER_REGISTER" \
+        --mgmt-url "$ARCHIVER_MGMT_URL" \
+        --delay-seconds "$delay_seconds" \
+        "$@"
+}
+
+bdx_stack_controlled_archiver_registration() {
+    local pilot_list="$BDX_STACK_RUNTIME_DIR/archiver-pilot.pvs"
+
+    mkdir -p "$BDX_STACK_RUNTIME_DIR"
+    bdx_stack_stop_archiver_registration_helper
+    printf '%s\n' "$ARCHIVER_READY_PV" >"$pilot_list"
+
+    echo "Registering and validating pilot Archiver PV: $ARCHIVER_READY_PV"
+    bdx_stack_register_pv_lists 0 "$pilot_list"
+    bdx_stack_wait_for_archiver_pv_connection "$ARCHIVER_READY_PV" 180
+
+    echo "Registering the complete Archiver catalog with ${ARCHIVER_REGISTER_DELAY_SECONDS}s pacing."
+    bdx_stack_register_pv_lists \
+        "$ARCHIVER_REGISTER_DELAY_SECONDS" \
+        "$ARCHIVER_APP_DIR/pv-lists/psu.txt" \
+        "$ARCHIVER_APP_DIR/pv-lists/chiller.txt" \
+        "$ARCHIVER_APP_DIR/pv-lists/environment.txt"
+
+    echo "Validating representative archived PVs after complete registration."
+    bdx_stack_wait_for_archiver_pv_connection "$ARCHIVER_READY_PV" 180
+    bdx_stack_wait_for_archiver_pv_connection "$ARCHIVER_CHILLER_READY_PV" 180
+    bdx_stack_wait_for_archiver_pv_connection "$ARCHIVER_ENV_READY_PV" 180
 }
 
 bdx_stack_urlencode_value() {
@@ -543,7 +594,9 @@ connected = (
         and connection_state.strip().lower() == "true"
     )
 )
-sys.exit(0 if connected else 1)
+last_event = str(status.get("lastEvent") or "").strip().lower()
+has_event = last_event not in {"", "never", "none", "null"}
+sys.exit(0 if connected and has_event else 1)
 ' "$pv"
 }
 
@@ -553,7 +606,7 @@ bdx_stack_wait_for_archiver_pv_connection() {
     local deadline
     deadline=$((SECONDS + timeout_seconds))
 
-    echo "Waiting for Archiver getPVStatus connectionState=true: $pv"
+    echo "Waiting for Archiver connection and first event: $pv"
     until bdx_stack_archiver_pv_connected "$pv"; do
         if (( SECONDS >= deadline )); then
             bdx_stack_die "Timed out waiting for Archiver PV connection: $pv"
@@ -594,7 +647,7 @@ bdx_stack_main() {
     bdx_stack_wait_for_ioc_listener 5
     bdx_stack_wait_for_pv_read "$IOC_READY_PV" 90
     bdx_stack_ensure_archiver
-    bdx_stack_wait_for_archiver_pv_connection "$ARCHIVER_READY_PV" 180
+    bdx_stack_controlled_archiver_registration
     bdx_stack_launch_phoebus "$BDX_STACK_DISPLAY"
 }
 
