@@ -1,0 +1,331 @@
+\documentclass[11pt]{article}
+\newcommand{\manualtitle}{BDX Slow Control Quickstart Guide}
+\newcommand{\manualshorttitle}{Quickstart Guide}
+\input{common/preamble}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+\makemanualtitle
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+
+\section{Purpose and audience}
+
+This guide is for operators who need to start, monitor, and stop the BDX slow-control prototype without modifying its software. It covers the normal Ubuntu desktop workflow, the Phoebus operator displays, the low-voltage power supplies, the chiller, the Raspberry Pi temperature IOC, and basic fault checks.
+
+The software uses EPICS Channel Access through caproto. The main Ubuntu host runs the aggregated IOC for the global, low-voltage power-supply, and chiller subsystems. A Raspberry Pi runs the environmental temperature IOC. Phoebus provides the graphical operator interface, and EPICS Archiver Appliance stores selected process variables for later retrieval.
+
+\begin{warningbox}[Operational safety]
+The slow-control software is not a substitute for hardwired protection, approved operating procedures, or direct verification at the equipment. Before enabling an output or changing a setpoint, confirm the intended channel, acceptable limits, load state, and detector condition.
+\end{warningbox}
+
+\section{System summary}
+
+The current prototype uses the following fixed slow-control network endpoints.
+
+\begin{center}
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+Component & Address & Function \\
+\midrule
+Main IOC host & \code{172.22.50.2} & Global state, LV1, LV2, and chiller IOC groups \\
+Raspberry Pi & \code{172.22.50.10} & MCP9808 environmental temperature IOC \\
+LV1 & \code{172.22.50.20:9221} & TTi CPX400DP low-voltage supply \\
+LV2 & \code{172.22.50.21:9221} & TTi CPX400DP low-voltage supply \\
+Chiller & \code{172.22.50.60:54321} & LAUDA ECO Silver RE 1225 S \\
+Archiver & \code{127.0.0.1:17665--17668} & Local Archiver Appliance services \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The default operational configuration is stored in \file{config/profiles/default}. It includes the global, PSU, and chiller subsystems. The Raspberry configuration is stored separately in \file{config/profiles/raspberry}.
+
+\section{Before starting}
+
+\subsection{Open a local desktop terminal}
+
+Run the normal start command from a terminal opened inside the Ubuntu graphical desktop session. The launcher needs a working \code{DISPLAY} or \code{WAYLAND_DISPLAY} and opens separate terminal windows for the IOC and for the Archiver/Phoebus workflow.
+
+A plain SSH session without graphical desktop access is not the normal operator workflow.
+
+\subsection{Enter the repository}
+
+\begin{lstlisting}[style=shell]
+cd ~/SlowControl/app/bdx-slow-control
+\end{lstlisting}
+
+If the repository is installed elsewhere, enter that directory or set \code{BDX_SLOW_CONTROL_ROOT} to the checkout path.
+
+\subsection{Check the runtime address}
+
+The untracked file \file{config/runtime.env} must identify the main IOC host. Create it once from the template if needed:
+
+\begin{lstlisting}[style=shell]
+cp config/runtime.env.example config/runtime.env
+\end{lstlisting}
+
+For the current prototype, the file should contain:
+
+\begin{lstlisting}[style=shell]
+BDX_MAIN_HOST=172.22.50.2
+\end{lstlisting}
+
+Do not use \code{127.0.0.1} for normal operation. Remote Channel Access clients cannot reach a loopback-only IOC.
+
+\subsection{Optional connectivity checks}
+
+Read-only network checks can be used before startup:
+
+\begin{lstlisting}[style=shell]
+ping -c 2 172.22.50.20
+nc -vz 172.22.50.20 9221
+
+ping -c 2 172.22.50.21
+nc -vz 172.22.50.21 9221
+
+ping -c 2 172.22.50.60
+nc -vz 172.22.50.60 54321
+\end{lstlisting}
+
+These checks do not write EPICS PVs and do not change equipment settings.
+
+\section{Starting the slow control}
+
+\subsection{Start or verify the Raspberry environment IOC}
+
+The main startup command checks whether \pv{BDX:ENV:TEMP:T00:VALUE} is reachable. If the Raspberry IOC is already running, no action is required. To start it through SSH:
+
+\begin{lstlisting}[style=shell]
+start-bdx-raspberry-ioc
+\end{lstlisting}
+
+To force a restart:
+
+\begin{lstlisting}[style=shell]
+start-bdx-raspberry-ioc --restart
+\end{lstlisting}
+
+The command runs the remote systemd action and then verifies the readiness PV over Channel Access.
+
+\subsection{Start the main operator stack}
+
+From the repository root:
+
+\begin{lstlisting}[style=shell]
+bdx_slow_control_start overview
+\end{lstlisting}
+
+The command performs the following actions:
+
+\begin{enumerate}
+  \item checks the Raspberry environment IOC and prints a warning if it is unavailable;
+  \item opens a terminal for the main aggregated IOC unless one is already listening on port 5064;
+  \item waits for the main IOC readiness PV;
+  \item checks or starts the local Archiver Appliance;
+  \item checks representative PSU, chiller, and environment archive connections;
+  \item launches Phoebus on the requested display.
+\end{enumerate}
+
+The startup command does not enable PSU outputs, start or stop the chiller, or write hardware setpoints.
+
+\begin{successbox}
+A normal startup leaves two terminal windows open: \textbf{BDX Main IOC} and \textbf{BDX Archiver and Phoebus}. Phoebus opens the overview display. Keep the terminals available for diagnostics.
+\end{successbox}
+
+A different initial display can be selected:
+
+\begin{lstlisting}[style=shell]
+bdx_slow_control_start psu
+bdx_slow_control_start chiller
+bdx_slow_control_start environment
+bdx_slow_control_start trends
+\end{lstlisting}
+
+\section{Using Phoebus}
+
+\subsection{Main displays}
+
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\toprule
+Display & Purpose \\
+\midrule
+\file{overview.bob} & Overall status and navigation \\
+\file{psu.bob} & Routine LV1/LV2 operation with staged requests and live plots \\
+\file{psu_expert.bob} & Complete PSU PV table and direct compatibility controls \\
+\file{chiller.bob} & Routine chiller operation and live temperature plots \\
+\file{chiller_expert.bob} & Complete chiller PV table and expert controls \\
+\file{environment.bob} & Environmental sensor status and values \\
+\file{global.bob} & Global state, update timing, interlock test, reset, and all-off \\
+\file{trends.bob} & Principal live and archived trends \\
+\file{all_pvs.bob} & Complete configured PV catalog \\
+\bottomrule
+\end{tabularx}
+
+Operator pages intentionally expose the normal safe workflow. Expert pages contain the complete writable PV surface and should be used only when the direct behavior is understood.
+
+\subsection{Status fields to check}
+
+Before issuing a command, verify the relevant IOC and device status:
+
+\begin{itemize}
+  \item \pv{IOC_STATE} should be \code{RUNNING};
+  \item \pv{COMM_OK} should be true;
+  \item \pv{COMM_STATUS} should be \code{OK} for hardware or \code{SIMULATION} for a simulator;
+  \item \pv{LAST_UPDATE} should continue changing;
+  \item \pv{ERROR_CODE} should be zero and \pv{ERROR_MESSAGE} should be empty.
+\end{itemize}
+
+If communication is not healthy, do not assume that an old displayed value represents the current equipment state.
+
+\section{Operating the low-voltage supplies}
+
+The operator display uses a staged request/apply workflow. Editing a request field does not immediately write the instrument.
+
+\subsection{Set voltage and current limit}
+
+For the intended device and channel:
+
+\begin{enumerate}
+  \item confirm the device label, channel, communication status, and current output state;
+  \item enter the desired value in \pv{VOLTAGE_REQUEST};
+  \item enter the desired value in \pv{CURRENT_LIMIT_REQUEST};
+  \item recheck both values and press the confirmed \textbf{Apply} button;
+  \item verify \pv{APPLY_STATUS} and \pv{APPLY_MESSAGE};
+  \item verify the hardware readbacks:
+  \begin{itemize}
+    \item \pv{VOLTAGE_SET_RBV};
+    \item \pv{VOLTAGE_RBV};
+    \item \pv{CURRENT_LIMIT_RBV}.
+  \end{itemize}
+\end{enumerate}
+
+The IOC validates voltage and current together before writing either setting. The default software envelope is 0--60 V, 0--20 A, and a maximum requested voltage-current product of 420 W. A profile may impose stricter per-device or per-channel limits.
+
+\begin{importantbox}[Setpoint versus readback]
+A writable setpoint or request indicates what was requested or accepted by the IOC. A field ending in \code{_RBV} is updated from a device query and represents the hardware readback. Always verify the readback after a command.
+\end{importantbox}
+
+\subsection{Enable or disable an output}
+
+Use the confirmed output control for the intended channel. After the command, verify both \pv{OUTPUT_RBV} and the measured voltage/current. Do not rely only on the button state.
+
+\subsection{All-off}
+
+Device and global all-off commands are available in Phoebus. The global command is intended to disable managed power outputs and requires confirmation.
+
+\begin{warningbox}[All-off scope]
+Software all-off acts through the configured drivers. It does not replace hardware emergency-off systems, and its effectiveness depends on communication with the equipment. Verify the physical result when safety or detector protection depends on the output state.
+\end{warningbox}
+
+\section{Operating the chiller}
+
+\subsection{Apply a temperature setpoint}
+
+\begin{enumerate}
+  \item verify chiller communication and confirm that the displayed temperatures are updating;
+  \item enter the target in \pv{SETPOINT_REQUEST};
+  \item press the confirmed setpoint apply control;
+  \item verify the apply status and the applied setpoint readback;
+  \item monitor controlled temperature, bath temperature, and deviation alarms.
+\end{enumerate}
+
+The current configured range is 5--40 degrees C. The default deviation thresholds are 0.2 degrees C for warning and 0.5 degrees C for alarm.
+
+\subsection{Start or stop circulation}
+
+The chiller does not start automatically when the IOC starts. Use the confirmed \textbf{Start} or \textbf{Stop} control, then verify the running-state readback and temperature evolution.
+
+Pressure and external-temperature measurements are disabled in the current main-server profile because those values are not available from the present setup. Disabled optional measurements are not queried and are not shown on the operator page.
+
+\section{Viewing archived history}
+
+Phoebus Data Browser combines live Channel Access data with Archiver Appliance retrieval when the PV is registered and actively sampled. Operator pages provide principal live plots and \textbf{Full history} actions for archived PVs.
+
+\begin{importantbox}[Archive limitation]
+History is available only from the time a PV was successfully registered and sampled. Missing past samples cannot be reconstructed retroactively.
+\end{importantbox}
+
+If a recent value appears live but not in history, check:
+
+\begin{itemize}
+  \item that the Archiver terminal reported the relevant subsystem as ready;
+  \item that the PV is registered and connected in Archiver Appliance;
+  \item that the main host, Raspberry Pi, and Archiver host clocks are synchronized;
+  \item that the selected plot time range includes the expected timestamp.
+\end{itemize}
+
+\section{Stopping the software}
+
+The software components can be stopped independently:
+
+\begin{lstlisting}[style=shell]
+bdx_slow_control_kill_phoebus
+bdx_slow_control_kill_archiver
+bdx_slow_control_kill_ioc
+\end{lstlisting}
+
+To stop the complete local software stack:
+
+\begin{lstlisting}[style=shell]
+./scripts/kill_slow_control_all.sh
+\end{lstlisting}
+
+Normal shutdown is graceful. The \code{--force} option is reserved for processes that do not terminate normally.
+
+\begin{warningbox}[Software shutdown does not make the hardware safe]
+Stopping Phoebus, Archiver Appliance, or the IOC does not switch off PSU outputs, send an automatic all-off, stop the chiller, or change setpoints. Put the equipment in the intended state before stopping the IOC, and verify that state directly.
+\end{warningbox}
+
+\section{Basic troubleshooting}
+
+\begin{longtable}{@{}p{0.29\textwidth}p{0.65\textwidth}@{}}
+\toprule
+Symptom & Check or action \\
+\midrule
+\endhead
+Startup reports no graphical display & Run \command{bdx_slow_control_start} from a terminal in the Ubuntu desktop session. Confirm that \code{DISPLAY} or \code{WAYLAND_DISPLAY} is set. \\
+\addlinespace
+Runtime environment not found & Create \file{config/runtime.env} from the example and set \code{BDX_MAIN_HOST=172.22.50.2}. \\
+\addlinespace
+Phoebus launcher not found & Confirm the Phoebus installation. Set \code{BDX_PHOEBUS_HOME} or pass \code{--phoebus-home}. The current default is \file{~/SlowControl/css/phoebus-4.7.4-SNAPSHOT}. \\
+\addlinespace
+Raspberry warning at startup & Run \command{start-bdx-raspberry-ioc}. If it fails, inspect the remote service with \command{ssh -t pi@172.22.50.10 sudo journalctl -u bdx-environment-ioc -n 100 --no-pager}. \\
+\addlinespace
+A PSU does not communicate & Check the instrument Ethernet cable and front-panel network configuration. Run \command{ping} and \command{nc -vz <address> 9221}. Check whether another client already holds the instrument socket. \\
+\addlinespace
+Chiller does not communicate & Check \code{172.22.50.60:54321}, the chiller network configuration, and the IOC terminal error. \\
+\addlinespace
+PV is not found & Confirm the correct Channel Access address list, that the relevant IOC is running, and that no second IOC exposes the same PV names. \\
+\addlinespace
+Values are live but history is empty & Confirm Archiver registration, connection state, retrieval availability, and synchronized clocks. \\
+\addlinespace
+Display looks stale & Check \pv{LAST_UPDATE}, \pv{COMM_OK}, and the IOC terminal. A visible old value is not proof of current communication. \\
+\bottomrule
+\end{longtable}
+
+\section{Command reference}
+
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\toprule
+Command & Function \\
+\midrule
+\command{bdx_slow_control_start overview} & Start or reuse the main IOC, check Archiver, and open Phoebus \\
+\command{start-bdx-raspberry-ioc} & Start the Raspberry environment IOC and verify its readiness PV \\
+\command{start-bdx-raspberry-ioc --restart} & Restart the Raspberry service and verify it \\
+\command{bdx_slow_control_kill_phoebus} & Stop BDX slow-control Phoebus processes \\
+\command{bdx_slow_control_kill_archiver} & Stop the repository-managed local Archiver Appliance \\
+\command{bdx_slow_control_kill_ioc} & Stop BDX main IOC processes \\
+\command{./scripts/kill_slow_control_all.sh} & Stop all local slow-control software components \\
+\command{caproto-get <PV>} & Read one PV from the command line \\
+\command{caproto-put <PV> <value>} & Write one PV; use only with an understood command or setpoint \\
+\bottomrule
+\end{tabularx}
+
+\section{Further documentation}
+
+Detailed architecture, configuration, development, testing, and extension procedures are provided in the \emph{BDX Slow Control Developer Manual}. Raspberry-specific deployment details remain in \file{docs/raspberry.md}; Archiver-specific deployment details remain in \file{deploy/archiver-appliance/README.md}.
+
+\end{document}
