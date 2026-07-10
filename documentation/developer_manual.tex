@@ -1,6 +1,6 @@
 \documentclass[11pt]{article}
-\newcommand{\manualtitle}{BDX Slow Control Developer Manual}
-\newcommand{\manualshorttitle}{Developer Manual}
+\newcommand{\manualtitle}{BDX Slow Control User and Developer Manual}
+\newcommand{\manualshorttitle}{User and Developer Manual}
 \input{common/preamble}
 
 \begin{document}
@@ -12,6 +12,10 @@
 \clearpage
 \pagenumbering{arabic}
 
+\part{User manual}
+\input{developer/00_user_operations}
+
+\part{Developer guide}
 \input{developer/01_overview_and_architecture}
 \input{developer/02_configuration_and_pv_contract}
 \input{developer/03_drivers_iocs_and_builders}
