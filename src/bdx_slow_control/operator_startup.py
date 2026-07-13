@@ -1,4 +1,4 @@
-"""Ubuntu startup command with subsystem-level Archiver status checks."""
+"""Ubuntu startup command with controlled Archiver registration."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ def _archiver_phoebus_terminal_command(
         [
             f"cd {q(str(root))}",
             f"export BDX_PHOEBUS_HOME={q(str(phoebus_home))}",
-            "export BDX_ARCHIVER_STRICT_CHECK=false",
+            "export BDX_ARCHIVER_STRICT_CHECK=true",
             "(",
             "  set -euo pipefail",
             f"  source {q(str(stack_script))}",
@@ -35,37 +35,23 @@ def _archiver_phoebus_terminal_command(
             "  bdx_stack_wait_for_ioc_listener 90",
             '  bdx_stack_wait_for_pv_read "$IOC_READY_PV" 90',
             "  bdx_stack_ensure_archiver",
-            "  bdx_stack_check_archiver_subsystem() {",
-            '      local label="$1"',
-            '      local representative_pv="$2"',
-            '      echo "Checking Archiver status for $label: $representative_pv"',
-            '      if bdx_stack_archiver_pv_connected "$representative_pv"; then',
-            '          echo "$label Archiver status: ready"',
-            "          return 0",
-            "      fi",
+            '  echo "Starting controlled Archiver PV registration and validation."',
+            "  bdx_stack_controlled_archiver_registration",
             (
-                '      echo "Warning: $label Archiver status: not ready '
-                '($representative_pv)." >&2'
-            ),
-            (
-                '      echo "Continuing without catalog registration; Phoebus will use '
-                'live Channel Access where archive data are unavailable." >&2'
-            ),
-            "      return 0",
-            "  }",
-            '  bdx_stack_check_archiver_subsystem "PSU" "$ARCHIVER_READY_PV"',
-            (
-                '  bdx_stack_check_archiver_subsystem "Chiller" '
-                '"$ARCHIVER_CHILLER_READY_PV"'
-            ),
-            (
-                '  bdx_stack_check_archiver_subsystem "Environment" '
-                '"$ARCHIVER_ENV_READY_PV"'
+                '  echo "Archiver registration and representative-PV validation '
+                'completed successfully."'
             ),
             '  bdx_stack_launch_phoebus "$BDX_STACK_DISPLAY"',
             ")",
             "status=$?",
             "echo",
+            "if (( status != 0 )); then",
+            (
+                '  echo "ERROR: Archiver/Phoebus startup failed. Phoebus launch is '
+                'blocked until Archiver registration and representative-PV validation '
+                'succeed." >&2'
+            ),
+            "fi",
             'echo "Archiver/Phoebus workflow exited with status $status."',
             'echo "This terminal remains open for inspection."',
             "exec bash",

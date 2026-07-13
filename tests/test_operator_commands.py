@@ -218,10 +218,19 @@ def test_archiver_precedes_phoebus_in_second_terminal(tmp_path: Path):
         tmp_path / "phoebus",
     )
 
-    assert command.index("bdx_stack_ensure_archiver") < command.index(
-        "bdx_stack_launch_phoebus"
+    listener_index = command.index("bdx_stack_wait_for_ioc_listener 90")
+    ready_pv_index = command.index('bdx_stack_wait_for_pv_read "$IOC_READY_PV" 90')
+    ensure_index = command.index("bdx_stack_ensure_archiver")
+    registration_index = command.index("bdx_stack_controlled_archiver_registration")
+    launch_index = command.index("bdx_stack_launch_phoebus")
+
+    assert (
+        listener_index
+        < ready_pv_index
+        < ensure_index
+        < registration_index
+        < launch_index
     )
-    assert "bdx_stack_wait_for_ioc_listener 90" in command
     assert "BDX_ARCHIVER_STRICT_CHECK=true" in command
 
 

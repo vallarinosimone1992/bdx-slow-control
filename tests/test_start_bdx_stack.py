@@ -514,6 +514,44 @@ def test_stack_launch_forwards_selected_display_and_archiver_environment(tmp_pat
     )
 
 
+def test_stack_main_registration_failure_prevents_phoebus_launch(tmp_path: Path):
+    trace = tmp_path / "trace.log"
+    result = _run_bash(
+        "\n".join(
+            [
+                f'source "{START_SCRIPT}"',
+                f'TRACE="{trace}"',
+                'record() { printf "%s\\n" "$1" >> "$TRACE"; }',
+                "bdx_stack_parse_args() { BDX_STACK_DISPLAY=overview; record parse; }",
+                "bdx_stack_load_runtime_environment() { record environment; }",
+                "bdx_stack_validate_installation() { record validate; }",
+                "bdx_stack_print_summary() { record summary; }",
+                "bdx_stack_start_ioc_if_needed() { record start-ioc; }",
+                "bdx_stack_wait_for_ioc_listener() { record listener; }",
+                "bdx_stack_wait_for_pv_read() { record ready-pv; }",
+                "bdx_stack_ensure_archiver() { record ensure; }",
+                "bdx_stack_controlled_archiver_registration() { record registration; return 29; }",
+                "bdx_stack_launch_phoebus() { record phoebus; }",
+                "bdx_stack_main overview",
+            ]
+        ),
+        check=False,
+    )
+
+    assert result.returncode == 29
+    assert trace.read_text(encoding="utf-8").splitlines() == [
+        "parse",
+        "environment",
+        "validate",
+        "summary",
+        "start-ioc",
+        "listener",
+        "ready-pv",
+        "ensure",
+        "registration",
+    ]
+
+
 def test_phoebus_direct_launch_records_pid_and_mode(tmp_path: Path):
     fake_phoebus = tmp_path / "phoebus.sh"
     runtime = tmp_path / "runtime"
