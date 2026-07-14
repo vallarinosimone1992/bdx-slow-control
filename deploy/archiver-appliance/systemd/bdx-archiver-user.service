@@ -6,12 +6,14 @@ Wants=network-online.target
 [Service]
 Type=simple
 EnvironmentFile=%h/.config/bdx-archiver/archappl.env
+Environment=BDX_ARCHIVER_AUTO_REGISTER=false
 ExecStart=/bin/bash -lc 'exec "${BDX_ARCHIVER_SCRIPT_DIR:-%h/.local/share/bdx-archiver/app/scripts}/start.sh" --env "${BDX_ARCHIVER_ENV_FILE:-%h/.config/bdx-archiver/archappl.env}" --foreground --user-local'
 ExecStop=/bin/bash -lc 'exec "${BDX_ARCHIVER_SCRIPT_DIR:-%h/.local/share/bdx-archiver/app/scripts}/stop.sh" --env "${BDX_ARCHIVER_ENV_FILE:-%h/.config/bdx-archiver/archappl.env}" --user-local'
 Restart=on-failure
 RestartSec=10
 TimeoutStopSec=90
 KillSignal=SIGTERM
+KillMode=control-group
 
 [Install]
 WantedBy=default.target

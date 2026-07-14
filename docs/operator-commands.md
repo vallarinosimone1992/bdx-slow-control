@@ -1,133 +1,196 @@
 # Ubuntu Operator Commands
 
-The Ubuntu slow-control host exposes one graphical startup command and direct
-shutdown commands for the three local components.
+Slow control and the Archiver Appliance are independent lifecycle units. Normal
+operators own the IOC and Phoebus lifecycle. Expert operators own the four
+Archiver components and catalog repair.
 
-Install or refresh the commands after pulling repository changes:
+Install or refresh the commands after repository changes:
 
 ```bash
 cd ~/SlowControl/app/bdx-slow-control
 bash scripts/install_user_commands.sh
 ```
 
-The installer refreshes the editable Python installation and creates command
-links under `~/.local/bin`.
+The installer refreshes the editable virtual-environment installation, creates
+links under `~/.local/bin`, and installs (but does not enable) the user Archiver
+service definition.
 
-## Start the local slow-control stack
+## Preferred lifecycle commands
 
-Run this command from a terminal opened in the Ubuntu graphical desktop session:
+| Unit | Start | Stop | Convenient alias |
+|---|---|---|---|
+| Slow control | `bdx_slow_control_start` | `bdx_slow_control_kill` | `start_slow_control`, `kill_slow_control` |
+| Archiver | `bdx_archiver_start` | `bdx_archiver_kill` | `start_archiver`, `kill_archiver` |
 
-```bash
-bdx_slow_control_start
-```
+### Normal slow control
 
-The command checks the Raspberry environment IOC, then opens two independent
-terminal windows:
-
-```text
-BDX Main IOC
-    runs bdx-prototype-ioc on BDX_MAIN_HOST
-
-BDX Archiver and Phoebus
-    waits for the main IOC
-    starts or validates the user-local Archiver Appliance
-    waits for an archived PV connection
-    launches Phoebus with Archiver history enabled
-```
-
-GNU Screen is not used. The IOC terminal remains directly visible to the expert
-operator. Phoebus is launched from the graphical desktop environment, so JavaFX
-can access the Ubuntu display.
-
-`BDX_MAIN_HOST` is read from the environment or from the untracked
-`config/runtime.env`. The operational value on the current prototype host is:
-
-```text
-BDX_MAIN_HOST=172.22.50.2
-```
-
-The command is idempotent:
-
-- if a Channel Access server is already listening on `BDX_MAIN_HOST:5064`, no
-  second main IOC is opened;
-- if the recorded Phoebus process is still running, no second Phoebus instance
-  is opened;
-- a healthy Archiver deployment is left untouched;
-- a partially running Archiver deployment is reported instead of duplicated.
-
-The default display is `overview`. A different generated display can be passed
-as the positional argument:
+Run the start command in an Ubuntu graphical desktop terminal:
 
 ```bash
-bdx_slow_control_start psu
+start_slow_control
 ```
 
-The default Phoebus installation is:
+It checks the Raspberry environment IOC, starts the local project IOC when it
+is not already listening, verifies the IOC listener and a live IOC PV, reports
+Archiver endpoint health read-only, and launches Phoebus. It never starts,
+stops, repairs, registers,
+pauses, or resumes the Archiver. Archiver absence is not an error: Phoebus
+starts for normal live Channel Access operation and historical data is simply
+unavailable.
 
-```text
-~/SlowControl/css/phoebus-4.7.4-SNAPSHOT
-```
+The command reports one of:
 
-Override it with:
+- `Archiver services: available and healthy.`
+- `Archiver services: starting or temporarily unavailable.`
+- `Archiver services: completely absent.`
+
+The start command is idempotent: an IOC already listening on the configured
+address and a Phoebus process matching its recorded PID are not duplicated.
+The display defaults to `overview`; for example, `start_slow_control psu` opens
+the PSU display. `BDX_MAIN_HOST` comes from the environment or the untracked
+`config/runtime.env` and is `172.22.50.2` on the current prototype host.
+
+Stop normal slow control with:
 
 ```bash
-bdx_slow_control_start --phoebus-home /path/to/phoebus
+kill_slow_control
 ```
 
-## Raspberry environment IOC check
+It stops Phoebus and project-owned local `bdx-prototype-ioc` processes. It does
+not inspect or modify the Archiver and does not write an EPICS PV. Repeating the
+command when processes are already stopped succeeds cleanly.
 
-Before opening local terminals, the command verifies:
+### Expert Archiver lifecycle
 
-```text
-BDX:ENV:TEMP:T00:VALUE
-```
-
-using Channel Access directed only to `172.22.50.10`. If the PV does not
-respond, startup continues in degraded mode and prints:
-
-```text
-Start it with: start-bdx-raspberry-ioc
-```
-
-Start the installed Raspberry systemd service remotely with:
+Start only management, engine, ETL, and retrieval with:
 
 ```bash
-start-bdx-raspberry-ioc
+start_archiver
 ```
 
-The default SSH destination is `pi@172.22.50.10`. The command does nothing when
-the readiness PV already responds. Otherwise it runs `systemctl start` remotely
-and waits for the PV. Use `--restart` to force a service restart.
+The command uses the expert environment in
+`~/.config/bdx-archiver/archappl.env` and the installed user service. It
+reconciles stale PID files, refuses duplicates and untracked occupied ports,
+starts management, engine, ETL, and retrieval in that order, and bounds the
+post-startup readiness wait. HTTP failures such as the expected temporary 500
+responses are retried. Success requires a non-empty HTTP 2xx response from all
+four supported version endpoints. A component exit during startup is reported.
+The component JVMs are children of the user service manager, not the invoking
+terminal or SSH session, so they survive shell exit, SSH disconnect, and
+command-session completion. The service is installed but not enabled across a
+host reboot.
+The production user-local environment uses the bundled JDBM2 persistence file
+under `~/.local/share/bdx-archiver/state/persistence`, so the catalog survives a
+supported component restart independently of STS, MTS, and LTS sample data.
 
-## Direct shutdown commands
-
-Stop the main IOC launched by `bdx_slow_control_start`:
+After all components are ready, the default command audits the complete
+configured catalog and selectively repairs only missing PVs. Use this expert
+option to start and validate components without catalog repair:
 
 ```bash
-bdx_slow_control_kill_ioc
+start_archiver --no-repair
 ```
 
-Stop the user-local Archiver Appliance deployment:
+The command never starts an IOC and never launches Phoebus. Low-level Tomcat
+startup never performs bulk registration.
+
+Stop only the Archiver with:
 
 ```bash
-bdx_slow_control_kill_archiver
+kill_archiver
 ```
 
-Stop the recorded Phoebus process:
+The command stops retrieval, ETL, engine, and management in that order through
+the supported Tomcat lifecycle. It reconciles stale PID files, treats an
+already-stopped deployment as success, and reports remaining component
+processes or occupied ports. It never stops an IOC or Phoebus and never removes
+STS, MTS, LTS, or other archived data.
+
+## Catalog audit and selective repair
+
+Preferred expert commands are:
 
 ```bash
-bdx_slow_control_kill_phoebus
+bdx_archiver_audit
+bdx_archiver_repair
 ```
 
-The IOC and Phoebus commands use the runtime PID files under
-`.runtime/bdx-stack/` and validate the recorded process before sending a signal.
-The Archiver command delegates to the deployment stop script and never sends a
-generic signal to unrelated Java processes.
+`bdx_archiver_audit` is equivalent to
+`bdx_slow_control_repair_archiver --audit-only`. The compatibility command
+`bdx_slow_control_repair_archiver` remains available.
 
-IOC and Phoebus shutdown is graceful by default. `SIGKILL` is used only when
-`--force` is supplied explicitly:
+Repair requires all four endpoints to be healthy and an idle management queue.
+It classifies the 18 essential configured PVs, skips healthy entries, and processes every
+remaining PV one at a time. For each PV it waits for queue drain, connection, a
+real first event, and retrieval before proceeding. A failure is retried
+individually once. By default an isolated persistent failure is recorded and
+the next PV is attempted; `--stop-on-first-failure` restores fail-fast behavior
+for debugging. Global endpoint, catalog-API, retrieval-infrastructure, or queue
+serialization failures still stop immediately. There is no unconditional
+full-catalog registration and no automatic engine restart. A complete final
+catalog audit always runs when infrastructure remains healthy. The
+single-appliance identity selects the upstream local-appliance capacity path;
+it does not bypass metadata, queue, sampler, first-event, or retrieval checks.
+
+Every repair writes a timestamped JSON report under the Archiver runtime
+`state/run` directory. `--report-path FILE` selects an explicit location. Exit
+status 0 means the complete catalog passed; 1 means the run completed with
+missing or unhealthy PVs; 2 means a global infrastructure failure prevented
+safe continuation.
+
+Registrations outside the required 18-PV target are reported separately and do
+not affect audit success. They are never re-registered by repair. Experts may
+run `bdx_archiver_repair --pause-out-of-scope` to stop their future sampling.
+This uses the supported pause operation, not delete: registrations, type
+information, and existing STS/MTS/LTS history remain available for retrieval.
+
+To require retrieval after a known restart time:
 
 ```bash
-bdx_slow_control_kill_ioc --force
-bdx_slow_control_kill_phoebus --force
+bdx_archiver_repair --retrieval-from 2026-07-14T09:30:00Z
 ```
+
+## Archiver status in the IOC and Phoebus
+
+The main IOC polls the four local version endpoints every 10 seconds with a
+one-second request timeout. Polling is asynchronous, bounded, read-only, and
+does not make IOC startup depend on the Archiver. It exposes:
+
+- `BDX:ARCHIVER:STATUS` (`AVAILABLE`, `STARTING`, `DEGRADED`, or `UNAVAILABLE`)
+- `BDX:ARCHIVER:OK`
+- `BDX:ARCHIVER:MGMT_OK`
+- `BDX:ARCHIVER:ENGINE_OK`
+- `BDX:ARCHIVER:ETL_OK`
+- `BDX:ARCHIVER:RETRIEVAL_OK`
+- `BDX:ARCHIVER:CATALOG_OK`
+- `BDX:ARCHIVER:REQUIRED_TOTAL`
+- `BDX:ARCHIVER:REQUIRED_HEALTHY`
+- `BDX:ARCHIVER:CATALOG_STATUS`
+- `BDX:ARCHIVER:LAST_CHECK`
+- `BDX:ARCHIVER:ERROR_MESSAGE`
+
+These are read-only software-status PVs; they cannot control the Archiver. The
+general Phoebus overview shows textual component state and an alarm-sensitive
+warning and the required-catalog count. `AVAILABLE` means all four services and
+all 18 required PVs are healthy; `DEGRADED` means services are healthy but the
+required catalog is incomplete; `UNAVAILABLE` means at least one service is
+unavailable. Out-of-scope registrations do not affect this state. Live control
+remains active in every state, and recovery clears the alarm without restarting
+the IOC or Phoebus.
+
+## Compatibility and component commands
+
+The following legacy/component commands remain available:
+
+- `bdx_slow_control_start_archiver` aliases `bdx_archiver_start`.
+- `bdx_slow_control_kill_archiver` aliases `bdx_archiver_kill`.
+- `bdx_slow_control_kill_ioc` stops only local project IOC processes.
+- `bdx_slow_control_kill_phoebus` stops only recorded Phoebus processes.
+- `start-bdx-raspberry-ioc` starts or verifies the separately deployed
+  Raspberry environment IOC over SSH.
+
+The Raspberry readiness PV remains `BDX:ENV:TEMP:T00:VALUE`. Component shutdown
+commands validate process command lines before signalling them. `SIGKILL` is
+used only when `--force` is supplied explicitly to IOC or Phoebus shutdown. The
+chiller Archiver readiness/retrieval probe remains
+`BDX:CHILLER:CHILLER1:RUN_STATE`.

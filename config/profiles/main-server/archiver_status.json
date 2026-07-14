@@ -1,0 +1,25 @@
+{
+  "server": {
+    "interfaces": [
+      "0.0.0.0"
+    ],
+    "poll_interval": 5.0,
+    "log_pv_names": false
+  },
+  "monitor": {
+    "prefix": "BDX:ARCHIVER:",
+    "poll_interval": 10.0,
+    "request_timeout": 1.0,
+    "required_pv_lists": [
+      "deploy/archiver-appliance/pv-lists/psu.txt",
+      "deploy/archiver-appliance/pv-lists/chiller.txt",
+      "deploy/archiver-appliance/pv-lists/environment.txt"
+    ],
+    "endpoints": {
+      "mgmt": "http://127.0.0.1:17665/mgmt/bpl/getVersions",
+      "engine": "http://127.0.0.1:17666/engine/bpl/getVersion",
+      "etl": "http://127.0.0.1:17667/etl/bpl/getVersion",
+      "retrieval": "http://127.0.0.1:17668/retrieval/bpl/getVersion"
+    }
+  }
+}

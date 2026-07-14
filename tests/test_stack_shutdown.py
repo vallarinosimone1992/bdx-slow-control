@@ -330,11 +330,11 @@ def test_archiver_shutdown_is_successful_when_already_stopped(tmp_path: Path):
         },
     )
 
-    assert "already stopped" in result.stdout
-    assert not stop_log.exists()
+    assert "Archiver Appliance stopped" in result.stdout
+    assert stop_log.exists()
 
 
-def test_full_stack_shutdown_order(tmp_path: Path):
+def test_normal_slow_control_shutdown_excludes_archiver(tmp_path: Path):
     runtime = tmp_path / "runtime"
     runtime.mkdir()
     app_dir = tmp_path / "app"
@@ -367,6 +367,6 @@ def test_full_stack_shutdown_order(tmp_path: Path):
     )
 
     phoebus_index = result.stdout.index("Stopping Phoebus...")
-    archiver_index = result.stdout.index("Stopping Archiver Appliance...")
     ioc_index = result.stdout.index("Stopping BDX main IOC...")
-    assert phoebus_index < archiver_index < ioc_index
+    assert phoebus_index < ioc_index
+    assert "Archiver Appliance" not in result.stdout

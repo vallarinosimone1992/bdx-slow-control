@@ -1059,7 +1059,75 @@ def generate_overview(
         confirm="Switch all simulated PSU and HV channels off?",
         background=(255, 150, 150),
     )
-    y = add_timing_controls(display, y + 45)
+    y += 45
+    pv_names = {pv.name for pv in pvs}
+    if "BDX:ARCHIVER:STATUS" in pv_names:
+        display.label(
+            "ARCHIVER / HISTORICAL DATA",
+            20,
+            y,
+            300,
+            30,
+            size=16,
+            bold=True,
+        )
+        display.label(
+            "Live control remains active; historical data status:",
+            330,
+            y,
+            390,
+            30,
+            bold=True,
+        )
+        status_widget = display.text_update(
+            "BDX:ARCHIVER:STATUS",
+            725,
+            y,
+            190,
+            30,
+            size=14,
+            bold=True,
+            background=(235, 235, 235),
+        )
+        ET.SubElement(status_widget, "border_alarm_sensitive").text = "true"
+        display.label("Last check", 930, y, 90, 30, bold=True)
+        display.text_update("BDX:ARCHIVER:LAST_CHECK", 1025, y, 340, 30)
+
+        y += 38
+        component_pvs = (
+            ("Management", "BDX:ARCHIVER:MGMT_OK"),
+            ("Engine", "BDX:ARCHIVER:ENGINE_OK"),
+            ("ETL", "BDX:ARCHIVER:ETL_OK"),
+            ("Retrieval", "BDX:ARCHIVER:RETRIEVAL_OK"),
+        )
+        x = 20
+        for label, pv in component_pvs:
+            display.label(label, x, y, 95, 26, bold=True)
+            display.led(pv, x + 98, y, 26, 26)
+            x += 145
+        display.label("Required catalog", 620, y, 100, 26, bold=True)
+        catalog_widget = display.text_update(
+            "BDX:ARCHIVER:CATALOG_STATUS",
+            725,
+            y,
+            640,
+            26,
+            bold=True,
+        )
+        ET.SubElement(catalog_widget, "border_alarm_sensitive").text = "true"
+        y += 34
+        display.label("Diagnostic", 620, y, 100, 26, bold=True)
+        diagnostic_widget = display.text_update(
+            "BDX:ARCHIVER:ERROR_MESSAGE",
+            725,
+            y,
+            640,
+            26,
+        )
+        ET.SubElement(diagnostic_widget, "border_alarm_sensitive").text = "true"
+        y += 43
+
+    y = add_timing_controls(display, y)
 
     display.label("Subsystem communication", 20, y, 300, 28, size=18, bold=True)
     y += 35

@@ -179,13 +179,13 @@ Then start the stack and open Phoebus:
 ```
 
 The launcher derives all Channel Access settings from `BDX_MAIN_HOST`, starts
-`bdx-prototype-ioc` in a dedicated macOS Terminal window only if it is not
-already running on `$BDX_MAIN_HOST:5064`, verifies
-`BDX:PSU:LV1:CH1:VOLTAGE_RBV`, checks the user-local Archiver Appliance with the
-repository deployment scripts, starts it only when it is fully inactive, waits
-for Archiver `getPVStatus` to report `connectionState=true`, and then launches
-Phoebus. It does not configure network interfaces, invoke `sudo`, set clocks,
-write EPICS PVs, or change PSU or chiller settings.
+`bdx-prototype-ioc` only if it is not already running on
+`$BDX_MAIN_HOST:5064`, verifies `BDX:PSU:LV1:CH1:VOLTAGE_RBV`, reports the
+independent user-local Archiver Appliance status read-only, and launches
+Phoebus. It never starts, stops, or repairs the Archiver, and Phoebus remains
+available for live control when historical data is unavailable. It does not
+configure network interfaces, invoke `sudo`, set clocks, write EPICS PVs, or
+change PSU or chiller settings.
 
 The fixed prototype endpoints are:
 
@@ -197,7 +197,16 @@ Chiller:       172.22.50.60:54321
 Archiver:      http://127.0.0.1:17665-17668
 ```
 
-Controlled shutdown commands:
+Preferred independent lifecycle commands on Ubuntu are:
+
+```bash
+start_slow_control
+kill_slow_control
+start_archiver
+kill_archiver
+```
+
+Lower-level controlled shutdown commands remain available:
 
 ```bash
 ./scripts/kill_slow_control_phoebus.sh
@@ -208,8 +217,9 @@ Controlled shutdown commands:
 
 Despite the command names, normal shutdown is graceful. The IOC and direct
 Phoebus launchers receive `SIGTERM`; `SIGKILL` is used only when `--force` is
-supplied explicitly. The Archiver command delegates to the installed user-local
-Archiver stop script:
+supplied explicitly. `kill_slow_control_all.sh` stops Phoebus and the IOC only;
+it never modifies the Archiver. The Archiver-specific command delegates to the
+installed user-local Archiver stop script:
 
 ```bash
 ~/.local/share/bdx-archiver/app/scripts/stop.sh \
@@ -343,9 +353,12 @@ runtimes, WAR/JAR files, credentials, logs, databases, or archive data.
 See `deploy/archiver-appliance/README.md` for the pinned release, storage
 layout, local evaluation commands, provisional Ubuntu 22.04 deployment commands,
 PV registration, health checks, retrieval tests, and backup procedure.
-The default Archiver startup helper registers the operational PSU, chiller, and
-environment PV lists unless `BDX_ARCHIVER_AUTO_REGISTER=false` or an explicit
-`BDX_ARCHIVER_PV_LISTS` override is configured.
+The expert Archiver startup command selectively repairs the configured PSU,
+chiller, and environment PV lists after component readiness. The required
+catalog is intentionally limited to 18 essential physical measurements and
+applied setpoints. Low-level component startup never performs bulk registration.
+Every stored value carries its EPICS event timestamp; `LAST_UPDATE` heartbeat
+diagnostics are therefore intentionally excluded from value history.
 
 ## Phoebus displays
 
@@ -576,16 +589,12 @@ bdx-generate-displays \
   --only psu
 ```
 
-Register the same PVs through the deployment helper and leave them actively
+Repair the same 18-PV target through the expert command and leave them actively
 sampled before relying on historical data. The Archiver Appliance cannot
 reconstruct samples from before a PV was registered and archived:
 
 ```bash
-deploy/archiver-appliance/scripts/register-pvs.py \
-  --mgmt-url http://<ARCHIVER_HOST>:17665/mgmt/bpl \
-  deploy/archiver-appliance/pv-lists/environment.txt \
-  deploy/archiver-appliance/pv-lists/psu.txt \
-  deploy/archiver-appliance/pv-lists/chiller.txt
+bdx_archiver_repair
 ```
 
 ## Automated validation

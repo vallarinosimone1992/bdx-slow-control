@@ -40,13 +40,35 @@ if [[ ! -x "$BDX_ARCHIVER_TOMCAT_HOME/bin/catalina.sh" ]]; then
     bdx_die "Tomcat catalina.sh not found or not executable: $BDX_ARCHIVER_TOMCAT_HOME/bin/catalina.sh"
 fi
 
+overall=0
 for component in retrieval etl engine mgmt; do
     base="$(bdx_tomcat_base "$component")"
     if [[ -d "$base" ]]; then
-        echo "Stopping Archiver Appliance component: $component"
-        CATALINA_HOME="$BDX_ARCHIVER_TOMCAT_HOME" \
-        CATALINA_BASE="$base" \
-        CATALINA_PID="$base/tomcat.pid" \
-            "$BDX_ARCHIVER_TOMCAT_HOME/bin/catalina.sh" stop 30 -force || true
+        pid="$(bdx_reconcile_component_pid_file "$component")"
+        if [[ -n "$pid" ]]; then
+            echo "Stopping Archiver Appliance component: $component pid $pid"
+            CATALINA_HOME="$BDX_ARCHIVER_TOMCAT_HOME" \
+            CATALINA_BASE="$base" \
+            CATALINA_PID="$base/tomcat.pid" \
+                "$BDX_ARCHIVER_TOMCAT_HOME/bin/catalina.sh" stop 30 -force || true
+        else
+            echo "Archiver Appliance component is already stopped: $component"
+        fi
     fi
 done
+
+for component in retrieval etl engine mgmt; do
+    remaining="$(bdx_component_pids "$component")"
+    if [[ -n "$remaining" ]]; then
+        echo "$component processes remain after shutdown: $remaining" >&2
+        overall=1
+    else
+        rm -f "$(bdx_tomcat_base "$component")/tomcat.pid"
+    fi
+    if bdx_component_port_occupied "$component"; then
+        echo "$component port remains occupied: $(bdx_component_port "$component")" >&2
+        overall=1
+    fi
+done
+
+exit "$overall"

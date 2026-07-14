@@ -34,6 +34,7 @@ def test_main_server_profile_excludes_environment_ioc():
 def test_default_operational_profile_contains_global_psu_and_chiller():
     profile = DEFAULT_PROFILE_DIR
     assert {path.name for path in profile.glob("*.json")} == {
+        "archiver_status.json",
         "chiller.json",
         "global.json",
         "psu.json",

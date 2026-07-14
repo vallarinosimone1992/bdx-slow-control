@@ -267,7 +267,7 @@ if [[ "$archive_enabled" == true && -n "$BDX_ARCHIVER_PREFLIGHT_PV" ]]; then
             echo "Archiver preflight failed for $BDX_ARCHIVER_PREFLIGHT_PV." >&2
             exit 2
         else
-            echo "Archiver preflight failed; launching Phoebus with live Channel Access fallback." >&2
+            echo "Archiver preflight failed; launching Phoebus for normal live control. Historical data is unavailable." >&2
         fi
     elif is_true "$BDX_ARCHIVER_STRICT_CHECK"; then
         echo "curl is required for strict Archiver preflight." >&2

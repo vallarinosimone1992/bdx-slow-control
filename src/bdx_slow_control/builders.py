@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from .config import (
@@ -20,6 +21,7 @@ from .drivers.factory import (
     build_sensor_driver,
 )
 from .iocs.chiller import ChillerIOC
+from .iocs.archiver_status import ArchiverStatusIOC
 from .iocs.daq import DaqCrateIOC
 from .iocs.environment import EnvironmentalSensorIOC, EnvironmentSummaryIOC
 from .iocs.global_system import GlobalIOC
@@ -212,11 +214,39 @@ def build_global(config: dict[str, Any], context: PrototypeContext | None = None
     return group.pvdb, settings
 
 
+def build_archiver_status(config: dict[str, Any], context: PrototypeContext | None = None):
+    """Build the read-only monitor for the independently managed Archiver."""
+    settings = server_settings(config)
+    monitor = require_mapping(config, "monitor")
+    raw_endpoints = require_mapping(monitor, "endpoints")
+    endpoints = {str(name): str(url) for name, url in raw_endpoints.items()}
+    required_pvs: list[str] = []
+    seen: set[str] = set()
+    for raw_path in require_list(monitor, "required_pv_lists"):
+        path = Path(str(raw_path))
+        if not path.is_file():
+            raise ConfigurationError(f"Archiver required PV list does not exist: {path}")
+        for raw_line in path.read_text(encoding="utf-8").splitlines():
+            pv = raw_line.split("#", 1)[0].strip()
+            if pv and pv not in seen:
+                required_pvs.append(pv)
+                seen.add(pv)
+    group = ArchiverStatusIOC(
+        prefix=normalized_prefix(monitor.get("prefix", "BDX:ARCHIVER:")),
+        endpoints=endpoints,
+        poll_interval=float(monitor.get("poll_interval", 10.0)),
+        request_timeout=float(monitor.get("request_timeout", 1.0)),
+        required_pvs=required_pvs,
+    )
+    return group.pvdb, settings
+
+
 BUILDERS = {
     "psu": build_psu,
     "chiller": build_chiller,
     "environment": build_environment,
     "hv": build_hv,
     "daq": build_daq,
+    "archiver_status": build_archiver_status,
     "global": build_global,
 }

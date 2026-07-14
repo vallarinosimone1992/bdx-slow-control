@@ -270,8 +270,21 @@ def pv_already_registered(mgmt_url: str, pv: str, timeout: float) -> bool:
     return get_pv_status(mgmt_url, pv, timeout).already_registered
 
 
-def archive_pv(mgmt_url: str, pv: str, policy: str, timeout: float) -> tuple[bool, str]:
-    archive_url = bpl_url(mgmt_url, "archivePV", {"pv": pv, "policy": policy})
+def archive_pv(
+    mgmt_url: str,
+    pv: str,
+    policy: str,
+    timeout: float,
+    *,
+    appliance_id: str | None = None,
+) -> tuple[bool, str]:
+    params = {"pv": pv, "policy": policy}
+    if appliance_id:
+        # In a single-appliance deployment this selects the local appliance and
+        # uses the upstream skip-capacity-planning path.  Policy selection and
+        # all subsequent workflow/health validation remain unchanged.
+        params["appliance"] = appliance_id
+    archive_url = bpl_url(mgmt_url, "archivePV", params)
     status, body = fetch_text(archive_url, timeout)
     if 200 <= status < 300:
         return True, body.strip() or "submitted"

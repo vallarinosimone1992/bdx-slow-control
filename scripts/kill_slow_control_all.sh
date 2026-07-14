@@ -9,8 +9,10 @@ usage() {
     cat <<'EOF'
 Usage: kill_slow_control_all.sh [--timeout SECONDS] [--force]
 
-Gracefully stop the local BDX software stack in this order:
-Phoebus, Archiver Appliance, IOC.
+Gracefully stop normal BDX slow control in this order: Phoebus, IOC.
+
+The independently managed Archiver Appliance is inspected by neither step and
+is never stopped, restarted, repaired, or otherwise modified.
 
 The command stops software processes only. It never writes EPICS PVs and never
 changes PSU, chiller, network, or Raspberry clock state.
@@ -65,8 +67,6 @@ run_component "Phoebus" \
     "$SCRIPT_DIR/kill_slow_control_phoebus.sh" \
     ${TIMEOUT_ARGS[@]+"${TIMEOUT_ARGS[@]}"} \
     ${force_args[@]+"${force_args[@]}"}
-run_component "Archiver Appliance" \
-    "$SCRIPT_DIR/kill_slow_control_archiver.sh"
 run_component "BDX main IOC" \
     "$SCRIPT_DIR/kill_slow_control_ioc.sh" \
     ${TIMEOUT_ARGS[@]+"${TIMEOUT_ARGS[@]}"} \

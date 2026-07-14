@@ -3,7 +3,7 @@ import subprocess
 
 import pytest
 
-from bdx_slow_control import operator_commands
+from bdx_slow_control import operator_commands, operator_startup
 
 
 def _prepare_root(tmp_path: Path) -> Path:
@@ -37,10 +37,10 @@ def test_start_requires_graphical_desktop(monkeypatch):
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
 
     with pytest.raises(operator_commands.OperatorCommandError, match="graphical desktop"):
-        operator_commands._start_slow_control([])
+        operator_startup._start_slow_control([])
 
 
-def test_start_opens_ioc_and_archiver_phoebus_terminals(
+def test_start_opens_ioc_and_phoebus_terminals_without_archiver_mutation(
     monkeypatch,
     tmp_path: Path,
     capsys,
@@ -76,6 +76,7 @@ def test_start_opens_ioc_and_archiver_phoebus_terminals(
         lambda command: False,
     )
     monkeypatch.setattr(operator_commands, "_port_is_listening", lambda host, port: False)
+    monkeypatch.setattr(operator_commands, "report_archiver_health", lambda: "UNAVAILABLE")
     monkeypatch.setattr(
         operator_commands,
         "_recorded_process_running",
@@ -87,17 +88,18 @@ def test_start_opens_ioc_and_archiver_phoebus_terminals(
         lambda title, command: opened.append((title, command)),
     )
 
-    operator_commands._start_slow_control([])
+    operator_startup._start_slow_control([])
 
     output = capsys.readouterr()
     assert "start-bdx-raspberry-ioc" in output.err
     assert [title for title, _command in opened] == [
         "BDX Main IOC",
-        "BDX Archiver and Phoebus",
+        "BDX Phoebus",
     ]
     assert "bdx-prototype-ioc" in opened[0][1]
-    assert "bdx_stack_ensure_archiver" in opened[1][1]
     assert "bdx_stack_launch_phoebus" in opened[1][1]
+    assert "bdx_stack_ensure_archiver" not in opened[1][1]
+    assert "bdx_stack_controlled_archiver_registration" not in opened[1][1]
 
 
 def test_start_does_not_duplicate_running_ioc(monkeypatch, tmp_path: Path):
@@ -132,6 +134,7 @@ def test_start_does_not_duplicate_running_ioc(monkeypatch, tmp_path: Path):
         lambda command: True,
     )
     monkeypatch.setattr(operator_commands, "_port_is_listening", lambda host, port: True)
+    monkeypatch.setattr(operator_commands, "report_archiver_health", lambda: "AVAILABLE")
     monkeypatch.setattr(
         operator_commands,
         "_recorded_process_running",
@@ -143,9 +146,9 @@ def test_start_does_not_duplicate_running_ioc(monkeypatch, tmp_path: Path):
         lambda title, command: opened.append((title, command)),
     )
 
-    operator_commands._start_slow_control([])
+    operator_startup._start_slow_control([])
 
-    assert [title for title, _command in opened] == ["BDX Archiver and Phoebus"]
+    assert [title for title, _command in opened] == ["BDX Phoebus"]
 
 
 def test_start_does_not_duplicate_running_phoebus(monkeypatch, tmp_path: Path):
@@ -180,6 +183,7 @@ def test_start_does_not_duplicate_running_phoebus(monkeypatch, tmp_path: Path):
         lambda command: True,
     )
     monkeypatch.setattr(operator_commands, "_port_is_listening", lambda host, port: False)
+    monkeypatch.setattr(operator_commands, "report_archiver_health", lambda: "AVAILABLE")
     monkeypatch.setattr(
         operator_commands,
         "_recorded_process_running",
@@ -191,7 +195,7 @@ def test_start_does_not_duplicate_running_phoebus(monkeypatch, tmp_path: Path):
         lambda title, command: opened.append((title, command)),
     )
 
-    operator_commands._start_slow_control([])
+    operator_startup._start_slow_control([])
 
     assert [title for title, _command in opened] == ["BDX Main IOC"]
 
@@ -208,10 +212,10 @@ def test_ioc_terminal_records_pid_and_executes_ioc(tmp_path: Path):
     assert "bdx-prototype-ioc" in command
 
 
-def test_archiver_precedes_phoebus_in_second_terminal(tmp_path: Path):
+def test_ioc_readiness_precedes_phoebus_without_archiver_gate(tmp_path: Path):
     root = _prepare_root(tmp_path)
 
-    command = operator_commands._archiver_phoebus_terminal_command(
+    command = operator_startup._phoebus_terminal_command(
         root,
         "172.22.50.2",
         "overview",
@@ -220,18 +224,12 @@ def test_archiver_precedes_phoebus_in_second_terminal(tmp_path: Path):
 
     listener_index = command.index("bdx_stack_wait_for_ioc_listener 90")
     ready_pv_index = command.index('bdx_stack_wait_for_pv_read "$IOC_READY_PV" 90')
-    ensure_index = command.index("bdx_stack_ensure_archiver")
-    registration_index = command.index("bdx_stack_controlled_archiver_registration")
+    report_index = command.index("bdx_stack_report_archiver_status")
     launch_index = command.index("bdx_stack_launch_phoebus")
 
-    assert (
-        listener_index
-        < ready_pv_index
-        < ensure_index
-        < registration_index
-        < launch_index
-    )
-    assert "BDX_ARCHIVER_STRICT_CHECK=true" in command
+    assert listener_index < ready_pv_index < report_index < launch_index
+    assert "bdx_stack_ensure_archiver" not in command
+    assert "bdx_stack_controlled_archiver_registration" not in command
 
 
 def test_start_raspberry_ioc_is_idempotent(monkeypatch, tmp_path: Path, capsys):

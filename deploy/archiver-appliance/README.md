@@ -126,9 +126,14 @@ BDX_State_Change      MONITOR, nominal 1 s
 BDX_Diagnostic_Change MONITOR, nominal 5 s
 ```
 
-`BDX_Physical_5s` is used for physical readbacks and applied setpoint readbacks,
-including temperature, voltage, current, current limit, OVP, OCP, and chiller
-setpoint values.
+`BDX_Physical_5s` is used by the essential catalog for physical temperature,
+voltage and current readbacks and applied voltage/chiller setpoint readbacks.
+Its effective method is `MONITOR` with a nominal 5-second period and zero
+Archiver-side value delta/deadband. This is not a forced 5-second scan: the
+engine subscribes to EPICS archive monitor events and stores events delivered by
+the IOC. It does not synthesize periodic copies of an unchanged value merely to
+fill five-second intervals; whether an IOC posts an event for an unchanged value
+remains part of that record's EPICS behavior.
 
 `BDX_State_Change` is used for boolean and state-transition PVs, including
 communication OK/status, output state, run state, faults, warnings, alarms,
@@ -138,9 +143,12 @@ sensor status, and IOC state.
 error code, error message, last-update timestamps, pump stage, cooling mode,
 device status, and fault diagnosis.
 
-Heartbeat counters are not archived. Command PVs, staged request PVs, apply
-commands, clear-error commands, direct writable output/run controls, and
-temporary GUI state are not archived.
+Heartbeat counters and `LAST_UPDATE` diagnostics are not archived. Every stored
+Archiver event already retains the EPICS event timestamp associated with that
+sample, so value history does not require a separately archived timestamp PV.
+`LAST_UPDATE` remains a live diagnostic heartbeat. Command PVs, staged request
+PVs, apply commands, clear-error commands, direct writable output/run controls,
+and temporary GUI state are also excluded.
 
 ## Retention
 
@@ -164,24 +172,16 @@ policy that BDX has not approved.
 
 ## Archived PV Lists
 
-`pv-lists/environment.txt` archives Raspberry MCP9808 physical temperature
-values, sensor status/connectivity PVs, IOC state per sensor, error transitions,
-and the last successful temperature-update timestamp. The current environment
-IOC does not expose aggregate OK/failed sensor-count PVs; add them to this list
-when the IOC contract provides them.
+The initial operational archive is intentionally limited to 18 essential
+physical measurements and applied setpoints. `pv-lists/environment.txt`
+contains only T00 through T03 temperature values. `pv-lists/psu.txt` contains,
+for both channels of LV1 and LV2, the configured voltage readback, measured
+voltage, and measured current. `pv-lists/chiller.txt` contains only the applied
+setpoint and controlled-temperature readback; bath temperature is intentionally
+excluded at this stage. Diagnostics, state PVs and heartbeat timestamps remain
+available live but are not part of the required archive catalog.
 
-`pv-lists/psu.txt` archives LV1/LV2 physical readbacks, applied setpoint
-readbacks, output state, OVP/OCP readbacks, communication state, IOC state,
-all-outputs-off state, and error diagnostics.
-
-`pv-lists/chiller.txt` archives controlled temperature, bath temperature,
-applied setpoint, run/fault state, pump stage, cooling mode, Safe Mode readback
-status, safe setpoint readback, communication-timeout readback, standby status,
-deviation diagnostics, communication state, IOC state, and error diagnostics.
-Pressure and external-temperature PVs remain excluded while they are disabled in
-the default and main-server profiles.
-
-`pv-lists/prototype.txt` is the duplicate-free union of the enabled subsystem
+`pv-lists/prototype.txt` is the duplicate-free 18-PV union of the subsystem
 lists. Validate the PV lists with:
 
 ```bash
@@ -198,14 +198,22 @@ cp deploy/archiver-appliance/config/archappl.env.example \
   ~/.config/bdx-archiver/archappl.env
 ```
 
-Edit `~/.config/bdx-archiver/archappl.env` and set:
+Edit `~/.config/bdx-archiver/archappl.env` and set the bundled durable
+single-appliance persistence layer:
 
 ```bash
-BDX_ARCHIVER_EVALUATION_MODE=true
-ARCHAPPL_PERSISTENCE_LAYER=
+BDX_ARCHIVER_EVALUATION_MODE=false
+ARCHAPPL_PERSISTENCE_LAYER=org.epics.archiverappliance.config.persistence.JDBM2Persistence
+ARCHAPPL_PERSISTENCE_LAYER_JDBM2FILENAME="$HOME/.local/share/bdx-archiver/state/persistence/archapplconfig"
 BDX_ARCHIVER_TOMCAT_TARBALL=/path/to/apache-tomcat-11.x.y.tar.gz
 EPICS_CA_ADDR_LIST="172.22.50.2 172.22.50.10"
 ```
+
+JDBM2 persists catalog type information and pending requests across supported
+component restarts. Its file belongs under the user-local persistence directory;
+it is separate from STS, MTS, and LTS sample storage. Use the in-memory layer
+only for deliberately disposable evaluation because it returns with an empty
+catalog after every restart.
 
 Then stage and configure:
 
@@ -232,9 +240,15 @@ Start and stop manually:
   --user-local
 ```
 
-With the default configuration, `start.sh` also launches a background
-auto-registration helper after the four Archiver Appliance components start.
-For `--user-local`, the default PV lists resolve to:
+These low-level scripts affect only the four Tomcat components and never launch
+catalog registration. For the persistent user-local lifecycle, install the
+operator commands and use `bdx_archiver_start` and `bdx_archiver_kill`. The
+foreground Tomcats then belong to `bdx-archiver-user.service` and the user
+service manager rather than the invoking shell, so they survive shell exit,
+SSH disconnect, and command-session completion. The installer deliberately
+does not enable automatic restart across a reboot.
+
+For `--user-local`, the default expert repair PV lists resolve to:
 
 ```text
 ~/.local/share/bdx-archiver/app/pv-lists/psu.txt
@@ -288,20 +302,24 @@ sudo systemctl --no-pager --full status bdx-archiver
 
 ## PV Registration
 
-Automatic registration is enabled by default:
+Automatic registration is disabled during low-level component startup:
 
 ```bash
-BDX_ARCHIVER_AUTO_REGISTER=true
+BDX_ARCHIVER_AUTO_REGISTER=false
 BDX_ARCHIVER_PV_LISTS=
 BDX_ARCHIVER_REGISTER_RETRY_SECONDS=30
 ```
 
-When `BDX_ARCHIVER_PV_LISTS` is empty, the startup scripts use
+When `BDX_ARCHIVER_PV_LISTS` is empty, the expert repair command uses
 `$BDX_ARCHIVER_APP_DIR/pv-lists/psu.txt` and
 `$BDX_ARCHIVER_APP_DIR/pv-lists/chiller.txt`, and
 `$BDX_ARCHIVER_APP_DIR/pv-lists/environment.txt`, matching the complete deployed
-prototype split across the main host and Raspberry. After `mgmt`, `engine`,
-`etl`, and `retrieval` respond on component-specific BPL operations, the helper
+prototype split across the main host and Raspberry. The low-level component
+start script never invokes registration. After all four supported readiness
+endpoints are healthy, `bdx_archiver_start` invokes staged selective repair
+unless `--no-repair` is supplied.
+
+The legacy bulk command remains available for explicit compatibility use and
 runs an equivalent of:
 
 ```bash
@@ -312,18 +330,9 @@ register-pvs.py \
   "$BDX_ARCHIVER_APP_DIR/pv-lists/environment.txt"
 ```
 
-Registration is idempotent; PVs reported as already registered are treated as
-success. If the IOC is temporarily unavailable or a registration attempt fails,
-the helper logs the failure and retries every
-`BDX_ARCHIVER_REGISTER_RETRY_SECONDS` seconds. It writes a PID file under
-`$BDX_ARCHIVER_STATE_DIR/run`, repeated `start.sh` calls do not create duplicate
-helpers, and `stop.sh` stops the helper before stopping Tomcat.
-
-Disable automatic registration explicitly when manual registration is desired:
-
-```bash
-BDX_ARCHIVER_AUTO_REGISTER=false
-```
+Do not enable the legacy automatic helper for normal operation. Selective repair
+is deliberately serialized because sampler activation has demonstrated a race
+even for otherwise independent PVs.
 
 Dry-run registration:
 
@@ -345,8 +354,39 @@ Register PVs using the management BPL API:
   /opt/bdx-archiver/pv-lists/chiller.txt
 ```
 
-The registration script reports a per-PV outcome and returns non-zero if any PV
-cannot be registered.
+The legacy registration script remains available for compatibility. Normal
+startup and recovery use the staged selective repair command:
+
+```bash
+/opt/bdx-archiver/scripts/repair-archiver.sh \
+  --env /etc/bdx-archiver/archappl.env
+```
+
+This requires all four components to be healthy, waits for an idle management
+queue, audits the 18-PV required catalog, and registers only missing PVs
+one PV at a time. Each request must drain and the PV must connect, produce a
+real event, and return retrieval data before the next PV starts. Timed-out `METAINFO_GATHERING`
+requests are aborted only when they belong to the current batch. A failed PV is
+retried individually once. An isolated persistent failure is recorded and
+repair continues with the next PV; use `--stop-on-first-failure` for the old
+fail-fast behavior. Endpoint loss, an unexpected overlapping workflow, or a
+queue that cannot be restored to idle remains a global stop condition. There
+is no full-catalog fallback or automatic component restart. The command writes
+a timestamped JSON report under `$BDX_ARCHIVER_STATE_DIR/run`, reports exact
+final failures, returns 1 for completed partial success, and returns 2 for a
+global infrastructure failure.
+
+Audit output reports registrations outside the required set separately. They do
+not affect required-catalog success and repair never re-registers them. The
+expert `--pause-out-of-scope` option stops future sampling of those
+registrations using the supported pause BPL. Pause leaves each PV registered and
+preserves its type information and STS/MTS/LTS history for retrieval. Repair
+never invokes a delete/purge BPL and never removes archive storage.
+
+In a configured single-appliance deployment it includes
+`BDX_ARCHIVER_APPLIANCE_ID` in each request, selecting the upstream
+skip-capacity-planning path while retaining the named BDX policy and every
+queue, first-event, and retrieval validation gate.
 
 ## Health Checks
 

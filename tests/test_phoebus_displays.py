@@ -710,6 +710,30 @@ def test_deployed_display_catalog_generates_active_subsystems_only(tmp_path: Pat
     assert "daq.bob" not in navigation_targets
 
 
+def test_overview_reports_archiver_health_without_hardware_control(tmp_path: Path):
+    generate(DEFAULT_PROFILE, tmp_path, catalog_path=DEPLOYED_DISPLAY_CATALOG)
+
+    overview = tmp_path / "overview.bob"
+    references = _pv_references(overview)
+    labels = _labels(overview)
+    expected = {
+        "BDX:ARCHIVER:STATUS",
+        "BDX:ARCHIVER:MGMT_OK",
+        "BDX:ARCHIVER:ENGINE_OK",
+        "BDX:ARCHIVER:ETL_OK",
+        "BDX:ARCHIVER:RETRIEVAL_OK",
+        "BDX:ARCHIVER:CATALOG_STATUS",
+        "BDX:ARCHIVER:LAST_CHECK",
+        "BDX:ARCHIVER:ERROR_MESSAGE",
+    }
+
+    assert expected.issubset(references)
+    assert "ARCHIVER / HISTORICAL DATA" in labels
+    assert "Live control remains active; historical data status:" in labels
+    assert "Required catalog" in labels
+    assert not any(name.endswith("_CMD") for name in expected)
+
+
 def test_deployed_overview_and_trends_cover_environment_chiller_and_lv(
     tmp_path: Path,
 ):
@@ -880,7 +904,7 @@ def test_phoebus_launcher_configures_archive_settings_when_enabled(tmp_path: Pat
     assert "Archiver retrieval: pbraw://archiver.example:17668/retrieval" in completed.stdout
 
 
-def test_phoebus_launcher_keeps_live_fallback_when_archive_preflight_fails(
+def test_phoebus_launcher_keeps_normal_live_control_when_archive_preflight_fails(
     tmp_path: Path,
 ):
     launcher = tmp_path / "fake_phoebus.sh"
@@ -907,7 +931,8 @@ def test_phoebus_launcher_keeps_live_fallback_when_archive_preflight_fails(
     )
 
     assert "Archiver enabled: true" in completed.stdout
-    assert "live Channel Access fallback" in completed.stderr
+    assert "normal live control" in completed.stderr
+    assert "Historical data is unavailable" in completed.stderr
 
 
 def test_raspberry_overview_environment_chart_uses_configured_temperature_pvs(

@@ -12,5 +12,7 @@ def test_aggregate_prototype_contains_all_major_subsystems():
         "BDX:HV:HV1:COMM_STATUS",
         "BDX:DAQ:CRATE01:READY",
         "BDX:GLOBAL:SYSTEM_STATE",
+        "BDX:ARCHIVER:STATUS",
+        "BDX:ARCHIVER:OK",
     }
     assert required.issubset(pvdb)

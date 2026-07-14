@@ -57,10 +57,18 @@ fi
 
 start_component_background() {
     local component="$1"
-    local base
+    local base existing_pid
     base="$(bdx_tomcat_base "$component")"
     if [[ ! -d "$base" ]]; then
         bdx_die "Tomcat base not configured for $component: $base"
+    fi
+    existing_pid="$(bdx_reconcile_component_pid_file "$component")"
+    if [[ -n "$existing_pid" ]]; then
+        echo "Archiver Appliance component is already running: $component pid $existing_pid"
+        return 0
+    fi
+    if bdx_component_port_occupied "$component"; then
+        bdx_die "Refusing to start $component: port $(bdx_component_port "$component") is occupied by an untracked process."
     fi
     echo "Starting Archiver Appliance component: $component"
     CATALINA_HOME="$BDX_ARCHIVER_TOMCAT_HOME" \
@@ -72,9 +80,10 @@ start_component_background() {
 foreground_pids=()
 
 stop_foreground_components() {
-    local pid
+    local index pid
     bdx_archiver_stop_registration_retry
-    for pid in "${foreground_pids[@]:-}"; do
+    for ((index = ${#foreground_pids[@]} - 1; index >= 0; index--)); do
+        pid="${foreground_pids[$index]}"
         if kill -0 "$pid" >/dev/null 2>&1; then
             kill "$pid" >/dev/null 2>&1 || true
         fi
@@ -83,10 +92,17 @@ stop_foreground_components() {
 
 start_component_foreground() {
     local component="$1"
-    local base
+    local base existing_pid
     base="$(bdx_tomcat_base "$component")"
     if [[ ! -d "$base" ]]; then
         bdx_die "Tomcat base not configured for $component: $base"
+    fi
+    existing_pid="$(bdx_reconcile_component_pid_file "$component")"
+    if [[ -n "$existing_pid" ]]; then
+        bdx_die "$component is already active outside this service supervisor: $existing_pid"
+    fi
+    if bdx_component_port_occupied "$component"; then
+        bdx_die "Refusing to start $component: port $(bdx_component_port "$component") is occupied by an untracked process."
     fi
     echo "Starting Archiver Appliance component in foreground: $component"
     CATALINA_HOME="$BDX_ARCHIVER_TOMCAT_HOME" \
@@ -96,6 +112,7 @@ start_component_foreground() {
         >>"$BDX_ARCHIVER_LOG_DIR/$component.out" \
         2>>"$BDX_ARCHIVER_LOG_DIR/$component.err" &
     foreground_pids+=("$!")
+    printf '%s\n' "$!" >"$base/tomcat.pid"
 }
 
 if [[ "$FOREGROUND" -eq 1 ]]; then
@@ -103,7 +120,7 @@ if [[ "$FOREGROUND" -eq 1 ]]; then
     for component in $(bdx_component_list); do
         start_component_foreground "$component"
     done
-    bdx_archiver_start_registration_retry "$ENV_FILE" "$USER_LOCAL"
+    echo "Automatic catalog registration is disabled during component startup."
     wait -n "${foreground_pids[@]}"
     status=$?
     stop_foreground_components
@@ -114,4 +131,4 @@ for component in $(bdx_component_list); do
     start_component_background "$component"
 done
 
-bdx_archiver_start_registration_retry "$ENV_FILE" "$USER_LOCAL"
+echo "Automatic catalog registration is disabled during component startup."

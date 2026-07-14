@@ -219,6 +219,31 @@ def test_disconnected_status_parsing():
     assert batch_tool.status_failure_reason(status, _retrieval_ok()) == "disconnected"
 
 
+def test_single_appliance_registration_preserves_policy_and_selects_appliance(monkeypatch):
+    requested_url = ""
+
+    def fetch(url, _timeout):
+        nonlocal requested_url
+        requested_url = url
+        return 200, "submitted"
+
+    monkeypatch.setattr(archiver_common, "fetch_text", fetch)
+
+    ok, message = archiver_common.archive_pv(
+        "http://127.0.0.1:17665/mgmt/bpl",
+        "BDX:TEST:VALUE",
+        "BDX_Physical_5s",
+        1.0,
+        appliance_id="bdx0",
+    )
+
+    assert ok is True
+    assert message == "submitted"
+    assert "pv=BDX%3ATEST%3AVALUE" in requested_url
+    assert "policy=BDX_Physical_5s" in requested_url
+    assert "appliance=bdx0" in requested_url
+
+
 def test_never_last_event_reports_initial_sampling_incomplete():
     status = archiver_common.ArchiverStatus(
         "registered",
