@@ -100,6 +100,8 @@ def test_archiver_deployment_tree_exists():
         "scripts/archiver_common.py",
         "scripts/auto-register-pvs.sh",
         "scripts/register-pvs.py",
+        "scripts/repair_archiver.py",
+        "scripts/repair-archiver.sh",
         "scripts/test-archive-batches.py",
         "scripts/verify-retrieval.py",
         "scripts/backup-config.sh",
@@ -136,6 +138,8 @@ def test_archiver_operator_scripts_are_executable():
         "healthcheck.sh",
         "auto-register-pvs.sh",
         "register-pvs.py",
+        "repair_archiver.py",
+        "repair-archiver.sh",
         "test-archive-batches.py",
         "verify-retrieval.py",
         "backup-config.sh",
@@ -143,6 +147,142 @@ def test_archiver_operator_scripts_are_executable():
     ]:
         mode = (SCRIPTS / script).stat().st_mode
         assert mode & stat.S_IXUSR
+
+
+def test_low_level_start_has_fixed_order_and_never_registers_catalog():
+    text = (SCRIPTS / "start.sh").read_text(encoding="utf-8")
+
+    assert "printf \"%s\\n\" mgmt engine etl retrieval" in (
+        SCRIPTS / "common.sh"
+    ).read_text(encoding="utf-8")
+    assert "bdx_archiver_start_registration_retry" not in text
+    assert "Automatic catalog registration is disabled during component startup" in text
+
+
+def test_user_service_owns_persistent_foreground_lifecycle():
+    text = (ARCHIVER / "systemd/bdx-archiver-user.service").read_text(
+        encoding="utf-8"
+    )
+
+    assert "--foreground --user-local" in text
+    assert "ExecStop=" in text
+    assert "scripts}/stop.sh" in text
+    assert "Environment=BDX_ARCHIVER_AUTO_REGISTER=false" in text
+    assert "KillMode=control-group" in text
+
+
+def test_catalog_repair_uses_a_non_overlapping_process_lock():
+    text = (SCRIPTS / "repair-archiver.sh").read_text(encoding="utf-8")
+
+    assert "repair-archiver.lock" in text
+    assert "flock -n 9" in text
+    assert "Another Archiver catalog repair is already active" in text
+    assert "PYTHONUNBUFFERED=1" in text
+
+
+def test_start_and_stop_reconcile_stale_pids_without_duplicates(tmp_path: Path):
+    env_file = _write_minimal_archiver_env(tmp_path)
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    fake_curl = fake_bin / "curl"
+    fake_curl.write_text("#!/usr/bin/env bash\nexit 1\n", encoding="utf-8")
+    fake_curl.chmod(0o755)
+
+    tomcat_home = tmp_path / "tomcat"
+    catalina = tomcat_home / "bin" / "catalina.sh"
+    catalina.parent.mkdir(parents=True)
+    stop_log = tmp_path / "stop.log"
+    catalina.write_text(
+        "\n".join(
+            [
+                "#!/usr/bin/env bash",
+                "set -euo pipefail",
+                'case "${1:-}" in',
+                "  start)",
+                "    bash -c 'exec -a \"$1\" sleep 30' _ \"java -Dcatalina.base=$CATALINA_BASE\" </dev/null >/dev/null 2>&1 &",
+                '    printf "%s\\n" "$!" > "$CATALINA_PID"',
+                "    ;;&",
+                "  stop)",
+                '    basename "$CATALINA_BASE" >> "$FAKE_STOP_LOG"',
+                '    pid="$(cat "$CATALINA_PID" 2>/dev/null || true)"',
+                '    [[ -n "$pid" ]] && kill "$pid" 2>/dev/null || true',
+                "    ;;&",
+                "esac",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    catalina.chmod(0o755)
+    bases = tmp_path / "tomcat-bases"
+    for component in ("mgmt", "engine", "etl", "retrieval"):
+        (bases / component).mkdir(parents=True)
+    stale = bases / "mgmt" / "tomcat.pid"
+    stale.write_text(f"{os.getpid()}\n", encoding="utf-8")
+
+    environment = {
+        **os.environ,
+        "PATH": f"{fake_bin}{os.pathsep}{os.environ['PATH']}",
+        "FAKE_STOP_LOG": str(stop_log),
+    }
+    started_pids: list[int] = []
+    try:
+        first = subprocess.run(
+            [str(SCRIPTS / "start.sh"), "--env", str(env_file)],
+            check=True,
+            text=True,
+            capture_output=True,
+            env=environment,
+        )
+        started_pids = [
+            int((bases / component / "tomcat.pid").read_text(encoding="utf-8"))
+            for component in ("mgmt", "engine", "etl", "retrieval")
+        ]
+        assert len(set(started_pids)) == 4
+        assert "Removing stale mgmt PID file" in first.stderr
+
+        second = subprocess.run(
+            [str(SCRIPTS / "start.sh"), "--env", str(env_file)],
+            check=True,
+            text=True,
+            capture_output=True,
+            env=environment,
+        )
+        repeated_pids = [
+            int((bases / component / "tomcat.pid").read_text(encoding="utf-8"))
+            for component in ("mgmt", "engine", "etl", "retrieval")
+        ]
+        assert repeated_pids == started_pids
+        assert second.stdout.count("is already running") == 4
+
+        subprocess.run(
+            [str(SCRIPTS / "stop.sh"), "--env", str(env_file)],
+            check=True,
+            text=True,
+            capture_output=True,
+            env=environment,
+        )
+        assert stop_log.read_text(encoding="utf-8").splitlines() == [
+            "retrieval",
+            "etl",
+            "engine",
+            "mgmt",
+        ]
+
+        repeated_stop = subprocess.run(
+            [str(SCRIPTS / "stop.sh"), "--env", str(env_file)],
+            check=True,
+            text=True,
+            capture_output=True,
+            env=environment,
+        )
+        assert repeated_stop.stdout.count("is already stopped") == 4
+    finally:
+        for pid in started_pids:
+            try:
+                os.kill(pid, 15)
+            except ProcessLookupError:
+                pass
 
 
 def test_archiver_env_path_generation_is_configurable(tmp_path: Path):
@@ -212,7 +352,7 @@ def test_archiver_auto_registration_command_defaults_to_deployed_lists(
         capture_output=True,
     )
 
-    assert "register-pvs.py" in result.stdout
+    assert "repair_archiver.py" in result.stdout
     assert "--mgmt-url http://127.0.0.1:17665/mgmt/bpl" in result.stdout
     assert f"{tmp_path / 'app' / 'pv-lists' / 'psu.txt'}" in result.stdout
     assert f"{tmp_path / 'app' / 'pv-lists' / 'chiller.txt'}" in result.stdout
@@ -359,20 +499,32 @@ def test_archiver_pv_lists_exclude_command_and_staging_pvs():
             assert not pv.endswith(disallowed_suffixes), f"{path} archives command PV {pv}"
 
 
-def test_archiver_pv_lists_include_required_psu_diagnostics():
-    psu_pvs = set(_read_pvs(PV_LISTS / "psu.txt"))
+def test_archiver_configured_catalog_is_exactly_18_unique_essential_pvs():
+    environment_pvs = _read_pvs(PV_LISTS / "environment.txt")
+    psu_pvs = _read_pvs(PV_LISTS / "psu.txt")
+    chiller_pvs = _read_pvs(PV_LISTS / "chiller.txt")
+    configured = environment_pvs + psu_pvs + chiller_pvs
 
-    for device in ("LV1", "LV2"):
-        assert f"BDX:PSU:{device}:IOC_STATE" in psu_pvs
-        assert f"BDX:PSU:{device}:ERROR_CODE" in psu_pvs
-        assert f"BDX:PSU:{device}:ERROR_MESSAGE" in psu_pvs
-        assert f"BDX:PSU:{device}:ALL_OUTPUTS_OFF" in psu_pvs
-        for channel in ("CH1", "CH2"):
-            prefix = f"BDX:PSU:{device}:{channel}:"
-            assert f"{prefix}OVP_RBV" in psu_pvs
-            assert f"{prefix}OCP_RBV" in psu_pvs
-            assert f"{prefix}ERROR_CODE" in psu_pvs
-            assert f"{prefix}ERROR_MESSAGE" in psu_pvs
+    expected_psu = [
+        f"BDX:PSU:{device}:{channel}:{suffix}"
+        for device in ("LV1", "LV2")
+        for channel in ("CH1", "CH2")
+        for suffix in ("VOLTAGE_SET_RBV", "VOLTAGE_RBV", "CURRENT_RBV")
+    ]
+    expected_chiller = [
+        "BDX:CHILLER:CHILLER1:SETPOINT_RBV",
+        "BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV",
+    ]
+    expected_environment = [
+        f"BDX:ENV:TEMP:T{index:02d}:VALUE" for index in range(4)
+    ]
+
+    assert psu_pvs == expected_psu
+    assert chiller_pvs == expected_chiller
+    assert environment_pvs == expected_environment
+    assert len(configured) == 18
+    assert len(set(configured)) == 18
+    assert not any(pv.endswith(":LAST_UPDATE") for pv in configured)
 
 
 def test_archiver_chiller_list_excludes_disabled_optional_measurements():
@@ -384,33 +536,13 @@ def test_archiver_chiller_list_excludes_disabled_optional_measurements():
     assert "BDX:CHILLER:CHILLER1:EXTERNAL_TEMPERATURE_VALID" not in chiller_pvs
 
 
-def test_archiver_chiller_list_includes_approved_operational_pvs():
+def test_archiver_chiller_list_excludes_controlled_and_diagnostic_pvs():
     chiller_pvs = set(_read_pvs(PV_LISTS / "chiller.txt"))
 
-    expected = {
-        "BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV",
-        "BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV",
-        "BDX:CHILLER:CHILLER1:SETPOINT_RBV",
-        "BDX:CHILLER:CHILLER1:RUN_RBV",
-        "BDX:CHILLER:CHILLER1:RUN_STATE",
-        "BDX:CHILLER:CHILLER1:FAULT",
-        "BDX:CHILLER:CHILLER1:SAFE_MODE_STATUS",
-        "BDX:CHILLER:CHILLER1:SAFE_SETPOINT_RBV",
-        "BDX:CHILLER:CHILLER1:COMM_TIMEOUT_RBV",
-        "BDX:CHILLER:CHILLER1:STANDBY_STATUS",
-        "BDX:CHILLER:CHILLER1:COMM_OK",
-        "BDX:CHILLER:CHILLER1:COMM_STATUS",
-        "BDX:CHILLER:CHILLER1:IOC_STATE",
-        "BDX:CHILLER:CHILLER1:ERROR_CODE",
-        "BDX:CHILLER:CHILLER1:ERROR_MESSAGE",
-        "BDX:CHILLER:CHILLER1:PUMP_STAGE",
-        "BDX:CHILLER:CHILLER1:COOLING_MODE",
-        "BDX:CHILLER:CHILLER1:TEMPERATURE_DEVIATION_RBV",
-        "BDX:CHILLER:CHILLER1:DEVIATION_WARNING",
-        "BDX:CHILLER:CHILLER1:DEVIATION_ALARM",
-        "BDX:CHILLER:CHILLER1:DEVIATION_STATUS",
-    }
-    assert expected.issubset(chiller_pvs)
+    assert "BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV" in chiller_pvs
+    assert "BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV" not in chiller_pvs
+    assert "BDX:CHILLER:CHILLER1:LAST_UPDATE" not in chiller_pvs
+    assert "BDX:CHILLER:CHILLER1:ERROR_MESSAGE" not in chiller_pvs
 
 
 def test_archiver_prototype_list_is_deduplicated_union_of_enabled_lists():
@@ -607,3 +739,5 @@ def test_archiver_env_documents_approved_retention_semantics():
     assert "BDX_ARCHIVER_LONG_TERM_HOLD_YEARS" not in text
     assert "BDX_ARCHIVER_HEARTBEAT_POLICY" not in text
     assert "Long-term storage intentionally has no automatic deletion" in text
+    assert "JDBM2Persistence" in text
+    assert "ARCHAPPL_PERSISTENCE_LAYER_JDBM2FILENAME" in text

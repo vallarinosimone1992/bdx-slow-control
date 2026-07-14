@@ -1,0 +1,51 @@
+\section{Principal environment variables}
+
+\begin{longtable}{@{}p{0.35\textwidth}p{0.59\textwidth}@{}}
+\toprule
+Variable & Purpose \\
+\midrule
+\endhead
+\code{BDX_SLOW_CONTROL_ROOT} & Explicit repository checkout path for operator commands \\
+\code{BDX_MAIN_HOST} & Operational main IOC address \\
+\code{BDX_RUNTIME_ENV} & Alternative runtime environment file \\
+\code{BDX_EPICS_INTERFACE} & Channel Access server interface override \\
+\code{BDX_CA_ADDR_LIST} & Phoebus/client Channel Access address list \\
+\code{BDX_CA_AUTO_ADDR_LIST} & Enable or disable automatic CA address discovery \\
+\code{BDX_PHOEBUS_HOME} & Phoebus installation directory containing \file{phoebus.sh} \\
+\code{BDX_PHOEBUS_CMD} & Explicit Phoebus launcher command \\
+\code{BDX_PHOEBUS_DISPLAY} & Initial display resource \\
+\code{BDX_TERMINAL} & Explicit graphical terminal executable \\
+\code{BDX_LOG_LEVEL} & Python/IOC log verbosity \\
+\code{BDX_STACK_RUNTIME_DIR} & Runtime PID and stack state directory \\
+\code{BDX_RASPBERRY_SSH_HOST} & SSH destination for Raspberry service control \\
+\code{BDX_ARCHIVER_ENABLED} & Include or disable archive retrieval in generated resources \\
+\code{BDX_ARCHIVER_URL} & Archiver retrieval endpoint \\
+\code{BDX_ARCHIVER_NAME} & Phoebus archive source name \\
+\code{BDX_ARCHIVER_STRICT_CHECK} & Make archive preflight failure fatal when enabled \\
+\code{BDX_TREND_RANGE} & Default generated plot time range \\
+\code{BDX_TREND_SCAN_PERIOD} & Live plot scan period \\
+\code{BDX_TREND_RING_SIZE} & Live Data Browser buffer size \\
+\code{BDX_TREND_ARCHIVE_REQUEST} & Archive retrieval optimization mode \\
+\bottomrule
+\end{longtable}
+
+\section{Principal console scripts}
+
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\toprule
+Command & Role \\
+\midrule
+\command{bdx-prototype-ioc} & Run all configured local subsystem groups in one caproto server \\
+\command{bdx-psu-ioc} & Run only the PSU builder/profile \\
+\command{bdx-chiller-ioc} & Run only the chiller builder/profile \\
+\command{bdx-environment-ioc} & Run only the environment builder/profile \\
+\command{bdx-hv-ioc} & Run only the HV builder/profile \\
+\command{bdx-daq-ioc} & Run only the DAQ builder/profile \\
+\command{bdx-global-ioc} & Run only the global builder/profile \\
+\command{bdx-pv-list} & Print or write the configured PV names \\
+\command{bdx-generate-displays} & Generate Phoebus displays, plots, and PV tables \\
+\command{bdx-environment-check} & Validate the configured environment sensor hardware \\
+\command{bdx_slow_control_start} & Start/reuse the Ubuntu operator stack and launch Phoebus \\
+\command{start-bdx-raspberry-ioc} & Control and verify the remote Raspberry environment service \\
+\bottomrule
+\end{tabularx}

@@ -14,15 +14,42 @@ fi
 
 "$VENV_PYTHON" -m pip install -e "$ROOT_DIR"
 
+ARCHIVER_ENV_FILE="${BDX_ARCHIVER_ENV_FILE:-$HOME/.config/bdx-archiver/archappl.env}"
+if [[ -f "$ARCHIVER_ENV_FILE" ]]; then
+    "$ROOT_DIR/deploy/archiver-appliance/scripts/install.sh" \
+        --env "$ARCHIVER_ENV_FILE" \
+        --user-local
+else
+    echo "Archiver expert environment is not installed; skipping deployment refresh: $ARCHIVER_ENV_FILE"
+fi
+
 mkdir -p "$USER_BIN"
 
 commands=(
     bdx_slow_control_start
+    bdx_slow_control_kill
+    bdx_archiver_start
+    bdx_archiver_kill
+    start_slow_control
+    kill_slow_control
+    start_archiver
+    kill_archiver
+    bdx_slow_control_start_archiver
+    bdx_slow_control_repair_archiver
+    bdx_archiver_repair
+    bdx_archiver_audit
     bdx_slow_control_kill_ioc
     bdx_slow_control_kill_archiver
     bdx_slow_control_kill_phoebus
     start-bdx-raspberry-ioc
 )
+
+USER_SYSTEMD_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
+install -d -m 0755 "$USER_SYSTEMD_DIR"
+install -m 0644 \
+    "$ROOT_DIR/deploy/archiver-appliance/systemd/bdx-archiver-user.service" \
+    "$USER_SYSTEMD_DIR/bdx-archiver-user.service"
+systemctl --user daemon-reload
 
 for command in "${commands[@]}"; do
     ln -sfn "$VENV_BIN/$command" "$USER_BIN/$command"

@@ -1,0 +1,129 @@
+\section{Scope}
+
+This manual describes how the BDX slow-control repository is structured, configured, tested, extended, deployed, and documented. It is intended for developers and maintainers who may modify IOC behavior, add a hardware backend, introduce a subsystem, regenerate Phoebus resources, or prepare a stable release.
+
+The repository is \repo. Software-facing material is maintained in English. The normal development branch is \code{devel}; validated stable snapshots are promoted to \code{main}.
+
+\begin{importantbox}[Source of truth]
+The checked-out code and JSON profiles are authoritative. This manual explains the design and maintenance workflow, but hardware addresses, limits, commands, and available PVs must be verified against the branch being deployed.
+\end{importantbox}
+
+\section{Design goals}
+
+The prototype is deliberately small in device count but should reproduce the final detector control model at the behavioral level. The principal design goals are:
+
+\begin{itemize}
+  \item modular IOC groups and hardware-independent driver interfaces;
+  \item stable, explicit EPICS PV naming;
+  \item separation of requested values, writable setpoints, and device readbacks;
+  \item communication health, stale-data awareness, and actionable error reporting;
+  \item simulation backends for development and regression tests;
+  \item safe operator workflows with explicit confirmation and staged requests;
+  \item generated Phoebus displays synchronized with the configured PV database;
+  \item compatibility with a single-host prototype and future split-host deployment;
+  \item integration with Archiver Appliance, alarm infrastructure, and DAQ coordination.
+\end{itemize}
+
+Backward compatibility with the earlier monolithic \file{test_ioc.py} execution model is intentionally not a design constraint.
+
+\section{Architecture}
+
+\subsection{Layering}
+
+\begin{lstlisting}
+Hardware or simulator
+        |
+Driver interface and implementation
+        |
+Subsystem IOC group
+        |
+caproto Channel Access server
+        |
+Phoebus / Archiver / alarms / DAQ coordination
+\end{lstlisting}
+
+Transport-specific communication belongs in the driver layer. IOC classes expose the EPICS contract, validate operator requests, poll drivers, and translate driver state into PV readbacks. Phoebus must not contain safety logic required for autonomous protection.
+
+\subsection{Runtime model}
+
+Each subsystem has an independent builder and can be run as an individual IOC command. The default prototype combines all JSON files present in one profile directory into one caproto server process:
+
+\begin{lstlisting}
+bdx-prototype-ioc
+  |- global IOC group
+  |- PSU device and channel IOC groups
+  |- chiller IOC group
+  |- optional environment IOC groups
+  |- optional HV IOC groups
+  `- optional DAQ IOC groups
+\end{lstlisting}
+
+The aggregated process avoids ambiguous Channel Access UDP search behavior when several caproto servers share the same host and interface. Individual commands remain available for focused development and future distribution across separate hosts.
+
+\subsection{Current deployed split}
+
+The current prototype is a two-host deployment:
+
+\begin{itemize}
+  \item the main Ubuntu host runs \command{bdx-prototype-ioc} with \file{config/profiles/default};
+  \item the Raspberry Pi runs only \command{bdx-environment-ioc} with \file{config/profiles/raspberry/environment.json};
+  \item a display-only catalog combines both profile views for Phoebus without starting a duplicate environment IOC on the main host.
+\end{itemize}
+
+Two Channel Access servers must never expose the same PV name.
+
+\section{Repository layout}
+
+\begin{lstlisting}
+bdx-slow-control/
+|- config/
+|  |- deployment/         host/network deployment configuration
+|  |- display-catalogs/   display-only composition catalogs
+|  |- examples/           non-installed configuration examples
+|  `- profiles/           runnable IOC profiles
+|- deploy/                external service deployment infrastructure
+|- docs/                  focused architecture and deployment notes
+|- documentation/         LaTeX operator and developer manuals
+|- phoebus/
+|  |- displays/           generated .bob, .plt, and PV table resources
+|  `- settings/           Phoebus settings templates
+|- scripts/               bootstrap, launch, installation, and shutdown scripts
+|- src/bdx_slow_control/
+|  |- drivers/            interfaces, simulations, and hardware backends
+|  `- iocs/               caproto IOC groups
+|- systemd/               service examples
+|- tests/                 unit, integration, and display-contract tests
+|- pyproject.toml          package metadata and console entry points
+`- README.md               repository overview and current procedures
+\end{lstlisting}
+
+Focused documents such as \file{docs/raspberry.md} and \file{deploy/archiver-appliance/README.md} remain the detailed source for those deployments. The manuals summarize and link to them rather than duplicating every command.
+
+\section{Development environment}
+
+\subsection{Requirements}
+
+The Python package requires Python 3.10 or newer. Runtime dependencies are caproto 1.x and pyserial 3.x. The development extras include pytest and Ruff. Phoebus is installed separately.
+
+A typical checkout setup is:
+
+\begin{lstlisting}[style=shell]
+git clone https://github.com/vallarinosimone1992/bdx-slow-control.git
+cd bdx-slow-control
+git switch devel
+./scripts/bootstrap.sh
+source .venv/bin/activate
+\end{lstlisting}
+
+The bootstrap script installs the package in editable mode and regenerates Phoebus resources from the configured PV database.
+
+\subsection{Useful checks}
+
+\begin{lstlisting}[style=shell]
+source .venv/bin/activate
+pytest
+ruff check src tests
+bdx-pv-list --config-dir config/profiles/default
+\end{lstlisting}
+
+Run tests before and after a change. A new driver or PV should be accompanied by targeted tests, not only a manual hardware trial.

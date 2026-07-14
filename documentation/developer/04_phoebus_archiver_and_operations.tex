@@ -1,0 +1,105 @@
+\section{Phoebus generation}
+
+\subsection{Generated resources}
+
+\code{bdx-generate-displays} reads the actual configured caproto PV database. This avoids a manually maintained display contract that can drift from code. Generated resources include operator displays, expert displays, Data Browser plot files, \file{all_pvs.bob}, and a valid Phoebus PV Table file.
+
+Operator pages are intentionally selective. Expert pages provide complete PV tables and direct compatibility controls. Every writable PV must have an appropriate generated control, and every configured PV must appear in the full PV view.
+
+\subsection{Common generation commands}
+
+Default operational profile:
+
+\begin{lstlisting}[style=shell]
+bdx-generate-displays \
+  --config-dir config/profiles/default \
+  --output-dir phoebus/displays
+\end{lstlisting}
+
+Full simulated prototype:
+
+\begin{lstlisting}[style=shell]
+bdx-generate-displays \
+  --config-dir config/profiles/prototype \
+  --output-dir phoebus/displays
+\end{lstlisting}
+
+Deployed two-host display catalog:
+
+\begin{lstlisting}[style=shell]
+bdx-generate-displays \
+  --catalog config/display-catalogs/deployed-prototype.json \
+  --output-dir phoebus/displays
+\end{lstlisting}
+
+Update only one subsystem when appropriate:
+
+\begin{lstlisting}[style=shell]
+bdx-generate-displays \
+  --config-dir config/profiles/default \
+  --output-dir phoebus/displays \
+  --only psu
+\end{lstlisting}
+
+Review generated diffs before committing. Unrelated displays should not change during a subsystem-only modification.
+
+\subsection{Plot and archive settings}
+
+The generator recognizes these principal environment variables:
+
+\begin{itemize}
+  \item \code{BDX_TREND_RANGE}, \code{BDX_TREND_SCAN_PERIOD}, and \code{BDX_TREND_RING_SIZE};
+  \item \code{BDX_TREND_ARCHIVE_REQUEST};
+  \item \code{BDX_ARCHIVER_ENABLED}, \code{BDX_ARCHIVER_URL}, and \code{BDX_ARCHIVER_NAME}.
+\end{itemize}
+
+Long historical ranges may use optimized Archiver retrieval. Live-only resources can be generated with \code{BDX_ARCHIVER_ENABLED=false}. The archive URL embedded in a display must correspond to the deployment being documented.
+
+\section{Archiver Appliance integration}
+
+Repository-owned Archiver infrastructure is under \file{deploy/archiver-appliance}. It contains scripts, templates, checksums, policies, PV lists, service examples, and tests, but not third-party release binaries, credentials, logs, databases, or archived samples.
+
+When adding or renaming a PV that should be archived:
+
+\begin{enumerate}
+  \item update the appropriate repository PV list;
+  \item run offline tests and PV-list validation;
+  \item deploy or register the list through the controlled helper;
+  \item confirm \code{connectionState=true} for a representative PV;
+  \item verify live and historical retrieval in Phoebus;
+  \item document that samples exist only from the registration time onward.
+\end{enumerate}
+
+Keep host clocks synchronized. Data Browser retrieval is timestamp-based, and clock skew can make recent samples appear absent.
+
+\section{Operator command layer}
+
+The installed Ubuntu commands provide a constrained operator workflow:
+
+\begin{itemize}
+  \item \command{bdx_slow_control_start};
+  \item \command{bdx_slow_control_kill_ioc};
+  \item \command{bdx_slow_control_kill_archiver};
+  \item \command{bdx_slow_control_kill_phoebus};
+  \item \command{start-bdx-raspberry-ioc}.
+\end{itemize}
+
+The start command resolves the repository root, validates \code{BDX_MAIN_HOST}, verifies the caproto client, checks the Raspberry readiness PV, opens a dedicated IOC terminal if required, performs Archiver checks, and launches Phoebus. It must be run from a graphical Ubuntu session.
+
+Shutdown commands target only recognized BDX slow-control processes. They use graceful termination by default and reserve forced killing for an explicit \code{--force}. Software process shutdown must remain separate from hardware state changes.
+
+When changing operator commands, add regression tests for process discovery, reused PID files, exact command matching, and protection of unrelated BDX DAQ or Phoebus sessions.
+
+\section{Raspberry environment IOC}
+
+The Raspberry Pi runs only the MCP9808 environment IOC. The canonical configuration files are:
+
+\begin{itemize}
+  \item \file{config/profiles/raspberry/environment.json};
+  \item \file{config/profiles/raspberry/bdx.env};
+  \item \file{config/deployment/raspberry-network.env}.
+\end{itemize}
+
+The current hardware uses I2C bus \file{/dev/i2c-6}, GPIO22/GPIO23, addresses \code{0x18} through \code{0x1B}, and \code{172.22.50.10/24} on Ethernet. Network configuration and software installation are intentionally separate operations.
+
+Before enabling the service, run the repository diagnostic against the installed JSON profile. The detailed installation, I2C overlay, diagnostic, systemd, and replacement-host procedure is maintained in \file{docs/raspberry.md}.

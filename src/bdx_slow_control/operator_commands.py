@@ -14,6 +14,8 @@ import sys
 import time
 from typing import Sequence
 
+from .iocs.archiver_status import check_archiver_endpoints, summarize_results
+
 
 DEFAULT_MAIN_HOST = "172.22.50.2"
 RASPBERRY_HOST = "172.22.50.10"
@@ -21,6 +23,12 @@ RASPBERRY_READY_PV = "BDX:ENV:TEMP:T00:VALUE"
 RASPBERRY_SERVICE = "bdx-environment-ioc"
 DEFAULT_RASPBERRY_SSH_HOST = "pi@172.22.50.10"
 DEFAULT_PHOEBUS_HOME = Path.home() / "SlowControl" / "css" / "phoebus-4.7.4-SNAPSHOT"
+ARCHIVER_ENDPOINTS = {
+    "mgmt": "http://127.0.0.1:17665/mgmt/bpl/getVersions",
+    "engine": "http://127.0.0.1:17666/engine/bpl/getVersion",
+    "etl": "http://127.0.0.1:17667/etl/bpl/getVersion",
+    "retrieval": "http://127.0.0.1:17668/retrieval/bpl/getVersion",
+}
 
 
 class OperatorCommandError(RuntimeError):
@@ -150,25 +158,46 @@ def _runtime_dir(root: Path) -> Path:
 
 
 def _recorded_process_running(pid_file: Path, markers: Sequence[str]) -> bool:
+    def matches(command_line: str) -> bool:
+        lowered = command_line.lower()
+        return any(marker.lower() in lowered for marker in markers)
+
     try:
         pid = int(pid_file.read_text(encoding="utf-8").strip())
     except (FileNotFoundError, ValueError, OSError):
-        return False
+        pid = 0
 
-    proc_dir = Path("/proc") / str(pid)
-    try:
-        command_line = (proc_dir / "cmdline").read_bytes().replace(b"\0", b" ").decode(
-            errors="replace"
-        )
-    except OSError:
+    if pid:
+        try:
+            command_line = (
+                (Path("/proc") / str(pid) / "cmdline")
+                .read_bytes()
+                .replace(b"\0", b" ")
+                .decode(errors="replace")
+            )
+        except OSError:
+            command_line = ""
+        if matches(command_line):
+            return True
         pid_file.unlink(missing_ok=True)
-        return False
 
-    lowered = command_line.lower()
-    if any(marker.lower() in lowered for marker in markers):
-        return True
-
-    pid_file.unlink(missing_ok=True)
+    # The Phoebus shell launcher can fork the Java process before returning, so
+    # reconcile the runtime PID with an exact BDX settings/display marker.
+    for proc_dir in Path("/proc").iterdir():
+        if not proc_dir.name.isdigit():
+            continue
+        try:
+            if proc_dir.stat().st_uid != os.getuid():
+                continue
+            command_line = (proc_dir / "cmdline").read_bytes().replace(b"\0", b" ").decode(
+                errors="replace"
+            )
+        except OSError:
+            continue
+        if matches(command_line):
+            pid_file.parent.mkdir(parents=True, exist_ok=True)
+            pid_file.write_text(f"{proc_dir.name}\n", encoding="utf-8")
+            return True
     return False
 
 
@@ -254,103 +283,18 @@ def _ioc_terminal_command(root: Path, host: str) -> str:
     )
 
 
-def _archiver_phoebus_terminal_command(
-    root: Path,
-    host: str,
-    display: str,
-    phoebus_home: Path,
-) -> str:
-    stack_script = root / "scripts" / "start_bdx_stack.sh"
-    q = shlex.quote
-    return "\n".join(
-        [
-            f"cd {q(str(root))}",
-            f"export BDX_PHOEBUS_HOME={q(str(phoebus_home))}",
-            "export BDX_ARCHIVER_STRICT_CHECK=true",
-            "(",
-            "  set -euo pipefail",
-            f"  source {q(str(stack_script))}",
-            f"  bdx_stack_parse_args --main-host {q(host)} {q(display)}",
-            "  bdx_stack_load_runtime_environment",
-            "  bdx_stack_validate_installation",
-            "  bdx_stack_print_summary",
-            "  bdx_stack_wait_for_ioc_listener 90",
-            '  bdx_stack_wait_for_pv_read "$IOC_READY_PV" 90',
-            "  bdx_stack_ensure_archiver",
-            "  bdx_stack_controlled_archiver_registration",
-            '  bdx_stack_launch_phoebus "$BDX_STACK_DISPLAY"',
-            ")",
-            "status=$?",
-            "echo",
-            'echo "Archiver/Phoebus workflow exited with status $status."',
-            'echo "This terminal remains open for inspection."',
-            "exec bash",
-        ]
-    )
-
-
-def _start_slow_control(argv: Sequence[str] | None) -> None:
-    parser = argparse.ArgumentParser(
-        prog="bdx_slow_control_start",
-        description=(
-            "Open one terminal for the main IOC and one terminal for Archiver startup "
-            "followed by Phoebus."
-        ),
-    )
-    parser.add_argument("display", nargs="?", default="overview")
-    parser.add_argument("--main-host")
-    parser.add_argument("--phoebus-home")
-    args = parser.parse_args(argv)
-
-    if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
-        raise OperatorCommandError(
-            "No graphical desktop display is available. Run this command from a terminal "
-            "opened in the Ubuntu desktop session."
-        )
-
-    root = _repository_root()
-    host = _read_main_host(root, args.main_host)
-    caproto_get = _caproto_get(root)
-    phoebus_home = _resolve_phoebus_home(args.phoebus_home)
-    _terminal_program()
-
-    if raspberry_ioc_responding(caproto_get):
-        print(f"Raspberry environment IOC: responding ({RASPBERRY_READY_PV})")
+def report_archiver_health(*, timeout: float = 0.5) -> str:
+    """Inspect Archiver endpoints without mutating the independent service."""
+    results = check_archiver_endpoints(ARCHIVER_ENDPOINTS, timeout)
+    state, ok, details = summarize_results(results)
+    if ok:
+        message = "Archiver services: available and healthy."
+    elif state in {"STARTING", "DEGRADED"}:
+        message = f"Archiver services: starting or temporarily unavailable ({details})."
     else:
-        print(
-            f"Warning: Raspberry environment IOC is not responding: {RASPBERRY_READY_PV}",
-            file=sys.stderr,
-        )
-        print("Start it with: start-bdx-raspberry-ioc", file=sys.stderr)
-        print("Continuing with the local slow-control startup.", file=sys.stderr)
-
-    if _port_is_listening(host, 5064):
-        print(f"BDX main IOC is already listening on {host}:5064; not opening another IOC.")
-    else:
-        _open_terminal("BDX Main IOC", _ioc_terminal_command(root, host))
-        print("Opened terminal: BDX Main IOC")
-
-    phoebus_pid_file = _runtime_dir(root) / "phoebus.pid"
-    if _recorded_process_running(
-        phoebus_pid_file,
-        ("phoebus", "org.phoebus", "javafx"),
-    ):
-        print("Phoebus is already running; not opening another instance.")
-    else:
-        _open_terminal(
-            "BDX Archiver and Phoebus",
-            _archiver_phoebus_terminal_command(
-                root,
-                host,
-                args.display,
-                phoebus_home,
-            ),
-        )
-        print("Opened terminal: BDX Archiver and Phoebus")
-
-
-def slow_control_start_main(argv: Sequence[str] | None = None) -> None:
-    _run_cli(_start_slow_control, argv)
+        message = "Archiver services: completely absent. Historical data is unavailable."
+    print(message)
+    return state
 
 
 def _wait_for_raspberry_ioc(
@@ -446,6 +390,17 @@ def kill_archiver_main(argv: Sequence[str] | None = None) -> None:
         lambda values: _exec_shutdown_script("kill_slow_control_archiver.sh", values),
         argv,
     )
+
+
+def slow_control_kill_main(argv: Sequence[str] | None = None) -> None:
+    _run_cli(
+        lambda values: _exec_shutdown_script("kill_slow_control_all.sh", values),
+        argv,
+    )
+
+
+def archiver_kill_main(argv: Sequence[str] | None = None) -> None:
+    kill_archiver_main(argv)
 
 
 def kill_phoebus_main(argv: Sequence[str] | None = None) -> None:

@@ -37,8 +37,18 @@ overall=0
 for component in $(bdx_component_list); do
     base="$(bdx_tomcat_base "$component")"
     pid_file="$base/tomcat.pid"
-    if [[ -f "$pid_file" ]] && kill -0 "$(cat "$pid_file")" >/dev/null 2>&1; then
-        echo "$component: running pid $(cat "$pid_file")"
+    component_pids=()
+    while IFS= read -r pid; do
+        [[ -n "$pid" ]] && component_pids+=("$pid")
+    done < <(bdx_component_pids "$component")
+    if [[ "${#component_pids[@]}" -eq 1 ]]; then
+        echo "$component: running pid ${component_pids[0]}"
+        if [[ ! -f "$pid_file" || "$(<"$pid_file")" != "${component_pids[0]}" ]]; then
+            echo "$component: PID file missing or stale: $pid_file" >&2
+        fi
+    elif [[ "${#component_pids[@]}" -gt 1 ]]; then
+        echo "$component: multiple processes ${component_pids[*]}" >&2
+        overall=1
     else
         echo "$component: not running"
         overall=1

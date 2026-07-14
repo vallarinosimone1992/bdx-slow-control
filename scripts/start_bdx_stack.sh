@@ -27,6 +27,8 @@ ARCHIVER_START="$ARCHIVER_SCRIPT_DIR/start.sh"
 ARCHIVER_STATUS="$ARCHIVER_SCRIPT_DIR/status.sh"
 ARCHIVER_AUTOREGISTER="$ARCHIVER_SCRIPT_DIR/auto-register-pvs.sh"
 ARCHIVER_REGISTER="$ARCHIVER_SCRIPT_DIR/register-pvs.py"
+ARCHIVER_REPAIR="$ARCHIVER_SCRIPT_DIR/repair-archiver.sh"
+ARCHIVER_SERVICE_NAME="${BDX_ARCHIVER_SERVICE_NAME:-bdx-archiver-user.service}"
 ARCHIVER_MGMT_URL="http://127.0.0.1:17665/mgmt/bpl"
 ARCHIVER_ENGINE_URL="http://127.0.0.1:17666/engine/bpl"
 ARCHIVER_ETL_URL="http://127.0.0.1:17667/etl/bpl"
@@ -36,7 +38,7 @@ ARCHIVER_START_ENV_FILE="$BDX_STACK_RUNTIME_DIR/archappl-no-auto-register.env"
 
 IOC_READY_PV="BDX:PSU:LV1:CH1:VOLTAGE_RBV"
 ARCHIVER_READY_PV="BDX:PSU:LV1:CH1:VOLTAGE_RBV"
-ARCHIVER_CHILLER_READY_PV="BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV"
+ARCHIVER_CHILLER_READY_PV="BDX:CHILLER:CHILLER1:RUN_STATE"
 ARCHIVER_ENV_READY_PV="BDX:ENV:TEMP:T00:VALUE"
 ARCHIVER_REGISTER_DELAY_SECONDS="${BDX_ARCHIVER_REGISTER_DELAY_SECONDS:-2.0}"
 PHOEBUS_PREFLIGHT_PV="BDX:ENV:TEMP:T00:VALUE"
@@ -223,10 +225,8 @@ bdx_stack_load_archiver_environment() {
     ARCHIVER_RETRIEVAL_URL="$BDX_ARCHIVER_RETRIEVAL_DATA_URL"
 }
 
-bdx_stack_validate_installation() {
+bdx_stack_validate_archiver_installation() {
     [[ -d "$VENV_DIR" ]] || bdx_stack_die "Repository virtual environment not found: $VENV_DIR"
-    [[ -x "$IOC_COMMAND" ]] || bdx_stack_die "bdx-prototype-ioc not found or not executable: $IOC_COMMAND"
-    [[ -x "$CAPROTO_GET" ]] || bdx_stack_die "caproto-get not found or not executable: $CAPROTO_GET"
     [[ -f "$ARCHIVER_ENV_FILE" ]] || bdx_stack_die "Archiver environment file not found: $ARCHIVER_ENV_FILE"
     bdx_stack_load_archiver_environment
     [[ -d "$ARCHIVER_APP_DIR" ]] || bdx_stack_die "Archiver user-local installation not found: $ARCHIVER_APP_DIR"
@@ -235,15 +235,29 @@ bdx_stack_validate_installation() {
     [[ -x "$ARCHIVER_STATUS" ]] || bdx_stack_die "Archiver status script not found or not executable: $ARCHIVER_STATUS"
     [[ -x "$ARCHIVER_AUTOREGISTER" ]] || bdx_stack_die "Archiver auto-register script not found or not executable: $ARCHIVER_AUTOREGISTER"
     [[ -x "$ARCHIVER_REGISTER" ]] || bdx_stack_die "Archiver register script not found or not executable: $ARCHIVER_REGISTER"
-    [[ -x "$PHOEBUS_LAUNCHER" ]] || bdx_stack_die "Phoebus launcher not found or not executable: $PHOEBUS_LAUNCHER"
-    command -v pgrep >/dev/null 2>&1 || bdx_stack_die "pgrep is required."
+    [[ -x "$ARCHIVER_REPAIR" ]] || bdx_stack_die "Archiver repair script not found or not executable: $ARCHIVER_REPAIR"
     command -v curl >/dev/null 2>&1 || bdx_stack_die "curl is required."
+    command -v systemctl >/dev/null 2>&1 || bdx_stack_die "systemctl is required."
+    if [[ "$(systemctl --user show "$ARCHIVER_SERVICE_NAME" -p LoadState --value 2>/dev/null || true)" != "loaded" ]]; then
+        bdx_stack_die "Archiver user service is not installed. Run scripts/install_user_commands.sh."
+    fi
 
     local list_name
     for list_name in psu.txt chiller.txt environment.txt; do
         [[ -f "$ARCHIVER_APP_DIR/pv-lists/$list_name" ]] || \
             bdx_stack_die "Required Archiver PV list not found: $ARCHIVER_APP_DIR/pv-lists/$list_name"
     done
+}
+
+bdx_stack_validate_slow_control_installation() {
+    [[ -x "$IOC_COMMAND" ]] || bdx_stack_die "bdx-prototype-ioc not found or not executable: $IOC_COMMAND"
+    [[ -x "$CAPROTO_GET" ]] || bdx_stack_die "caproto-get not found or not executable: $CAPROTO_GET"
+    [[ -x "$PHOEBUS_LAUNCHER" ]] || bdx_stack_die "Phoebus launcher not found or not executable: $PHOEBUS_LAUNCHER"
+    command -v pgrep >/dev/null 2>&1 || bdx_stack_die "pgrep is required."
+}
+
+bdx_stack_validate_installation() {
+    bdx_stack_validate_slow_control_installation
 }
 
 bdx_stack_shell_quote() {
@@ -368,14 +382,44 @@ bdx_stack_archiver_running_count() {
 }
 
 bdx_stack_component_ready_url() {
-    bdx_component_ready_url "$1"
+    local component="$1"
+    local base path
+    case "$component" in
+        mgmt)
+            base="${BDX_ARCHIVER_MGMT_URL:-$ARCHIVER_MGMT_URL}"
+            path="${BDX_ARCHIVER_MGMT_READY_PATH:-getVersions}"
+            ;;
+        engine)
+            base="${BDX_ARCHIVER_ENGINE_URL:-$ARCHIVER_ENGINE_URL}"
+            path="${BDX_ARCHIVER_ENGINE_READY_PATH:-getVersion}"
+            ;;
+        etl)
+            base="${BDX_ARCHIVER_ETL_URL:-$ARCHIVER_ETL_URL}"
+            path="${BDX_ARCHIVER_ETL_READY_PATH:-getVersion}"
+            ;;
+        retrieval)
+            base="${BDX_ARCHIVER_RETRIEVAL_BPL_URL:-$ARCHIVER_RETRIEVAL_BPL_URL}"
+            path="${BDX_ARCHIVER_RETRIEVAL_READY_PATH:-getVersion}"
+            ;;
+        *)
+            bdx_stack_die "Unknown Archiver Appliance component: $component"
+            ;;
+    esac
+    bdx_url_join "$base" "$path"
+}
+
+bdx_stack_component_ready() {
+    local component="$1"
+    local body url
+    url="$(bdx_stack_component_ready_url "$component")"
+    body="$(curl -fsS --max-time 2 "$url" 2>/dev/null)" || return 1
+    [[ -n "${body//[[:space:]]/}" ]]
 }
 
 bdx_stack_archiver_ready_count() {
     local component url count=0
     for component in $(bdx_component_list); do
-        url="$(bdx_stack_component_ready_url "$component")"
-        if curl -fsS --max-time 2 "$url" >/dev/null 2>&1; then
+        if bdx_stack_component_ready "$component"; then
             count=$((count + 1))
         fi
     done
@@ -386,7 +430,7 @@ bdx_stack_archiver_first_unready_endpoint() {
     local component url
     for component in $(bdx_component_list); do
         url="$(bdx_stack_component_ready_url "$component")"
-        if ! curl -fsS --max-time 2 "$url" >/dev/null 2>&1; then
+        if ! bdx_stack_component_ready "$component"; then
             printf "%s endpoint is not ready: %s\n" "$component" "$url"
             return 0
         fi
@@ -429,14 +473,47 @@ bdx_stack_any_archiver_endpoint_reachable() {
     return 1
 }
 
+bdx_stack_report_archiver_status() {
+    local component ready_count reachable_count=0 url
+    ready_count="$(bdx_stack_archiver_ready_count)"
+    if [[ "$ready_count" -eq 4 ]]; then
+        echo "Archiver services: available and healthy."
+        return 0
+    fi
+    for component in $(bdx_component_list); do
+        url="$(bdx_stack_component_ready_url "$component")"
+        if curl -sS --max-time 1 --output /dev/null "$url" >/dev/null 2>&1; then
+            reachable_count=$((reachable_count + 1))
+        fi
+    done
+    if [[ "$ready_count" -gt 0 || "$reachable_count" -gt 0 ]]; then
+        echo "Archiver services: starting or temporarily unavailable (${ready_count}/4 ready)."
+    else
+        echo "Archiver services: completely absent. Live control remains available; historical data is unavailable."
+    fi
+}
+
 bdx_stack_wait_for_archiver_healthy() {
     local timeout_seconds="${1:-180}"
     local deadline
-    local state unready
+    local state status_output running_count unready
+    local saw_all_processes=0
     deadline=$((SECONDS + timeout_seconds))
 
     echo "Waiting for Archiver Appliance components to become healthy."
     while true; do
+        status_output="$(bdx_stack_archiver_status_output)"
+        running_count="$(bdx_stack_archiver_running_count "$status_output")"
+        if [[ "$running_count" -eq 4 ]]; then
+            saw_all_processes=1
+        elif [[ "$saw_all_processes" -eq 1 ]]; then
+            printf '%s\n' "$status_output" >&2
+            bdx_stack_die "An Archiver component exited during startup."
+        fi
+        if systemctl --user is-failed --quiet "$ARCHIVER_SERVICE_NAME" 2>/dev/null; then
+            printf '%s\n' "$status_output" >&2
+            bdx_stack_die "Archiver user service failed during startup."
+        fi
         state="$(bdx_stack_archiver_state)"
         if [[ "$state" == "healthy" ]]; then
             return 0
@@ -448,7 +525,7 @@ bdx_stack_wait_for_archiver_healthy() {
             fi
             bdx_stack_die "Timed out waiting for Archiver Appliance health."
         fi
-        if [[ "$state" != "starting" && "$state" != "inactive" ]]; then
+        if [[ "$state" == "inconsistent" ]]; then
             bdx_stack_die "Archiver Appliance entered unexpected state while waiting: $state"
         fi
         unready="$(bdx_stack_archiver_first_unready_endpoint || true)"
@@ -473,7 +550,7 @@ EOF
 }
 
 bdx_stack_ensure_archiver() {
-    local state
+    local state timeout_seconds="${1:-180}"
     state="$(bdx_stack_archiver_state)"
     case "$state" in
         healthy)
@@ -481,16 +558,12 @@ bdx_stack_ensure_archiver() {
             ;;
         starting)
             echo "Archiver Appliance processes are active; waiting for ready endpoints."
-            bdx_stack_wait_for_archiver_healthy 60
+            bdx_stack_wait_for_archiver_healthy "$timeout_seconds"
             ;;
         inactive)
-            echo "Archiver Appliance is inactive; starting the user-local deployment."
-            bdx_stack_prepare_archiver_start_environment
-            BDX_MAIN_HOST="$BDX_MAIN_HOST" \
-            EPICS_CA_ADDR_LIST="$EPICS_CA_ADDR_LIST" \
-            EPICS_CA_AUTO_ADDR_LIST="$EPICS_CA_AUTO_ADDR_LIST" \
-                "$ARCHIVER_START" --env "$ARCHIVER_START_ENV_FILE" --user-local
-            bdx_stack_wait_for_archiver_healthy 180
+            echo "Archiver Appliance is inactive; starting $ARCHIVER_SERVICE_NAME."
+            systemctl --user start "$ARCHIVER_SERVICE_NAME"
+            bdx_stack_wait_for_archiver_healthy "$timeout_seconds"
             ;;
         partial)
             echo "Archiver Appliance is partially running." >&2
@@ -528,27 +601,33 @@ bdx_stack_register_pv_lists() {
 }
 
 bdx_stack_controlled_archiver_registration() {
-    local pilot_list="$BDX_STACK_RUNTIME_DIR/archiver-pilot.pvs"
-
-    mkdir -p "$BDX_STACK_RUNTIME_DIR"
     bdx_stack_stop_archiver_registration_helper
-    printf '%s\n' "$ARCHIVER_READY_PV" >"$pilot_list"
+    echo "Running selective staged Archiver catalog audit and repair."
+    BDX_ARCHIVER_PYTHON="$VENV_DIR/bin/python" \
+        "$ARCHIVER_REPAIR" --env "$ARCHIVER_ENV_FILE" --user-local
+}
 
-    echo "Registering and validating pilot Archiver PV: $ARCHIVER_READY_PV"
-    bdx_stack_register_pv_lists 0 "$pilot_list"
-    bdx_stack_wait_for_archiver_pv_connection "$ARCHIVER_READY_PV" 180
-
-    echo "Registering the complete Archiver catalog with ${ARCHIVER_REGISTER_DELAY_SECONDS}s pacing."
-    bdx_stack_register_pv_lists \
-        "$ARCHIVER_REGISTER_DELAY_SECONDS" \
-        "$ARCHIVER_APP_DIR/pv-lists/psu.txt" \
-        "$ARCHIVER_APP_DIR/pv-lists/chiller.txt" \
-        "$ARCHIVER_APP_DIR/pv-lists/environment.txt"
-
-    echo "Validating representative archived PVs after complete registration."
-    bdx_stack_wait_for_archiver_pv_connection "$ARCHIVER_READY_PV" 180
-    bdx_stack_wait_for_archiver_pv_connection "$ARCHIVER_CHILLER_READY_PV" 180
-    bdx_stack_wait_for_archiver_pv_connection "$ARCHIVER_ENV_READY_PV" 180
+bdx_stack_start_and_validate_archiver() {
+    local timeout_seconds="${1:-180}"
+    local run_repair="${2:-true}"
+    bdx_stack_ensure_archiver "$timeout_seconds"
+    echo "Archiver component processes:"
+    "$ARCHIVER_STATUS" --env "$ARCHIVER_ENV_FILE" --user-local
+    echo "Archiver readiness endpoints:"
+    local component url
+    for component in $(bdx_component_list); do
+        url="$(bdx_stack_component_ready_url "$component")"
+        if bdx_stack_component_ready "$component"; then
+            echo "  $component: HTTP 200 ready ($url)"
+        else
+            bdx_stack_die "$component readiness endpoint did not return a valid success: $url"
+        fi
+    done
+    if [[ "$run_repair" == "true" ]]; then
+        bdx_stack_controlled_archiver_registration
+    else
+        echo "Skipping selective catalog repair because --no-repair was supplied."
+    fi
 }
 
 bdx_stack_urlencode_value() {
@@ -620,7 +699,8 @@ bdx_stack_launch_phoebus() {
     export BDX_STACK_RUNTIME_DIR
     export BDX_ARCHIVER_ENABLED=true
     export BDX_ARCHIVER_URL="$ARCHIVER_RETRIEVAL_URL"
-    export BDX_ARCHIVER_PREFLIGHT_PV="$PHOEBUS_PREFLIGHT_PV"
+    export BDX_ARCHIVER_STRICT_CHECK=false
+    export BDX_ARCHIVER_PREFLIGHT_PV=""
     exec "$PHOEBUS_LAUNCHER" "$display"
 }
 
@@ -641,13 +721,12 @@ EOF
 bdx_stack_main() {
     bdx_stack_parse_args "$@"
     bdx_stack_load_runtime_environment
-    bdx_stack_validate_installation
+    bdx_stack_validate_slow_control_installation
     bdx_stack_print_summary
     bdx_stack_start_ioc_if_needed
     bdx_stack_wait_for_ioc_listener 5
     bdx_stack_wait_for_pv_read "$IOC_READY_PV" 90
-    bdx_stack_ensure_archiver
-    bdx_stack_controlled_archiver_registration
+    bdx_stack_report_archiver_status
     bdx_stack_launch_phoebus "$BDX_STACK_DISPLAY"
 }
 

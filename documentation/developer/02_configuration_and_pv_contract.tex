@@ -1,0 +1,136 @@
+\section{Configuration model}
+
+\subsection{Profiles}
+
+A profile directory contains one JSON file per enabled subsystem. The aggregated prototype iterates over the registered builders and includes only files that exist:
+
+\begin{lstlisting}
+config/profiles/default/
+  global.json
+  psu.json
+  chiller.json
+\end{lstlisting}
+
+The full simulated profile is in \file{config/profiles/prototype}. Raspberry hardware uses \file{config/profiles/raspberry}.
+
+The command:
+
+\begin{lstlisting}[style=shell]
+bdx-prototype-ioc --config-dir config/profiles/default
+\end{lstlisting}
+
+builds all supported subsystem files found in that directory. Duplicate PV names are rejected. All included subsystem configurations must resolve to the same server interface list.
+
+\subsection{Common server settings}
+
+A typical JSON file contains:
+
+\begin{lstlisting}[style=json]
+{
+  "server": {
+    "interfaces": ["0.0.0.0"],
+    "poll_interval": 1.0,
+    "log_pv_names": false
+  }
+}
+\end{lstlisting}
+
+\code{BDX_EPICS_INTERFACE} overrides \code{server.interfaces} at runtime. This is the preferred mechanism on a host with more than one network interface.
+
+The configured polling interval must be positive. In the aggregated prototype, all managed IOC groups share one \code{RuntimeSettings} object; the global IOC can change the effective update period at runtime within configured bounds.
+
+\subsection{Device entries}
+
+Hardware-specific addresses, ports, timeouts, channel lists, optional features, and limits belong in JSON. IOC classes must not hard-code those deployment values.
+
+Example PSU device entry:
+
+\begin{lstlisting}[style=json]
+{
+  "name": "LV1",
+  "prefix": "BDX:PSU:LV1:",
+  "mode": "hardware",
+  "driver": "cpx400dp",
+  "host": "172.22.50.20",
+  "port": 9221,
+  "timeout": 3.0,
+  "channels": [1, 2],
+  "software_limits": {
+    "minimum_voltage": 0.0,
+    "maximum_voltage": 60.0,
+    "minimum_current_limit": 0.0,
+    "maximum_current_limit": 20.0,
+    "maximum_power": 420.0
+  }
+}
+\end{lstlisting}
+
+Device limits may be overridden per channel through \code{channel_limits}. Validate a new profile with the simulated or disconnected startup path before connecting it to hardware.
+
+\subsection{Runtime environment}
+
+Machine-specific values are not committed in \file{config/runtime.env}. Create it from \file{config/runtime.env.example} and set the operational main IOC address:
+
+\begin{lstlisting}[style=shell]
+BDX_MAIN_HOST=172.22.50.2
+\end{lstlisting}
+
+Do not store credentials, Wi-Fi secrets, private keys, downloaded third-party runtimes, logs, databases, or archive data in the repository.
+
+\section{PV contract}
+
+\subsection{Naming convention}
+
+The default hierarchy is:
+
+\begin{lstlisting}
+BDX:<SUBSYSTEM>:<DEVICE>:<CHANNEL>:<FIELD>
+\end{lstlisting}
+
+Examples:
+
+\begin{lstlisting}
+BDX:PSU:LV1:CH1:VOLTAGE_REQUEST
+BDX:PSU:LV1:CH1:VOLTAGE_RBV
+BDX:CHILLER:CHILLER1:SETPOINT_REQUEST
+BDX:ENV:TEMP:T00:VALUE
+BDX:DAQ:CRATE01:READY
+BDX:GLOBAL:INTERLOCK_ACTIVE
+\end{lstlisting}
+
+Use these suffixes consistently:
+
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\toprule
+Suffix & Meaning \\
+\midrule
+\code{_RBV} & Read-only value obtained from device or IOC state \\
+\code{_SET} & Direct writable setpoint or compatibility control \\
+\code{_REQUEST} & Operator-staged value not yet applied to hardware \\
+\code{_CMD} & Momentary command, normally self-resetting \\
+\code{_STATUS} & Textual outcome or state \\
+\code{_OK} & Boolean status suited to indicators and logic \\
+\bottomrule
+\end{tabularx}
+
+A successful write means the IOC accepted the command path; it does not prove that the physical device reached the requested state. Update readbacks only from driver-reported state.
+
+\subsection{Managed IOC health PVs}
+
+Every class derived from \code{ManagedIOC} exposes:
+
+\begin{lstlisting}
+HEARTBEAT
+IOC_STATE
+COMM_STATUS
+COMM_OK
+LAST_UPDATE
+ERROR_CODE
+ERROR_MESSAGE
+SIMULATION
+CLEAR_ERROR_CMD
+\end{lstlisting}
+
+At startup, \code{IOC_STATE} changes to \code{RUNNING}. The heartbeat loop performs a driver communication check, polls subsystem state, updates health PVs, and sleeps for the shared runtime period. Communication failures set \code{COMM_OK=false} and preserve an actionable error message.
+
+The baseline communication states are \code{STARTING}, \code{OK}, \code{DISCONNECTED}, \code{TIMEOUT}, \code{INVALID_DATA}, \code{DEVICE_ERROR}, \code{DISABLED}, and \code{SIMULATION}. New drivers should map failures consistently rather than inventing display-specific semantics.

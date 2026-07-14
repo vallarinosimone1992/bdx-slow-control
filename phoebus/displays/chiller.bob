@@ -322,7 +322,7 @@
     <y>268</y>
     <width>151</width>
     <height>20</height>
-    <text>Controlled</text>
+    <text>Bath temperature</text>
     <font>
       <font name="Default" family="Liberation Sans" style="BOLD" size="11.0" />
     </font>
@@ -333,7 +333,7 @@
     <y>290</y>
     <width>126</width>
     <height>40</height>
-    <pv_name>BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV</pv_name>
+    <pv_name>BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV</pv_name>
     <font>
       <font name="Default" family="Liberation Sans" style="BOLD" size="24.0" />
     </font>
@@ -362,7 +362,7 @@
     <y>268</y>
     <width>151</width>
     <height>20</height>
-    <text>Bath</text>
+    <text>Controlled (diagnostic)</text>
     <font>
       <font name="Default" family="Liberation Sans" style="BOLD" size="11.0" />
     </font>
@@ -373,7 +373,7 @@
     <y>290</y>
     <width>126</width>
     <height>40</height>
-    <pv_name>BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV</pv_name>
+    <pv_name>BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV</pv_name>
     <font>
       <font name="Default" family="Liberation Sans" style="BOLD" size="24.0" />
     </font>

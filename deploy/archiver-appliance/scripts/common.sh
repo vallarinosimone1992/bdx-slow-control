@@ -98,6 +98,76 @@ bdx_component_shutdown_port() {
     esac
 }
 
+bdx_pid_is_running() {
+    local pid="$1"
+    local state
+    [[ "$pid" =~ ^[0-9]+$ ]] || return 1
+    kill -0 "$pid" >/dev/null 2>&1 || return 1
+    state="$(ps -p "$pid" -o stat= 2>/dev/null || true)"
+    [[ "$state" != Z* ]]
+}
+
+bdx_pid_matches_component() {
+    local pid="$1"
+    local component="$2"
+    local base command_line
+    bdx_pid_is_running "$pid" || return 1
+    base="$(bdx_tomcat_base "$component")"
+    command_line="$(ps -p "$pid" -o args= 2>/dev/null || true)"
+    [[ "$command_line" == *"-Dcatalina.base=$base"* ]]
+}
+
+bdx_component_pids() {
+    local component="$1"
+    local base candidate command_line
+    base="$(bdx_tomcat_base "$component")"
+    while read -r candidate command_line; do
+        [[ "$candidate" =~ ^[0-9]+$ ]] || continue
+        if [[ "$command_line" == *"-Dcatalina.base=$base"* ]] && \
+           bdx_pid_is_running "$candidate"; then
+            printf '%s\n' "$candidate"
+        fi
+    done < <(ps -u "$(id -u)" -o pid=,args= 2>/dev/null || true)
+}
+
+bdx_reconcile_component_pid_file() {
+    local component="$1"
+    local base pid_file recorded_pid
+    local pids=()
+    base="$(bdx_tomcat_base "$component")"
+    pid_file="$base/tomcat.pid"
+
+    if [[ -f "$pid_file" ]]; then
+        recorded_pid="$(<"$pid_file")"
+        if ! bdx_pid_matches_component "$recorded_pid" "$component"; then
+            echo "Removing stale $component PID file: $pid_file" >&2
+            rm -f "$pid_file"
+        fi
+    fi
+
+    while IFS= read -r recorded_pid; do
+        [[ -n "$recorded_pid" ]] && pids+=("$recorded_pid")
+    done < <(bdx_component_pids "$component")
+    if [[ "${#pids[@]}" -gt 1 ]]; then
+        bdx_die "Multiple $component Tomcat processes are active: ${pids[*]}"
+    fi
+    if [[ "${#pids[@]}" -eq 1 ]]; then
+        if [[ ! -f "$pid_file" || "$(<"$pid_file")" != "${pids[0]}" ]]; then
+            echo "Restoring $component PID file for active process ${pids[0]}: $pid_file" >&2
+            printf '%s\n' "${pids[0]}" >"$pid_file"
+        fi
+        printf '%s\n' "${pids[0]}"
+    fi
+}
+
+bdx_component_port_occupied() {
+    local component="$1"
+    local port
+    port="$(bdx_component_port "$component")"
+    curl -sS --connect-timeout 1 --max-time 1 \
+        --output /dev/null "http://127.0.0.1:$port/" >/dev/null 2>&1
+}
+
 bdx_export_archappl_env() {
     bdx_require_env \
         BDX_ARCHIVER_CONFIG_DIR \
@@ -209,9 +279,13 @@ bdx_archiver_registration_running() {
 }
 
 bdx_archiver_registration_command() {
-    local script_dir pv_list
+    local script_dir pv_list retrieval_url
     script_dir="${SCRIPT_DIR:-$(bdx_archiver_deploy_dir)/scripts}"
-    printf "%q " "$script_dir/register-pvs.py" "--mgmt-url" "$BDX_ARCHIVER_MGMT_URL"
+    retrieval_url="${BDX_ARCHIVER_RETRIEVAL_DATA_URL:-${BDX_ARCHIVER_DATA_RETRIEVAL_URL:-}}"
+    [[ -n "$retrieval_url" ]] || bdx_die "BDX_ARCHIVER_RETRIEVAL_DATA_URL is required."
+    printf "%q " "$script_dir/repair_archiver.py" \
+        "--mgmt-url" "$BDX_ARCHIVER_MGMT_URL" \
+        "--retrieval-url" "$retrieval_url"
     while IFS= read -r pv_list; do
         printf "%q " "$pv_list"
     done < <(bdx_archiver_resolved_pv_lists)
@@ -219,7 +293,7 @@ bdx_archiver_registration_command() {
 }
 
 bdx_archiver_run_registration() {
-    local script_dir pv_list
+    local script_dir pv_list retrieval_url
     local pv_lists=()
     script_dir="${SCRIPT_DIR:-$(bdx_archiver_deploy_dir)/scripts}"
     while IFS= read -r pv_list; do
@@ -233,7 +307,12 @@ bdx_archiver_run_registration() {
         echo "No Archiver PV-list files are configured." >&2
         return 1
     fi
-    "$script_dir/register-pvs.py" --mgmt-url "$BDX_ARCHIVER_MGMT_URL" "${pv_lists[@]}"
+    retrieval_url="${BDX_ARCHIVER_RETRIEVAL_DATA_URL:-${BDX_ARCHIVER_DATA_RETRIEVAL_URL:-}}"
+    [[ -n "$retrieval_url" ]] || bdx_die "BDX_ARCHIVER_RETRIEVAL_DATA_URL is required."
+    "${BDX_ARCHIVER_PYTHON:-python3}" "$script_dir/repair_archiver.py" \
+        --mgmt-url "$BDX_ARCHIVER_MGMT_URL" \
+        --retrieval-url "$retrieval_url" \
+        "${pv_lists[@]}"
 }
 
 bdx_archiver_start_registration_retry() {

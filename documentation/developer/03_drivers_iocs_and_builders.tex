@@ -1,0 +1,120 @@
+\section{Driver layer}
+
+\subsection{Interfaces and state objects}
+
+Hardware-independent interfaces are defined in \file{src/bdx_slow_control/drivers/base.py}. State is returned with immutable dataclasses such as \code{PowerChannelState}, \code{ChillerState}, and \code{DaqCrateState}.
+
+Current abstract interfaces include:
+
+\begin{itemize}
+  \item \code{PowerSupplyDriver};
+  \item \code{HighVoltageDriver};
+  \item \code{ChillerDriver};
+  \item \code{SensorDriver};
+  \item \code{DaqCrateDriver}.
+\end{itemize}
+
+All drivers implement \code{ping()}. Read methods return complete state objects. Write methods perform one explicit device action and raise an exception when the operation cannot be completed or verified according to the driver contract.
+
+\subsection{Simulation first}
+
+A subsystem should have a simulation backend before or together with its hardware implementation. Simulation enables:
+
+\begin{itemize}
+  \item IOC and display development without equipment;
+  \item deterministic validation of writable PV behavior;
+  \item fault and interlock testing;
+  \item continuous tests on machines without the hardware network.
+\end{itemize}
+
+Set \code{driver.simulation=true} for simulation implementations so \pv{SIMULATION} and \pv{COMM_STATUS} are correct.
+
+\subsection{Adding a hardware backend}
+
+Use the following sequence.
+
+\begin{enumerate}
+  \item Identify the existing abstract interface and state dataclass. Extend them only when the new device requires information that is meaningful at the subsystem contract level.
+  \item Add the implementation under \file{src/bdx_slow_control/drivers/hardware/}. Keep socket, serial, protocol parsing, locking, timeouts, and device command strings inside this module.
+  \item Provide a small builder function that validates required JSON fields and returns the driver instance.
+  \item Register the driver name in \file{src/bdx_slow_control/drivers/factory.py}. Unsupported names must fail with an explicit configuration error.
+  \item Add a JSON example or operational profile entry. Do not embed host addresses or channel counts in IOC code.
+  \item Add unit tests for command formatting, parsing, limit behavior, timeouts, and representative failures. Use fake transports or local test servers where possible.
+  \item Run the subsystem IOC against simulation, then perform read-only hardware checks, then controlled write tests under an approved procedure.
+\end{enumerate}
+
+\begin{importantbox}[Event-loop behavior]
+A slow blocking hardware call must not stall unrelated caproto Channel Access traffic. Use the established driver/IOC pattern for offloading and serialization when a device library or network protocol is blocking.
+\end{importantbox}
+
+\section{IOC layer}
+
+\subsection{ManagedIOC}
+
+\file{src/bdx_slow_control/iocs/common.py} defines \code{ManagedIOC}. A subsystem IOC should normally:
+
+\begin{itemize}
+  \item declare PVs with caproto \code{pvproperty};
+  \item implement \code{poll_device()} to write readbacks from one coherent driver state;
+  \item implement putters for explicit writes;
+  \item catch write failures, call \code{mark_failure()}, and re-raise or return a rejected status as appropriate;
+  \item avoid transport-specific code and deployment constants.
+\end{itemize}
+
+\subsection{Staged operator requests}
+
+Routine hardware changes should prefer request/apply semantics. The low-voltage IOC is the reference pattern:
+
+\begin{enumerate}
+  \item request PVs are initialized from the first successful device read;
+  \item the operator edits voltage and current requests without immediate hardware writes;
+  \item \pv{APPLY_CMD} validates both values together;
+  \item the driver applies the request;
+  \item the IOC rereads the device and updates readbacks;
+  \item \pv{APPLY_STATUS} and \pv{APPLY_MESSAGE} record the outcome.
+\end{enumerate}
+
+If a multi-step hardware write can partially succeed, the failure message must state that possibility and the IOC should reread the device before reporting the final state.
+
+\subsection{Commands}
+
+Momentary command PVs should normally return to false after execution. Confirmed actions in Phoebus are required for operations such as output enable, chiller start, all-off, simulated interlock injection, and interlock reset.
+
+Global or device all-off callbacks are registered in \code{PrototypeContext}. A reset clears the latched global interlock state but must not automatically restore outputs.
+
+\section{Builders and CLI entry points}
+
+\file{src/bdx_slow_control/builders.py} converts validated JSON objects into IOC groups and PV databases. Driver selection occurs through the factory. \file{src/bdx_slow_control/prototype.py} combines available subsystem files, checks for duplicate PVs, and enforces compatible server interfaces.
+
+Console scripts are declared in \file{pyproject.toml}. The principal development commands are:
+
+\begin{lstlisting}[style=shell]
+bdx-prototype-ioc --config-dir config/profiles/default
+bdx-psu-ioc --config config/profiles/default/psu.json
+bdx-chiller-ioc --config config/profiles/default/chiller.json
+bdx-environment-ioc --config config/profiles/raspberry/environment.json
+bdx-pv-list --config-dir config/profiles/default
+bdx-generate-displays --config-dir config/profiles/default \
+  --output-dir phoebus/displays
+\end{lstlisting}
+
+\subsection{Adding a new subsystem}
+
+A new subsystem normally requires all of the following:
+
+\begin{enumerate}
+  \item a state model and abstract driver interface in the driver layer;
+  \item a simulation implementation;
+  \item one or more IOC groups under \file{src/bdx_slow_control/iocs/};
+  \item a builder function in \file{builders.py};
+  \item a driver-factory function or registration;
+  \item a key in the \code{BUILDERS} mapping;
+  \item an individual CLI entry point when focused execution is useful;
+  \item a console-script entry in \file{pyproject.toml};
+  \item one or more JSON profiles;
+  \item generated Phoebus coverage and tests;
+  \item Archiver PV-list updates when the subsystem must be archived;
+  \item documentation updates.
+\end{enumerate}
+
+The subsystem filename used by the aggregated prototype must match its \code{BUILDERS} key, for example \code{psu} maps to \file{psu.json}.

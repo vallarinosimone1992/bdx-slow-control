@@ -159,6 +159,7 @@ def test_repository_archiver_scripts_take_precedence_over_installed_copies():
                 'printf "%s\\n" "$ARCHIVER_HEALTHCHECK"',
                 'printf "%s\\n" "$ARCHIVER_START"',
                 'printf "%s\\n" "$ARCHIVER_AUTOREGISTER"',
+                'printf "%s\\n" "$ARCHIVER_REPAIR"',
             ]
         )
     )
@@ -166,6 +167,19 @@ def test_repository_archiver_scripts_take_precedence_over_installed_copies():
     paths = result.stdout.splitlines()
     assert all("/deploy/archiver-appliance/scripts/" in path for path in paths)
     assert all(".local/share/bdx-archiver/app/scripts" not in path for path in paths)
+
+
+def test_chiller_archiver_readiness_probe_remains_run_state():
+    result = _run_bash(
+        "\n".join(
+            [
+                f'source "{START_SCRIPT}"',
+                'printf "%s\\n" "$ARCHIVER_CHILLER_READY_PV"',
+            ]
+        )
+    )
+
+    assert result.stdout.strip() == "BDX:CHILLER:CHILLER1:RUN_STATE"
 
 
 def test_component_ready_urls_are_component_specific():
@@ -215,7 +229,7 @@ def test_archiver_state_healthy_with_four_processes_and_component_ready_endpoint
         "\n".join(
             [
                 'case "${*: -1}" in',
-                '  *"/mgmt/bpl/getVersions"|*"/engine/bpl/getVersion"|*"/etl/bpl/getVersion"|*"/retrieval/bpl/getVersion") exit 0 ;;',
+                '  *"/mgmt/bpl/getVersions"|*"/engine/bpl/getVersion"|*"/etl/bpl/getVersion"|*"/retrieval/bpl/getVersion") echo \'{"version":"test"}\'; exit 0 ;;',
                 "  *) exit 1 ;;",
                 "esac",
             ]
@@ -263,7 +277,7 @@ def test_archiver_state_starting_when_all_processes_exist_but_endpoint_is_not_re
         "\n".join(
             [
                 'case "${*: -1}" in',
-                '  *"/mgmt/bpl/getVersions"|*"/engine/bpl/getVersion"|*"/retrieval/bpl/getVersion") exit 0 ;;',
+                '  *"/mgmt/bpl/getVersions"|*"/engine/bpl/getVersion"|*"/retrieval/bpl/getVersion") echo \'{"version":"test"}\'; exit 0 ;;',
                 "  *) exit 1 ;;",
                 "esac",
             ]
@@ -327,6 +341,26 @@ def test_archiver_state_partial_when_only_subset_of_processes_exists(tmp_path: P
     assert result.stdout.strip() == "partial"
 
 
+def test_read_only_archiver_report_does_not_require_expert_environment(tmp_path: Path):
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    _write_fake_script(fake_bin / "curl", "exit 7")
+
+    result = _run_bash(
+        "\n".join(
+            [
+                f'source "{START_SCRIPT}"',
+                "unset BDX_ARCHIVER_MGMT_URL BDX_ARCHIVER_ENGINE_URL",
+                "unset BDX_ARCHIVER_ETL_URL BDX_ARCHIVER_RETRIEVAL_BPL_URL",
+                "bdx_stack_report_archiver_status",
+            ]
+        ),
+        env={"PATH": f"{fake_bin}{os.pathsep}{os.environ['PATH']}"},
+    )
+
+    assert "completely absent" in result.stdout
+
+
 def test_archiver_state_is_healthy_with_version_endpoints(
     tmp_path: Path,
 ):
@@ -355,7 +389,7 @@ def test_archiver_state_is_healthy_with_version_endpoints(
                 'url="${*: -1}"',
                 f'printf "%s\\n" "$url" >> "{curl_log}"',
                 'case "$url" in',
-                '  *"/mgmt/bpl/getVersions"|*"/engine/bpl/getVersion"|*"/etl/bpl/getVersion"|*"/retrieval/bpl/getVersion") exit 0 ;;',
+                '  *"/mgmt/bpl/getVersions"|*"/engine/bpl/getVersion"|*"/etl/bpl/getVersion"|*"/retrieval/bpl/getVersion") echo \'{"version":"test"}\'; exit 0 ;;',
                 '  *"/engine/bpl/getVersions"|*"/etl/bpl/getVersions"|*"/retrieval/bpl/getVersions") exit 22 ;;',
                 "  *) exit 1 ;;",
                 "esac",
@@ -385,6 +419,150 @@ def test_archiver_state_is_healthy_with_version_endpoints(
     assert "/engine/bpl/getVersions" not in requested_urls
     assert "/etl/bpl/getVersions" not in requested_urls
     assert "/retrieval/bpl/getVersions" not in requested_urls
+
+
+def test_archiver_readiness_retries_temporary_http_failures(tmp_path: Path):
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    state_dir = tmp_path / "curl-state"
+    state_dir.mkdir()
+    status = tmp_path / "status.sh"
+    env_file = tmp_path / "archappl.env"
+    env_file.write_text("", encoding="utf-8")
+    _write_fake_script(
+        status,
+        "\n".join(
+            [
+                'echo "mgmt: running pid 101"',
+                'echo "engine: running pid 102"',
+                'echo "etl: running pid 103"',
+                'echo "retrieval: running pid 104"',
+            ]
+        ),
+    )
+    _write_fake_script(
+        fake_bin / "curl",
+        "\n".join(
+            [
+                'url="${*: -1}"',
+                'case "$url" in',
+                '  *"/mgmt/"*) component=mgmt ;;',
+                '  *"/engine/"*) component=engine ;;',
+                '  *"/etl/"*) component=etl ;;',
+                '  *"/retrieval/"*) component=retrieval ;;',
+                "  *) exit 22 ;;",
+                "esac",
+                f'counter="{state_dir}/$component"',
+                'count="$(cat "$counter" 2>/dev/null || echo 0)"',
+                'count=$((count + 1))',
+                'printf "%s\\n" "$count" > "$counter"',
+                "if [[ \"$count\" -eq 1 ]]; then exit 22; fi",
+                "echo '{\"version\":\"test\"}'",
+            ]
+        ),
+    )
+    _write_fake_script(fake_bin / "systemctl", "exit 1")
+    _write_fake_script(fake_bin / "sleep", "exit 0")
+
+    result = _run_bash(
+        "\n".join(
+            [
+                f'source "{START_SCRIPT}"',
+                _archiver_url_exports(),
+                f'ARCHIVER_STATUS="{status}"',
+                f'ARCHIVER_ENV_FILE="{env_file}"',
+                "bdx_stack_wait_for_archiver_healthy 5",
+            ]
+        ),
+        env={"PATH": f"{fake_bin}{os.pathsep}{os.environ['PATH']}"},
+    )
+
+    assert result.returncode == 0
+    assert all(
+        int((state_dir / component).read_text(encoding="utf-8")) >= 2
+        for component in ("mgmt", "engine", "etl", "retrieval")
+    )
+
+
+def test_archiver_readiness_permanent_failure_is_bounded(tmp_path: Path):
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    status = tmp_path / "status.sh"
+    env_file = tmp_path / "archappl.env"
+    env_file.write_text("", encoding="utf-8")
+    _write_fake_script(
+        status,
+        "\n".join(
+            [
+                'echo "mgmt: running pid 101"',
+                'echo "engine: running pid 102"',
+                'echo "etl: running pid 103"',
+                'echo "retrieval: running pid 104"',
+            ]
+        ),
+    )
+    _write_fake_script(fake_bin / "curl", "exit 22")
+    _write_fake_script(fake_bin / "systemctl", "exit 1")
+
+    result = _run_bash(
+        "\n".join(
+            [
+                f'source "{START_SCRIPT}"',
+                _archiver_url_exports(),
+                f'ARCHIVER_STATUS="{status}"',
+                f'ARCHIVER_ENV_FILE="{env_file}"',
+                "bdx_stack_wait_for_archiver_healthy 0",
+            ]
+        ),
+        env={"PATH": f"{fake_bin}{os.pathsep}{os.environ['PATH']}"},
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert "Timed out waiting for Archiver Appliance health" in result.stderr
+
+
+def test_archiver_readiness_detects_component_exit_during_startup(tmp_path: Path):
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    calls = tmp_path / "status-calls"
+    status = tmp_path / "status.sh"
+    env_file = tmp_path / "archappl.env"
+    env_file.write_text("", encoding="utf-8")
+    _write_fake_script(
+        status,
+        "\n".join(
+            [
+                f'calls="$(cat "{calls}" 2>/dev/null || echo 0)"',
+                "calls=$((calls + 1))",
+                f'printf "%s\\n" "$calls" > "{calls}"',
+                'echo "mgmt: running pid 101"',
+                'echo "engine: running pid 102"',
+                'echo "etl: running pid 103"',
+                'if [[ "$calls" -lt 3 ]]; then echo "retrieval: running pid 104"; else echo "retrieval: not running"; fi',
+            ]
+        ),
+    )
+    _write_fake_script(fake_bin / "curl", "exit 22")
+    _write_fake_script(fake_bin / "systemctl", "exit 1")
+    _write_fake_script(fake_bin / "sleep", "exit 0")
+
+    result = _run_bash(
+        "\n".join(
+            [
+                f'source "{START_SCRIPT}"',
+                _archiver_url_exports(),
+                f'ARCHIVER_STATUS="{status}"',
+                f'ARCHIVER_ENV_FILE="{env_file}"',
+                "bdx_stack_wait_for_archiver_healthy 5",
+            ]
+        ),
+        env={"PATH": f"{fake_bin}{os.pathsep}{os.environ['PATH']}"},
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert "An Archiver component exited during startup" in result.stderr
 
 
 def test_stack_does_not_start_duplicate_ioc_when_requested_address_is_listening(
@@ -508,10 +686,44 @@ def test_stack_launch_forwards_selected_display_and_archiver_environment(tmp_pat
         (tmp_path / "archiver_url.txt").read_text(encoding="utf-8").strip()
         == "http://127.0.0.1:17668/retrieval"
     )
-    assert (
-        (tmp_path / "preflight_pv.txt").read_text(encoding="utf-8").strip()
-        == "BDX:ENV:TEMP:T00:VALUE"
+    assert (tmp_path / "preflight_pv.txt").read_text(encoding="utf-8").strip() == ""
+
+
+def test_stack_main_launches_phoebus_when_archiver_is_absent(tmp_path: Path):
+    trace = tmp_path / "trace.log"
+    result = _run_bash(
+        "\n".join(
+            [
+                f'source "{START_SCRIPT}"',
+                f'TRACE="{trace}"',
+                'record() { printf "%s\\n" "$1" >> "$TRACE"; }',
+                "bdx_stack_parse_args() { BDX_STACK_DISPLAY=overview; record parse; }",
+                "bdx_stack_load_runtime_environment() { record environment; }",
+                "bdx_stack_validate_slow_control_installation() { record validate; }",
+                "bdx_stack_print_summary() { record summary; }",
+                "bdx_stack_start_ioc_if_needed() { record start-ioc; }",
+                "bdx_stack_wait_for_ioc_listener() { record listener; }",
+                "bdx_stack_wait_for_pv_read() { record ready-pv; }",
+                "bdx_stack_report_archiver_status() { record archiver-absent; }",
+                "bdx_stack_launch_phoebus() { record phoebus; }",
+                "bdx_stack_main overview",
+            ]
+        ),
+        check=False,
     )
+
+    assert result.returncode == 0
+    assert trace.read_text(encoding="utf-8").splitlines() == [
+        "parse",
+        "environment",
+        "validate",
+        "summary",
+        "start-ioc",
+        "listener",
+        "ready-pv",
+        "archiver-absent",
+        "phoebus",
+    ]
 
 
 def test_phoebus_direct_launch_records_pid_and_mode(tmp_path: Path):
@@ -585,4 +797,5 @@ def test_phoebus_archiver_preflight_uses_iso_timestamps_and_url_encoding(
     assert "to=now" not in url
     assert re.search(r"from=\d{4}-\d{2}-\d{2}T\d{2}%3A\d{2}%3A\d{2}Z", url)
     assert re.search(r"to=\d{4}-\d{2}-\d{2}T\d{2}%3A\d{2}%3A\d{2}Z", url)
-    assert "live Channel Access fallback" in result.stderr
+    assert "normal live control" in result.stderr
+    assert "Historical data is unavailable" in result.stderr

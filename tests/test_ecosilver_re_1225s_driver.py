@@ -93,6 +93,8 @@ def test_ecosilver_read_state_and_setters():
     assert state.standby_status == "0"
     assert state.device_status == "OK"
     assert state.fault_diagnosis == "0000"
+    assert ("query", "IN_PV_00") in connection.calls
+    assert ("query", "IN_PV_01") in connection.calls
 
     driver.set_setpoint(21.5)
     driver.set_safe_setpoint(18.5)
