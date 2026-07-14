@@ -177,8 +177,10 @@ physical measurements and applied setpoints. `pv-lists/environment.txt`
 contains only T00 through T03 temperature values. `pv-lists/psu.txt` contains,
 for both channels of LV1 and LV2, the configured voltage readback, measured
 voltage, and measured current. `pv-lists/chiller.txt` contains only the applied
-setpoint and controlled-temperature readback; bath temperature is intentionally
-excluded at this stage. Diagnostics, state PVs and heartbeat timestamps remain
+setpoint and real bath-temperature readback (`IN_PV_00`). The distinct
+controlled-temperature readback (`IN_PV_01`) remains available live and any
+existing history remains retrievable, but it is outside the required catalog.
+Diagnostics, state PVs and heartbeat timestamps remain
 available live but are not part of the required archive catalog.
 
 `pv-lists/prototype.txt` is the duplicate-free 18-PV union of the subsystem
@@ -330,9 +332,7 @@ register-pvs.py \
   "$BDX_ARCHIVER_APP_DIR/pv-lists/environment.txt"
 ```
 
-Do not enable the legacy automatic helper for normal operation. Selective repair
-is deliberately serialized because sampler activation has demonstrated a race
-even for otherwise independent PVs.
+Do not enable the legacy automatic helper for normal operation.
 
 Dry-run registration:
 
@@ -362,15 +362,19 @@ startup and recovery use the staged selective repair command:
   --env /etc/bdx-archiver/archappl.env
 ```
 
-This requires all four components to be healthy, waits for an idle management
-queue, audits the 18-PV required catalog, and registers only missing PVs
-one PV at a time. Each request must drain and the PV must connect, produce a
-real event, and return retrieval data before the next PV starts. Timed-out `METAINFO_GATHERING`
-requests are aborted only when they belong to the current batch. A failed PV is
-retried individually once. An isolated persistent failure is recorded and
-repair continues with the next PV; use `--stop-on-first-failure` for the old
-fail-fast behavior. Endpoint loss, an unexpected overlapping workflow, or a
-queue that cannot be restored to idle remains a global stop condition. There
+This requires all four components to be healthy and first audits the complete
+18-PV required catalog. Healthy PVs take a fast path: valid connection, last
+event and effective policy are sufficient, so they are neither paused nor
+forced to produce a new sample. Interventions for all missing, paused,
+disconnected, pending or incorrectly configured required PVs are initiated
+before a single global polling phase checks workflow completion, connection,
+first event and retrieval. Thus the timeout is per wave, not per PV. Use
+`--verify-new-sample` when a new event after repair start is specifically
+required, and `--timeout`/`--poll-interval` to tune the bounded global wait.
+Timed-out repair-owned workflows are aborted without deleting registration or
+history, and isolated failures receive one retry wave. `--stop-on-first-failure`
+keeps the diagnostic fail-fast mode. Endpoint loss, an unexpected external
+workflow, or an unavailable catalog/retrieval API remains a global stop. There
 is no full-catalog fallback or automatic component restart. The command writes
 a timestamped JSON report under `$BDX_ARCHIVER_STATE_DIR/run`, reports exact
 final failures, returns 1 for completed partial success, and returns 2 for a

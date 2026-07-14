@@ -1,5 +1,5 @@
-# Essential chiller history: configured setpoint and controlled temperature.
-# Bath temperature and diagnostic/state PVs are intentionally out of scope.
+# Essential chiller history: configured setpoint and the real bath temperature.
+# Controlled temperature remains available to EPICS but is outside this target catalog.
 
 BDX:CHILLER:CHILLER1:SETPOINT_RBV
-BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV
+BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV

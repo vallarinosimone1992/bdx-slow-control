@@ -921,7 +921,7 @@ def trend_groups(
         for name in names
         if name.startswith("BDX:CHILLER:")
         and name.rsplit(":", 1)[-1]
-        in {"CONTROLLED_TEMPERATURE_RBV", "BATH_TEMPERATURE_RBV", "SETPOINT_RBV"}
+        in {"BATH_TEMPERATURE_RBV", "SETPOINT_RBV"}
     )
     chiller_pressure = sorted(
         name for name in names if name.startswith("BDX:CHILLER:") and name.endswith("PRESSURE_RBV")
@@ -1441,8 +1441,8 @@ def generate_chiller_operator(
     display.label("Temperatures", 36, y + 12, 180, 28, size=18, bold=True)
     _add_readback_pair(
         display,
-        "Controlled",
-        _pv(prefix, "CONTROLLED_TEMPERATURE_RBV"),
+        "Bath temperature",
+        _pv(prefix, "BATH_TEMPERATURE_RBV"),
         36,
         y + 58,
         width=126,
@@ -1451,8 +1451,8 @@ def generate_chiller_operator(
     )
     _add_readback_pair(
         display,
-        "Bath",
-        _pv(prefix, "BATH_TEMPERATURE_RBV"),
+        "Controlled (diagnostic)",
+        _pv(prefix, "CONTROLLED_TEMPERATURE_RBV"),
         220,
         y + 58,
         width=126,

@@ -417,7 +417,8 @@ PV was archived.
 PSU operator plots contain one dual-axis Data Browser plot per physical LV
 supply. Each plot shows actual channel voltage readbacks on the voltage axis
 and actual channel current readbacks on the current axis. Chiller operator
-plots show controlled temperature, bath temperature, and applied setpoint;
+plots show bath temperature and applied setpoint; the distinct controlled
+temperature remains visible as a diagnostic readback on the operator page;
 optional pressure or external-temperature plots are generated only when those
 measurements are enabled in the selected profile.
 

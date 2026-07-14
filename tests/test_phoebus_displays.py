@@ -611,10 +611,12 @@ def test_chiller_temperature_plot_excludes_duplicate_and_disabled_measurements(
     assert len(plot_files) == 1
     traces = _plt_traces(_plt(plot_files[0]))
     assert traces == {
-        "BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV",
         "BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV",
         "BDX:CHILLER:CHILLER1:SETPOINT_RBV",
     }
+    labels = _labels(tmp_path / "chiller.bob")
+    assert "Bath temperature" in labels
+    assert "Controlled (diagnostic)" in labels
 
 
 def test_default_chiller_plot_contains_default_archive_source(tmp_path: Path):
@@ -754,7 +756,6 @@ def test_deployed_overview_and_trends_cover_environment_chiller_and_lv(
         "BDX:PSU:LV2:CH2:CURRENT_RBV",
     }
     expected_chiller = {
-        "BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV",
         "BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV",
         "BDX:CHILLER:CHILLER1:SETPOINT_RBV",
     }

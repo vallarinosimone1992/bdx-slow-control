@@ -513,7 +513,7 @@ def test_archiver_configured_catalog_is_exactly_18_unique_essential_pvs():
     ]
     expected_chiller = [
         "BDX:CHILLER:CHILLER1:SETPOINT_RBV",
-        "BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV",
+        "BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV",
     ]
     expected_environment = [
         f"BDX:ENV:TEMP:T{index:02d}:VALUE" for index in range(4)
@@ -536,10 +536,11 @@ def test_archiver_chiller_list_excludes_disabled_optional_measurements():
     assert "BDX:CHILLER:CHILLER1:EXTERNAL_TEMPERATURE_VALID" not in chiller_pvs
 
 
-def test_archiver_chiller_list_excludes_bath_and_diagnostic_pvs():
+def test_archiver_chiller_list_excludes_controlled_and_diagnostic_pvs():
     chiller_pvs = set(_read_pvs(PV_LISTS / "chiller.txt"))
 
-    assert "BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV" not in chiller_pvs
+    assert "BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV" in chiller_pvs
+    assert "BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV" not in chiller_pvs
     assert "BDX:CHILLER:CHILLER1:LAST_UPDATE" not in chiller_pvs
     assert "BDX:CHILLER:CHILLER1:ERROR_MESSAGE" not in chiller_pvs
 

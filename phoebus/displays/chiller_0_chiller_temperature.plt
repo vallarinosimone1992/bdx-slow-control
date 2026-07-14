@@ -54,39 +54,14 @@
             </archive>
         </pv>
         <pv>
-            <display_name>BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV</display_name>
-            <visible>true</visible>
-            <name>BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV</name>
-            <axis>0</axis>
-            <color>
-                <red>230</red>
-                <green>85</green>
-                <blue>13</blue>
-            </color>
-            <trace_type>SINGLE_LINE</trace_type>
-            <linewidth>2</linewidth>
-            <line_style>SOLID</line_style>
-            <point_type>NONE</point_type>
-            <point_size>6</point_size>
-            <waveform_index>0</waveform_index>
-            <period>1.0</period>
-            <ring_size>5000</ring_size>
-            <request>RAW</request>
-            <archive>
-                <name>BDX Archiver</name>
-                <url>pbraw://127.0.0.1:17668/retrieval</url>
-                <key>1</key>
-            </archive>
-        </pv>
-        <pv>
             <display_name>BDX:CHILLER:CHILLER1:SETPOINT_RBV</display_name>
             <visible>true</visible>
             <name>BDX:CHILLER:CHILLER1:SETPOINT_RBV</name>
             <axis>0</axis>
             <color>
-                <red>49</red>
-                <green>163</green>
-                <blue>84</blue>
+                <red>230</red>
+                <green>85</green>
+                <blue>13</blue>
             </color>
             <trace_type>SINGLE_LINE</trace_type>
             <linewidth>2</linewidth>

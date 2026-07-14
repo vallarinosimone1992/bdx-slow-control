@@ -51,8 +51,17 @@ class BatchClient:
         self.health_checks = 0
         self.fail_health_after = fail_health_after
         self.status_reads: list[str] = []
+        self.type_reads: list[str] = []
         self.restart_calls = 0
         self.deleted: list[str] = []
+        self.policy_changes: list[tuple[str, str]] = []
+        self.type_infos = {
+            pv: repair_archiver.PolicyInfo(
+                repair_archiver.policy_for_pv(pv), "MONITOR",
+                repair_archiver.POLICY_SETTINGS[repair_archiver.policy_for_pv(pv)][1],
+            )
+            for pv in initial
+        }
         self.extra_registered = list(extra_registered)
 
     def require_healthy(self):
@@ -91,11 +100,23 @@ class BatchClient:
         self.status_reads.append(pv)
         return self.statuses[pv]
 
+    def type_info(self, pv):
+        self.type_reads.append(pv)
+        return self.type_infos.get(pv)
+
+    def change_archival_parameters(self, pv, policy):
+        self.policy_changes.append((pv, policy))
+        method, period = repair_archiver.POLICY_SETTINGS[policy]
+        self.type_infos[pv] = repair_archiver.PolicyInfo(policy, method, period)
+        return True, "changed"
+
     def submit(self, pv, policy):
         if len(self.active) >= 2:
             self.overlap = True
         self.submitted.append((pv, policy))
         self.active.append(pv)
+        method, period = repair_archiver.POLICY_SETTINGS[policy]
+        self.type_infos[pv] = repair_archiver.PolicyInfo(policy, method, period)
         self.queue_reads = 0
         return True, "submitted"
 
@@ -143,17 +164,19 @@ def test_healthy_pvs_are_not_reregistered_and_only_missing_pvs_are_submitted():
 
     assert [pv for pv, _policy in client.submitted] == ["missing"]
     assert client.retrieved == ["missing"]
+    assert client.paused == []
+    assert client.resumed == []
 
 
-def test_batches_do_not_overlap_and_next_batch_waits_for_queue_drain():
+def test_all_problematic_pvs_start_before_global_polling():
     pvs = ["pv1", "pv2", "pv3", "pv4", "pv5"]
     client = BatchClient({pv: missing_status() for pv in pvs}, drain_after=2)
 
     assert coordinator(client, pvs).repair()
 
-    assert not client.overlap
+    assert client.overlap
     assert [pv for pv, _policy in client.submitted] == pvs
-    assert client.total_queue_reads >= 6
+    assert client.total_queue_reads >= 3
     assert client.retrieved == pvs
 
 
@@ -164,6 +187,38 @@ class AdvancingClock:
     def __call__(self):
         self.value += 1.0
         return self.value
+
+
+class SleepClock:
+    def __init__(self):
+        self.value = 0.0
+        self.sleeps = 0
+
+    def __call__(self):
+        return self.value
+
+    def sleep(self, seconds):
+        self.sleeps += 1
+        self.value += seconds
+
+
+def test_verification_timeout_is_global_not_multiplied_by_pv_count():
+    pvs = [f"pv{index}" for index in range(10)]
+    client = NeverHealthyClient({pv: missing_status() for pv in pvs})
+    clock = SleepClock()
+
+    result = coordinator(
+        client,
+        pvs,
+        validation_timeout=3,
+        poll_interval=1,
+        clock=clock,
+        sleep=clock.sleep,
+    ).repair()
+
+    assert not result
+    assert clock.sleeps <= 6  # two shared three-second waves, not 10 PV timeouts
+    assert client.health_checks < 20
 
 
 def test_unexpected_overlapping_workflow_is_a_global_failure():
@@ -186,6 +241,41 @@ def test_registration_uses_existing_policy():
     assert repair.repair()
 
     assert client.submitted == [("BDX:TEST:RUN_STATE", "BDX_State_Change")]
+
+
+def test_pending_workflow_is_not_submitted_again():
+    client = BatchClient({"pending": missing_status()}, drain_after=999)
+    client.active = ["pending"]
+
+    result = coordinator(
+        client, ["pending"], clock=AdvancingClock()
+    ).repair()
+
+    assert not result
+    assert [pv for pv, _policy in client.submitted].count("pending") <= 1
+    assert result.outcomes[0].attempts <= 1
+
+
+def test_wrong_effective_policy_is_corrected_without_pause_resume():
+    client = BatchClient({"pv": healthy_status()})
+    client.type_infos["pv"] = repair_archiver.PolicyInfo(
+        "wrong-policy", "SCAN", 1.0
+    )
+
+    assert coordinator(client, ["pv"]).repair()
+
+    assert client.policy_changes == [("pv", repair_archiver.PHYSICAL_POLICY)]
+    assert client.paused == []
+    assert client.resumed == []
+
+
+def test_paused_pv_is_resumed_only_when_needed():
+    client = BatchClient({"pv": ArchiverStatus("status returned", "Paused")})
+
+    assert coordinator(client, ["pv"]).repair()
+
+    assert client.paused == []
+    assert client.resumed == ["pv"]
 
 
 class NeverHealthyClient(BatchClient):
@@ -262,11 +352,15 @@ def test_multiple_persistent_retrieval_failures_are_accumulated():
         {"first": missing_status(), "second": missing_status()}
     )
 
-    result = coordinator(client, ["first", "second"]).repair()
+    result = coordinator(
+        client, ["first", "second"], clock=AdvancingClock()
+    ).repair()
 
     assert not result
     assert [pv for pv, _policy in client.submitted] == ["first", "second"]
-    assert client.retrieved == ["first", "first", "second", "second"]
+    assert set(client.retrieved) == {"first", "second"}
+    assert client.retrieved.count("first") == client.retrieved.count("second")
+    assert client.retrieved.count("first") >= 2
     failures = [item for item in result.outcomes if item.outcome == "failed"]
     assert [item.pv for item in failures] == ["first", "second"]
     assert {item.failure_stage for item in failures} == {"retrieval verification"}
@@ -289,14 +383,14 @@ def test_fail_fast_compatibility_stops_before_next_pv_and_still_audits():
 
 def test_global_endpoint_failure_stops_immediately_without_final_audit():
     client = BatchClient(
-        {"first": missing_status(), "second": missing_status()}, fail_health_after=7
+        {"first": missing_status(), "second": missing_status()}, fail_health_after=2
     )
 
     result = coordinator(client, ["first", "second"]).repair()
 
     assert not result.completed
     assert result.global_error == "engine unavailable"
-    assert [pv for pv, _policy in client.submitted] == ["first"]
+    assert [pv for pv, _policy in client.submitted] == ["first", "second"]
     assert result.final_entries == []
 
 

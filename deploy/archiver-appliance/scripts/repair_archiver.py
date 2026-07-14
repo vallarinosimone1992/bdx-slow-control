@@ -36,13 +36,22 @@ REGISTERED_UNHEALTHY = "registered but unhealthy"
 PENDING = "initial sampling or pending workflow"
 NOT_ARCHIVED = "not being archived"
 PAUSED = "paused"
+UNVERIFIABLE = "unverifiable"
 UNKNOWN = "unknown/error"
-CATEGORIES = (HEALTHY, REGISTERED_UNHEALTHY, PENDING, NOT_ARCHIVED, PAUSED, UNKNOWN)
+CATEGORIES = (
+    HEALTHY,
+    REGISTERED_UNHEALTHY,
+    PENDING,
+    NOT_ARCHIVED,
+    PAUSED,
+    UNVERIFIABLE,
+    UNKNOWN,
+)
 NEVER_VALUES = {"", "never", "none", "null"}
 DEFAULT_REPRESENTATIVES = (
     "BDX:PSU:LV1:CH1:VOLTAGE_RBV",
     "BDX:PSU:LV2:CH2:CURRENT_RBV",
-    "BDX:CHILLER:CHILLER1:CONTROLLED_TEMPERATURE_RBV",
+    "BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV",
     "BDX:ENV:TEMP:T00:VALUE",
 )
 DEFAULT_READY_URLS = {
@@ -54,13 +63,27 @@ DEFAULT_READY_URLS = {
 
 
 class InfrastructureFailure(RuntimeError):
-    """A global failure that makes continued serialized repair unsafe."""
+    """A global failure that makes continued repair unsafe."""
 
 
 @dataclass(frozen=True)
 class AttemptFailure:
     stage: str
     reason: str
+
+
+@dataclass(frozen=True)
+class PolicyInfo:
+    name: str
+    sampling_method: str
+    sampling_period: float
+
+
+POLICY_SETTINGS = {
+    PHYSICAL_POLICY: ("MONITOR", 5.0),
+    "BDX_State_Change": ("MONITOR", 1.0),
+    "BDX_Diagnostic_Change": ("MONITOR", 5.0),
+}
 
 
 @dataclass
@@ -129,6 +152,16 @@ class CatalogEntry:
     pv: str
     category: str
     status: ArchiverStatus
+    policy: PolicyInfo | None = None
+    diagnostic: str | None = None
+
+
+def policy_is_correct(info: PolicyInfo | None, expected_policy: str) -> bool:
+    """Compare effective policy parameters; the AA label can remain stale after a change."""
+    if info is None:
+        return False
+    method, period = POLICY_SETTINGS[expected_policy]
+    return info.sampling_method == method and abs(info.sampling_period - period) < 1e-6
 
 
 def utc_now() -> str:
@@ -227,6 +260,32 @@ class ArchiverClient:
             raise RuntimeError("registered-PV query returned an invalid payload")
         return sorted(set(payload))
 
+    def type_info(self, pv: str) -> PolicyInfo | None:
+        url = bpl_url(self.mgmt_url, "getPVTypeInfo", {"pv": pv})
+        status, payload, body = fetch_json(url, self.timeout)
+        if status == 404:
+            return None
+        if status >= 400 or not isinstance(payload, dict):
+            raise RuntimeError(f"type-info query failed for {pv}: HTTP {status}: {body.strip()}")
+        try:
+            return PolicyInfo(
+                str(payload["policyName"]),
+                str(payload["samplingMethod"]).upper(),
+                float(payload["samplingPeriod"]),
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise RuntimeError(f"invalid type-info response for {pv}: {body.strip()}") from exc
+
+    def change_archival_parameters(self, pv: str, policy: str) -> tuple[bool, str]:
+        method, period = POLICY_SETTINGS[policy]
+        url = bpl_url(
+            self.mgmt_url,
+            "changeArchivalParameters",
+            {"pv": pv, "samplingmethod": method, "samplingperiod": str(period)},
+        )
+        status, body = fetch_text(url, self.timeout)
+        return 200 <= status < 300, body.strip() or f"HTTP {status}"
+
     def submit(self, pv: str, policy: str) -> tuple[bool, str]:
         return archive_pv(
             self.mgmt_url,
@@ -276,6 +335,7 @@ class CatalogRepair:
         poll_interval: float = 2.0,
         retrieval_minutes: float = 10.0,
         retrieval_from: str | None = None,
+        verify_new_sample: bool = False,
         default_policy: str = PHYSICAL_POLICY,
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], None] = time.sleep,
@@ -283,7 +343,7 @@ class CatalogRepair:
         verbose: bool = False,
     ) -> None:
         if batch_size != 1:
-            raise ValueError("safe Archiver repair requires an effective batch size of one")
+            raise ValueError("Archiver repair accepts individual PV submissions only")
         self.client = client
         self.pvs = list(pvs)
         self.batch_size = batch_size
@@ -292,12 +352,14 @@ class CatalogRepair:
         self.poll_interval = poll_interval
         self.retrieval_minutes = retrieval_minutes
         self.retrieval_from = retrieval_from
+        self.verify_new_sample = verify_new_sample
         self.default_policy = default_policy
         self.clock = clock
         self.sleep = sleep
         self.output = output
         self.verbose = verbose
         self.out_of_scope_registered: list[str] = []
+        self.last_workflows: list[Workflow] = []
 
     def detail(self, message: str) -> None:
         if self.verbose:
@@ -317,15 +379,39 @@ class CatalogRepair:
         except (OSError, RuntimeError, urllib.error.URLError) as exc:
             raise InfrastructureFailure(f"catalog workflow API unavailable: {exc}") from exc
         pending = {workflow.pv for workflow in workflows}
+        self.last_workflows = workflows
         entries = []
         for pv in self.pvs:
             try:
                 status = self.client.status(pv)
             except (OSError, RuntimeError, urllib.error.URLError) as exc:
                 raise InfrastructureFailure(f"catalog status API unavailable for {pv}: {exc}") from exc
-            entries.append(
-                CatalogEntry(pv, classify_status(status, pending=pv in pending), status)
-            )
+            if status.result == "endpoint failure":
+                raise InfrastructureFailure(
+                    f"catalog status API unavailable for {pv}: {status.status}"
+                )
+            category = classify_status(status, pending=pv in pending)
+            policy = None
+            diagnostic = None
+            if category in {HEALTHY, REGISTERED_UNHEALTHY, PAUSED}:
+                try:
+                    policy = self.client.type_info(pv)
+                except (OSError, RuntimeError, urllib.error.URLError) as exc:
+                    category = UNVERIFIABLE
+                    diagnostic = f"policy unverifiable: {exc}"
+                else:
+                    expected = policy_for_pv(pv, self.default_policy)
+                    if policy is None:
+                        category = UNVERIFIABLE
+                        diagnostic = "registered PV has no type information"
+                    elif not policy_is_correct(policy, expected):
+                        category = REGISTERED_UNHEALTHY
+                        diagnostic = (
+                            f"wrong effective policy: {policy.name} "
+                            f"{policy.sampling_method}/{policy.sampling_period:g}s; "
+                            f"expected {expected}"
+                        )
+            entries.append(CatalogEntry(pv, category, status, policy, diagnostic))
         try:
             registered = set(self.client.registered_pvs())
         except (OSError, RuntimeError, urllib.error.URLError) as exc:
@@ -572,6 +658,134 @@ class CatalogRepair:
             return action, health_failure
         return action, self.verify_retrieval(pv)
 
+    def start_intervention(self, entry: CatalogEntry) -> tuple[str, AttemptFailure | None]:
+        """Start one intervention without waiting for its asynchronous completion."""
+        pv = entry.pv
+        expected_policy = policy_for_pv(pv, self.default_policy)
+        if entry.category == PENDING:
+            return "wait for existing workflow", None
+        if entry.category == NOT_ARCHIVED:
+            ok, message = self.client.submit(pv, expected_policy)
+            self.detail(f"submit {pv} policy={expected_policy}: {message}")
+            if not ok:
+                return "registration", AttemptFailure("registration submission", message)
+            return "registration", None
+        if entry.category == PAUSED:
+            ok, message = self.client.resume(pv)
+            self.detail(f"resume {pv}: {message}")
+            if not ok:
+                return "resume", AttemptFailure("pause/resume retry", message)
+            return "resume", None
+        if entry.category == REGISTERED_UNHEALTHY:
+            if entry.policy is not None and not policy_is_correct(entry.policy, expected_policy):
+                ok, message = self.client.change_archival_parameters(pv, expected_policy)
+                self.detail(f"correct-policy {pv} policy={expected_policy}: {message}")
+                if not ok:
+                    return "policy correction", AttemptFailure("policy correction", message)
+                return "policy correction", None
+            ok, message = self.client.pause(pv)
+            self.detail(f"pause-for-reactivation {pv}: {message}")
+            if not ok:
+                return "recovery", AttemptFailure("pause/resume retry", message)
+            ok, message = self.client.resume(pv)
+            self.detail(f"resume-for-reactivation {pv}: {message}")
+            if not ok:
+                return "recovery", AttemptFailure("pause/resume retry", message)
+            return "recovery", None
+        return "none", AttemptFailure(
+            "unexpected status", entry.diagnostic or f"cannot safely activate {entry.category}"
+        )
+
+    def poll_globally(
+        self,
+        entries: Mapping[str, CatalogEntry],
+        *,
+        from_time: str | None,
+    ) -> tuple[set[str], dict[str, AttemptFailure]]:
+        """Verify all modified PVs with one shared deadline and one service check per cycle."""
+        remaining = dict.fromkeys(entries)
+        healthy: set[str] = set()
+        last_failures: dict[str, AttemptFailure] = {}
+        deadline = self.clock() + self.validation_timeout
+        while remaining:
+            self.require_healthy()
+            try:
+                workflows = self.client.workflows()
+            except (OSError, RuntimeError, urllib.error.URLError) as exc:
+                raise InfrastructureFailure(f"management queue API unavailable: {exc}") from exc
+            unexpected = [item for item in workflows if item.pv not in entries]
+            if unexpected:
+                details = ", ".join(f"{item.pv}:{item.state}" for item in unexpected)
+                raise InfrastructureFailure(f"unexpected overlapping management workflow: {details}")
+            pending = {item.pv for item in workflows}
+
+            for pv in list(remaining):
+                try:
+                    status = self.client.status(pv)
+                except (OSError, RuntimeError, urllib.error.URLError) as exc:
+                    raise InfrastructureFailure(f"catalog status API unavailable for {pv}: {exc}") from exc
+                if status.result == "endpoint failure":
+                    raise InfrastructureFailure(
+                        f"catalog status API unavailable for {pv}: {status.status}"
+                    )
+                category = classify_status(status, pending=pv in pending)
+                if category != HEALTHY:
+                    if category == PENDING:
+                        state = next((item.state for item in workflows if item.pv == pv), "pending")
+                        last_failures[pv] = AttemptFailure("metadata gathering", state)
+                    elif status.status.strip().lower() == "being archived" and status.connection_state is not True:
+                        last_failures[pv] = AttemptFailure("connection timeout", "sampler is disconnected")
+                    elif status.status.strip().lower() == "being archived":
+                        last_failures[pv] = AttemptFailure("first-event timeout", "no valid archived event")
+                    else:
+                        last_failures[pv] = AttemptFailure("unexpected status", status.status)
+                    continue
+                try:
+                    info = self.client.type_info(pv)
+                except (OSError, RuntimeError, urllib.error.URLError) as exc:
+                    raise InfrastructureFailure(f"catalog type-info API unavailable for {pv}: {exc}") from exc
+                expected = policy_for_pv(pv, self.default_policy)
+                if not policy_is_correct(info, expected):
+                    last_failures[pv] = AttemptFailure("policy correction", "effective policy is still incorrect")
+                    continue
+                try:
+                    ok, message = self.client.retrieve(
+                        pv, self.retrieval_minutes, from_time=from_time
+                    )
+                except (OSError, RuntimeError, urllib.error.URLError) as exc:
+                    raise InfrastructureFailure(f"retrieval infrastructure unavailable: {exc}") from exc
+                if ok:
+                    healthy.add(pv)
+                    remaining.pop(pv)
+                    last_failures.pop(pv, None)
+                elif "endpoint failure" in message.lower():
+                    raise InfrastructureFailure(
+                        f"retrieval infrastructure unavailable while checking {pv}: {message}"
+                    )
+                else:
+                    last_failures[pv] = AttemptFailure("retrieval verification", message)
+
+            if not remaining or self.clock() >= deadline:
+                break
+            self.sleep(self.poll_interval)
+
+        if remaining:
+            workflows = self.client.workflows()
+            unexpected = [item for item in workflows if item.pv not in entries]
+            if unexpected:
+                details = ", ".join(f"{item.pv}:{item.state}" for item in unexpected)
+                raise InfrastructureFailure(f"unexpected workflow during timeout cleanup: {details}")
+            for workflow in workflows:
+                if workflow.pv in remaining:
+                    ok, message = self.client.abort(workflow.pv)
+                    self.detail(f"abort timed-out {workflow.pv}: {message}")
+                    if not ok:
+                        raise InfrastructureFailure(
+                            f"could not clear timed-out workflow for {workflow.pv}: {message}"
+                        )
+            self.wait_for_idle(None, abort_on_timeout=False)
+        return healthy, {pv: last_failures.get(pv, AttemptFailure("unexpected status", "verification timed out")) for pv in remaining}
+
     def print_final_summary(self, result: RepairResult) -> None:
         counts = Counter(entry.category for entry in result.final_entries)
         already = sum(item.outcome == "already healthy" for item in result.outcomes)
@@ -589,6 +803,7 @@ class CatalogRepair:
             ("required not being archived", counts[NOT_ARCHIVED]),
             ("required pending", counts[PENDING]),
             ("required paused", counts[PAUSED]),
+            ("required unverifiable", counts[UNVERIFIABLE]),
             ("required unknown/error", counts[UNKNOWN]),
             ("out-of-scope registered", len(result.final_out_of_scope)),
             ("failed during this run", len(failed)),
@@ -602,6 +817,48 @@ class CatalogRepair:
             self.output(f"  FAILED [{stage}] {reason}: {', '.join(pvs)}")
         if result.global_error:
             self.output(f"  GLOBAL FAILURE: {result.global_error}")
+
+    def run_fail_fast(
+        self,
+        entries: Sequence[CatalogEntry],
+        indices: Mapping[str, int],
+        started: Mapping[str, str],
+    ) -> list[PVOutcome]:
+        """Retain the former serialized diagnostic mode."""
+        outcomes: list[PVOutcome] = []
+        for entry in entries:
+            if entry.category == HEALTHY:
+                outcomes.append(PVOutcome(
+                    entry.pv, entry.category, "already healthy", 0, "none",
+                    started[entry.pv], utc_now(), final_category=HEALTHY,
+                ))
+                continue
+            action, failure = self.attempt_once(entry.pv)
+            attempts = 1
+            if failure:
+                self.cleanup_workflow(entry.pv)
+                action, failure = self.attempt_once(entry.pv)
+                attempts = 2
+            if failure:
+                self.cleanup_workflow(entry.pv)
+                outcomes.append(PVOutcome(
+                    entry.pv, entry.category, "failed", attempts, action,
+                    started[entry.pv], utc_now(), failure_stage=failure.stage,
+                    diagnostic=failure.reason,
+                ))
+                self.output(
+                    f"[{indices[entry.pv]}/{len(self.pvs)}] {entry.pv} FAILED: "
+                    f"{failure.stage}: {failure.reason}; stopping"
+                )
+                break
+            outcome = "newly registered" if entry.category == NOT_ARCHIVED else "recovered"
+            if attempts > 1:
+                outcome += " after retry"
+            outcomes.append(PVOutcome(
+                entry.pv, entry.category, outcome, attempts, action,
+                started[entry.pv], utc_now(), final_category=HEALTHY,
+            ))
+        return outcomes
 
     def repair(
         self,
@@ -621,10 +878,19 @@ class CatalogRepair:
         completed = False
         try:
             self.require_healthy()
-            self.wait_for_idle(None, abort_on_timeout=False)
             initial = self.audit()
             initial_out_of_scope = list(self.out_of_scope_registered)
             self.print_summary(initial, "Initial catalog audit")
+            unexpected_initial = [
+                item for item in self.last_workflows if item.pv not in set(self.pvs)
+            ]
+            if unexpected_initial:
+                details = ", ".join(
+                    f"{item.pv}:{item.state}" for item in unexpected_initial
+                )
+                raise InfrastructureFailure(
+                    f"unexpected out-of-catalog management workflow: {details}"
+                )
             if pause_out_of_scope:
                 paused_out_of_scope = self.pause_out_of_scope(initial_out_of_scope)
             explicit = set(repair_pvs)
@@ -635,79 +901,117 @@ class CatalogRepair:
                     + ", ".join(sorted(invalid))
                 )
 
-            for index, entry in enumerate(initial, start=1):
-                item_started = utc_now()
-                if entry.category == HEALTHY:
-                    outcomes.append(
-                        PVOutcome(
-                            entry.pv,
-                            entry.category,
-                            "already healthy",
-                            0,
-                            "none",
-                            item_started,
-                            utc_now(),
-                            final_category=HEALTHY,
-                        )
-                    )
-                    self.output(f"[{index}/{len(self.pvs)}] {entry.pv} already healthy")
-                    continue
+            indices = {pv: index for index, pv in enumerate(self.pvs, start=1)}
+            item_started = {entry.pv: utc_now() for entry in initial}
+            parallel_entries: Sequence[CatalogEntry] = initial
+            if stop_on_first_failure:
+                outcomes.extend(
+                    self.run_fail_fast(initial, indices, item_started)
+                )
+                parallel_entries = ()
+            targets: dict[str, CatalogEntry] = {}
+            actions: dict[str, str] = {}
+            attempt_counts: Counter[str] = Counter()
+            failures: dict[str, AttemptFailure] = {}
 
-                action, failure = self.attempt_once(entry.pv)
-                attempts = 1
-                if failure:
-                    self.cleanup_workflow(entry.pv)
-                    self.require_healthy()
-                    self.detail(
-                        f"individual retry {entry.pv} after {failure.stage}: {failure.reason}"
-                    )
-                    action, failure = self.attempt_once(entry.pv)
-                    attempts = 2
-
-                if failure:
-                    self.cleanup_workflow(entry.pv)
-                    self.require_healthy()
-                    outcomes.append(
-                        PVOutcome(
-                            entry.pv,
-                            entry.category,
-                            "failed",
-                            attempts,
-                            action,
-                            item_started,
-                            utc_now(),
-                            failure_stage=failure.stage,
-                            diagnostic=failure.reason,
-                        )
-                    )
+            for entry in parallel_entries:
+                if entry.category == HEALTHY and not self.verify_new_sample:
+                    outcomes.append(PVOutcome(
+                        entry.pv, entry.category, "already healthy", 0, "none",
+                        item_started[entry.pv], utc_now(), final_category=HEALTHY,
+                    ))
                     self.output(
-                        f"[{index}/{len(self.pvs)}] {entry.pv} FAILED: "
-                        f"{failure.stage}: {failure.reason}; "
-                        f"{'stopping' if stop_on_first_failure else 'continuing'}"
-                    )
-                    if stop_on_first_failure:
-                        break
-                    continue
-
-                if entry.category == NOT_ARCHIVED:
-                    outcome = (
-                        "newly registered after retry" if attempts == 2 else "newly registered"
+                        f"[{indices[entry.pv]}/{len(self.pvs)}] "
+                        f"{entry.pv} already healthy"
                     )
                 else:
-                    outcome = "recovered after retry" if attempts == 2 else "recovered"
-                outcomes.append(
-                    PVOutcome(
-                        entry.pv,
-                        entry.category,
-                        outcome,
-                        attempts,
-                        action,
-                        item_started,
-                        utc_now(),
-                        final_category=HEALTHY,
+                    targets[entry.pv] = entry
+
+            # Phase 2: start every intervention before any long per-PV wait.
+            for pv, entry in targets.items():
+                if entry.category == HEALTHY:
+                    actions[pv] = "verify new sample"
+                    continue
+                action, failure = self.start_intervention(entry)
+                actions[pv] = action
+                attempt_counts[pv] = 0 if entry.category == PENDING else 1
+                if failure:
+                    failures[pv] = failure
+                else:
+                    self.output(
+                        f"[{indices[pv]}/{len(self.pvs)}] {pv} {action} started"
                     )
+
+            verification = {
+                pv: entry for pv, entry in targets.items() if pv not in failures
+            }
+            retrieval_from = started_at if self.verify_new_sample else self.retrieval_from
+            if verification:
+                _healthy, timed_out = self.poll_globally(
+                    verification, from_time=retrieval_from
                 )
-                self.output(f"[{index}/{len(self.pvs)}] {entry.pv} {outcome}")
+                failures.update(timed_out)
+
+            # Retry all isolated failures as one second wave, never one timeout per PV.
+            if failures:
+                self.require_healthy()
+                retry_entries = {entry.pv: entry for entry in self.audit()}
+                retry_verification: dict[str, CatalogEntry] = {}
+                for pv in list(failures):
+                    entry = retry_entries[pv]
+                    if entry.category == HEALTHY:
+                        retry_verification[pv] = entry
+                        attempt_counts[pv] += 1
+                        failures.pop(pv, None)
+                        continue
+                    action, failure = self.start_intervention(entry)
+                    actions[pv] = action
+                    attempt_counts[pv] += 1
+                    if failure:
+                        failures[pv] = failure
+                    else:
+                        failures.pop(pv, None)
+                        retry_verification[pv] = entry
+                        self.detail(f"retry started {pv}: {action}")
+                if retry_verification:
+                    _healthy, timed_out = self.poll_globally(
+                        retry_verification, from_time=retrieval_from
+                    )
+                    failures.update(timed_out)
+
+            for pv, entry in targets.items():
+                failure = failures.get(pv)
+                if failure:
+                    outcomes.append(PVOutcome(
+                        pv, entry.category, "failed", attempt_counts[pv],
+                        actions.get(pv, "none"), item_started[pv], utc_now(),
+                        failure_stage=failure.stage, diagnostic=failure.reason,
+                    ))
+                    self.output(
+                        f"[{indices[pv]}/{len(self.pvs)}] {pv} FAILED: "
+                        f"{failure.stage}: {failure.reason}"
+                    )
+                else:
+                    outcome = (
+                        "newly registered" if entry.category == NOT_ARCHIVED else "recovered"
+                    )
+                    if attempt_counts[pv] > 1:
+                        outcome += " after retry"
+                    outcomes.append(PVOutcome(
+                        pv, entry.category, outcome, attempt_counts[pv],
+                        actions.get(pv, "verification"), item_started[pv], utc_now(),
+                        final_category=HEALTHY,
+                    ))
+                    self.output(f"[{indices[pv]}/{len(self.pvs)}] {pv} {outcome}")
+
+            attempted = {item.pv for item in outcomes}
+            for entry in initial:
+                if entry.pv not in attempted:
+                    outcomes.append(PVOutcome(
+                        entry.pv, entry.category, "not attempted", 0, "none",
+                        item_started[entry.pv], utc_now(),
+                        diagnostic="stop-on-first-failure",
+                    ))
 
             self.require_healthy()
             self.wait_for_idle(None, abort_on_timeout=False)
@@ -767,7 +1071,7 @@ def report_payload(result: RepairResult, configured: Sequence[str]) -> dict[str,
     final_counts = Counter(entry.category for entry in result.final_entries)
     failed = [item for item in result.outcomes if item.outcome == "failed"]
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "started_at": result.started_at,
         "completed_at": result.completed_at,
         "completed": result.completed,
@@ -789,6 +1093,7 @@ def report_payload(result: RepairResult, configured: Sequence[str]) -> dict[str,
             "not_being_archived": final_counts[NOT_ARCHIVED],
             "pending": final_counts[PENDING],
             "paused": final_counts[PAUSED],
+            "unverifiable": final_counts[UNVERIFIABLE],
             "unknown_error": final_counts[UNKNOWN],
             "failed_during_run": len(failed),
             "out_of_scope_registered": len(result.final_out_of_scope),
@@ -827,7 +1132,14 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--batch-size", type=positive_int, default=1)
     parser.add_argument("--queue-timeout", type=non_negative_float, default=180.0)
-    parser.add_argument("--validation-timeout", type=non_negative_float, default=180.0)
+    parser.add_argument(
+        "--validation-timeout",
+        "--timeout",
+        dest="validation_timeout",
+        type=non_negative_float,
+        default=180.0,
+        help="Global verification timeout per intervention wave (default: 180 s).",
+    )
     parser.add_argument("--poll-interval", type=non_negative_float, default=2.0)
     parser.add_argument("--http-timeout", type=non_negative_float, default=10.0)
     parser.add_argument(
@@ -842,6 +1154,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--retrieval-from",
         help="Require representative samples at or after this ISO-8601 timestamp.",
+    )
+    parser.add_argument(
+        "--verify-new-sample",
+        action="store_true",
+        help="Require a sample newer than this repair run, including for healthy PVs.",
     )
     parser.add_argument("--repair-pv", action="append", default=[])
     parser.add_argument(
@@ -898,7 +1215,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
     if args.batch_size != 1:
-        print("Archiver repair requires --batch-size 1 for safe serialization.", file=sys.stderr)
+        print("Archiver repair requires --batch-size 1 (individual submissions).", file=sys.stderr)
         return 2
     try:
         pvs = read_pv_list(args.pv_lists)
@@ -940,6 +1257,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         poll_interval=args.poll_interval,
         retrieval_minutes=args.retrieval_minutes,
         retrieval_from=args.retrieval_from,
+        verify_new_sample=args.verify_new_sample,
         verbose=args.verbose,
     )
     try:

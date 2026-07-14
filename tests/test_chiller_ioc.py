@@ -138,6 +138,8 @@ def test_chiller_poll_updates_deviation_and_optional_validity():
         try:
             await group.poll_device()
 
+            assert group.BATH_TEMPERATURE_RBV.value == pytest.approx(20.2)
+            assert group.CONTROLLED_TEMPERATURE_RBV.value == pytest.approx(20.4)
             assert group.TEMPERATURE_DEVIATION_RBV.value == pytest.approx(0.4)
             assert group.DEVIATION_WARNING.value == "On"
             assert group.DEVIATION_ALARM.value == "Off"

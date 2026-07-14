@@ -119,14 +119,18 @@ bdx_archiver_repair
 `bdx_slow_control_repair_archiver --audit-only`. The compatibility command
 `bdx_slow_control_repair_archiver` remains available.
 
-Repair requires all four endpoints to be healthy and an idle management queue.
-It classifies the 18 essential configured PVs, skips healthy entries, and processes every
-remaining PV one at a time. For each PV it waits for queue drain, connection, a
-real first event, and retrieval before proceeding. A failure is retried
-individually once. By default an isolated persistent failure is recorded and
-the next PV is attempted; `--stop-on-first-failure` restores fail-fast behavior
-for debugging. Global endpoint, catalog-API, retrieval-infrastructure, or queue
-serialization failures still stop immediately. There is no unconditional
+Repair requires all four endpoints to be healthy. It first classifies all 18
+essential configured PVs. A healthy PV with the expected effective policy, a
+live connection and a valid prior event is skipped immediately: the default
+does not pause/resume it or wait for a newly produced sample. All necessary
+interventions are then started before a shared polling loop verifies workflow
+completion, connection, first event and retrieval. `--timeout` is global to an
+intervention wave instead of being multiplied by the number of PVs;
+`--poll-interval` controls polling. `--verify-new-sample` opts into requiring an
+event newer than repair start. Isolated failures receive one global retry wave.
+`--stop-on-first-failure` retains diagnostic fail-fast behavior. Global
+endpoint, catalog-API, retrieval-infrastructure, or unexpected external
+workflow failures still stop immediately. There is no unconditional
 full-catalog registration and no automatic engine restart. A complete final
 catalog audit always runs when infrastructure remains healthy. The
 single-appliance identity selects the upstream local-appliance capacity path;
@@ -149,6 +153,11 @@ To require retrieval after a known restart time:
 ```bash
 bdx_archiver_repair --retrieval-from 2026-07-14T09:30:00Z
 ```
+
+The chiller target uses `BDX:CHILLER:CHILLER1:BATH_TEMPERATURE_RBV`, mapped by
+the IOC from the device's `IN_PV_00` bath reading. The separate
+`CONTROLLED_TEMPERATURE_RBV` (`IN_PV_01`) is not deleted; it remains a live and
+potentially historical out-of-scope PV.
 
 ## Archiver status in the IOC and Phoebus
 
