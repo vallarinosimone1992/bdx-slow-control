@@ -5,15 +5,23 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+import json
 import math
 import os
 from pathlib import Path
 import re
 from string import Formatter
 import sys
-from typing import Mapping, TextIO
+import tempfile
+from typing import Callable, Mapping, TextIO
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from .archiver_retrieval import (
+    ArchivedSample,
+    ArchiverRetrievalError,
+    query_pvs,
+    summarize_samples,
+)
 from .config import ConfigurationError, load_json, require_list, require_mapping
 
 
@@ -446,10 +454,12 @@ def format_dry_run_summary(
     config: RunTemperatureExportConfig,
     paths: RunPaths,
     metadata: CaenRunMetadata,
+    *,
+    heading: str = "CAEN run temperature export dry-run",
 ) -> str:
-    """Build the operator-readable dry-run report."""
+    """Build the operator-readable run report."""
     lines = [
-        "CAEN run temperature export dry-run",
+        heading,
         f"Run ID: {metadata.run_id}",
         f"run_root source: {config.run_root_source}",
         f"Run directory: {paths.run_directory}",
@@ -467,14 +477,146 @@ def format_dry_run_summary(
     return "\n".join(lines)
 
 
+def _pv_short_name(pv: str) -> str:
+    fields = pv.split(":")
+    return fields[-2] if len(fields) >= 2 else pv
+
+
+def build_json_dump(
+    config: RunTemperatureExportConfig,
+    metadata: CaenRunMetadata,
+    samples_by_pv: Mapping[str, list[ArchivedSample]],
+) -> dict[str, object]:
+    """Build the normalized diagnostic JSON document."""
+    return {
+        "run": {
+            "run_id": metadata.run_id,
+            "start_local": metadata.start_time.isoformat(),
+            "stop_local": metadata.stop_time.isoformat(),
+            "start_utc": metadata.start_time.astimezone(timezone.utc).isoformat(),
+            "stop_utc": metadata.stop_time.astimezone(timezone.utc).isoformat(),
+            "duration_seconds": int(metadata.duration.total_seconds()),
+        },
+        "archiver": {
+            "retrieval_url": config.archiver.retrieval_url,
+            "timeout_seconds": config.archiver.timeout_seconds,
+        },
+        "configuration": {
+            "run_root": str(config.run_root),
+            "run_time_zone": config.run_time_zone,
+            "histogram_bin_width_seconds": config.histogram_bin_width_seconds,
+            "pvs": list(config.pvs),
+        },
+        "pvs": {
+            pv: {
+                "name": _pv_short_name(pv),
+                **summarize_samples(samples_by_pv[pv]),
+                "samples": [sample.as_dict() for sample in samples_by_pv[pv]],
+            }
+            for pv in config.pvs
+        },
+    }
+
+
+def write_json_dump(
+    path: str | Path,
+    payload: Mapping[str, object],
+    *,
+    overwrite: bool,
+) -> Path:
+    """Atomically publish a diagnostic JSON dump without creating parent directories."""
+    requested = Path(path).expanduser()
+    parent = requested.parent.resolve(strict=False)
+    target = parent / requested.name
+    if not parent.is_dir():
+        raise RunTemperatureExportError(f"JSON dump directory does not exist: {parent}")
+    if target.exists() and not overwrite:
+        raise RunTemperatureExportError(
+            f"JSON dump already exists: {target}; use --overwrite to replace it"
+        )
+
+    file_descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{target.name}.",
+        suffix=".tmp",
+        dir=parent,
+    )
+    temporary_path = Path(temporary_name)
+    try:
+        with os.fdopen(file_descriptor, "w", encoding="utf-8") as stream:
+            json.dump(payload, stream, indent=2, ensure_ascii=False, allow_nan=False)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+
+        if overwrite:
+            os.replace(temporary_path, target)
+        else:
+            try:
+                os.link(temporary_path, target)
+            except FileExistsError as exc:
+                raise RunTemperatureExportError(
+                    f"JSON dump already exists: {target}; use --overwrite to replace it"
+                ) from exc
+            temporary_path.unlink()
+    finally:
+        temporary_path.unlink(missing_ok=True)
+    return target
+
+
+QueryArchiver = Callable[
+    [str, tuple[str, ...], datetime, datetime, float],
+    dict[str, list[ArchivedSample]],
+]
+
+
+def _format_archiver_summaries(
+    config: RunTemperatureExportConfig,
+    samples_by_pv: Mapping[str, list[ArchivedSample]],
+) -> str:
+    lines = ["Archiver retrieval summary:"]
+    pvs_with_samples = 0
+    total_samples = 0
+    for pv in config.pvs:
+        if pv not in samples_by_pv:
+            raise RunTemperatureExportError(f"Archiver result is missing configured PV: {pv}")
+        summary = summarize_samples(samples_by_pv[pv])
+        sample_count = summary["sample_count"]
+        total_samples += sample_count
+        lines.extend([f"{pv}:", f"  samples: {sample_count}"])
+        if summary["warning"]:
+            lines.append(f"  warning: {summary['warning']}")
+            continue
+        pvs_with_samples += 1
+        lines.extend(
+            [
+                f"  first timestamp: {summary['first_timestamp']}",
+                f"  last timestamp: {summary['last_timestamp']}",
+                f"  minimum: {summary['minimum']:g}",
+                f"  maximum: {summary['maximum']:g}",
+                "  samples with non-nominal or unavailable status/severity: "
+                f"{summary['alarm_or_unavailable_count']}",
+            ]
+        )
+    lines.extend(
+        [
+            f"Configured PVs: {len(config.pvs)}",
+            f"PVs with samples: {pvs_with_samples}",
+            f"Empty PVs: {len(config.pvs) - pvs_with_samples}",
+            f"Total samples: {total_samples}",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def main(
     argv: list[str] | None = None,
     *,
     output: TextIO | None = None,
     error_output: TextIO | None = None,
     environ: Mapping[str, str] | None = None,
+    query_archiver: QueryArchiver = query_pvs,
 ) -> int:
-    """Run the metadata-only temperature export dry-run command."""
+    """Inspect a run and optionally retrieve its archived temperature samples."""
     parser = argparse.ArgumentParser(prog="bdx_run_temperature_export")
     parser.add_argument("run_id", metavar="RUN_ID", help="Opaque CAEN run identifier")
     parser.add_argument(
@@ -488,16 +630,32 @@ def main(
         action="store_true",
         help="Parse metadata and print planned paths without writing anything",
     )
+    parser.add_argument(
+        "--query-archiver",
+        action="store_true",
+        help="Retrieve and summarize configured PV samples without writing ROOT output",
+    )
+    parser.add_argument("--dump-json", help="Optional path for a normalized diagnostic dump")
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Allow --dump-json to replace an existing file",
+    )
     args = parser.parse_args(argv)
 
     output = output or sys.stdout
     error_output = error_output or sys.stderr
-    if not args.dry_run:
+    if args.dry_run and args.query_archiver:
+        print("Error: choose either --dry-run or --query-archiver", file=error_output)
+        return 2
+    if not args.dry_run and not args.query_archiver:
         print(
-            "Error: --dry-run is required because temperature retrieval and ROOT output "
-            "are not implemented yet",
+            "Error: one mode is required: --dry-run or --query-archiver",
             file=error_output,
         )
+        return 2
+    if args.dump_json and not args.query_archiver:
+        print("Error: --dump-json requires --query-archiver", file=error_output)
         return 2
 
     try:
@@ -513,7 +671,34 @@ def main(
         print(f"Error: {exc}", file=error_output)
         return 2
 
-    print(format_dry_run_summary(config, paths, metadata), file=output)
+    heading = (
+        "CAEN run temperature Archiver query"
+        if args.query_archiver
+        else "CAEN run temperature export dry-run"
+    )
+    print(format_dry_run_summary(config, paths, metadata, heading=heading), file=output)
+    if not args.query_archiver:
+        return 0
+
+    try:
+        samples_by_pv = query_archiver(
+            config.archiver.retrieval_url,
+            config.pvs,
+            metadata.start_time.astimezone(timezone.utc),
+            metadata.stop_time.astimezone(timezone.utc),
+            config.archiver.timeout_seconds,
+        )
+        print(_format_archiver_summaries(config, samples_by_pv), file=output)
+        if args.dump_json:
+            dump_path = write_json_dump(
+                args.dump_json,
+                build_json_dump(config, metadata, samples_by_pv),
+                overwrite=args.overwrite,
+            )
+            print(f"Diagnostic JSON dump: {dump_path}", file=output)
+    except (ArchiverRetrievalError, RunTemperatureExportError, OSError, ValueError) as exc:
+        print(f"Error: {exc}", file=error_output)
+        return 2
     return 0
 
 

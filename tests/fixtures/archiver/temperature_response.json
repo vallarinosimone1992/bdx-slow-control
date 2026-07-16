@@ -1,0 +1,30 @@
+[
+  {
+    "meta": {
+      "name": "BDX:ENV:TEMP:T00:VALUE",
+      "status": 0,
+      "severity": 0
+    },
+    "data": [
+      {
+        "secs": 102,
+        "nanos": 500000000,
+        "val": 22.5,
+        "status": 1,
+        "severity": 2
+      },
+      {
+        "secs": 100,
+        "nanos": 0,
+        "val": 20.0
+      },
+      {
+        "secs": 101,
+        "nanos": 250000000,
+        "val": 21.25,
+        "status": "NO_ALARM",
+        "severity": "NO_ALARM"
+      }
+    ]
+  }
+]

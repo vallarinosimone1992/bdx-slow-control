@@ -1,11 +1,12 @@
 from dataclasses import replace
-from datetime import timedelta, timezone
+from datetime import datetime, timedelta, timezone
 import io
 import json
 from pathlib import Path
 
 import pytest
 
+from bdx_slow_control.archiver_retrieval import ArchivedSample, ArchiverRetrievalError
 from bdx_slow_control.config import ConfigurationError
 from bdx_slow_control.run_temperature_export import (
     DEFAULT_HISTOGRAM_BIN_WIDTH_SECONDS,
@@ -67,6 +68,38 @@ def _prepare_run(tmp_path: Path) -> tuple[Path, Path, Path]:
     info_file = run_directory / "260714_info.txt"
     _write_info(info_file)
     return run_root, run_directory, info_file
+
+
+def _fake_archiver_samples(
+    pvs, *, empty_pvs: tuple[str, ...] = ()
+) -> dict[str, list[ArchivedSample]]:
+    start = datetime(2026, 7, 14, 14, 16, 4, tzinfo=timezone.utc)
+    result = {}
+    for index, pv in enumerate(pvs):
+        if pv in empty_pvs:
+            result[pv] = []
+            continue
+        samples = []
+        for offset, value, status, severity in (
+            (0, 20.0 + index, 0, 0),
+            (5, 21.0 + index, None, None),
+        ):
+            timestamp = start + timedelta(seconds=offset)
+            seconds = int(timestamp.timestamp())
+            samples.append(
+                ArchivedSample(
+                    pv=pv,
+                    seconds=seconds,
+                    nanoseconds=0,
+                    timestamp_ns=seconds * 1_000_000_000,
+                    timestamp_utc=f"{timestamp:%Y-%m-%dT%H:%M:%S}.000000000Z",
+                    value=value,
+                    status=status,
+                    severity=severity,
+                )
+            )
+        result[pv] = samples
+    return result
 
 
 def test_parse_caen_run_info_real_fixture():
@@ -402,16 +435,21 @@ def test_cli_dry_run_prints_complete_summary(tmp_path: Path):
     output = io.StringIO()
     error_output = io.StringIO()
 
+    def fail_if_queried(*_args):
+        pytest.fail("dry-run must not query the Archiver")
+
     exit_code = main(
         ["260714", "--config", str(config_path), "--dry-run"],
         output=output,
         error_output=error_output,
         environ={},
+        query_archiver=fail_if_queried,
     )
 
     summary = output.getvalue()
     assert exit_code == 0
     assert error_output.getvalue() == ""
+    assert summary.startswith("CAEN run temperature export dry-run\n")
     assert "Run ID: 260714" in summary
     assert "run_root source: JSON" in summary
     assert f"Run directory: {run_directory}" in summary
@@ -444,7 +482,7 @@ def test_cli_dry_run_creates_no_files_or_directories(tmp_path: Path):
     assert not (run_directory / "OTHER").exists()
 
 
-def test_cli_requires_dry_run(tmp_path: Path):
+def test_cli_requires_a_mode(tmp_path: Path):
     config_path = _write_config(tmp_path, tmp_path / "DAQ")
     error_output = io.StringIO()
 
@@ -456,7 +494,35 @@ def test_cli_requires_dry_run(tmp_path: Path):
     )
 
     assert exit_code == 2
-    assert "--dry-run is required" in error_output.getvalue()
+    assert "one mode is required" in error_output.getvalue()
+
+
+def test_dump_json_requires_query_archiver(tmp_path: Path):
+    error_output = io.StringIO()
+
+    exit_code = main(
+        ["260714", "--dry-run", "--dump-json", str(tmp_path / "dump.json")],
+        output=io.StringIO(),
+        error_output=error_output,
+        environ={},
+    )
+
+    assert exit_code == 2
+    assert "--dump-json requires --query-archiver" in error_output.getvalue()
+
+
+def test_dry_run_and_query_modes_are_mutually_exclusive(tmp_path: Path):
+    error_output = io.StringIO()
+
+    exit_code = main(
+        ["260714", "--dry-run", "--query-archiver"],
+        output=io.StringIO(),
+        error_output=error_output,
+        environ={},
+    )
+
+    assert exit_code == 2
+    assert "choose either" in error_output.getvalue()
 
 
 def test_cli_help_uses_only_underscore_command_name(capsys):
@@ -466,6 +532,8 @@ def test_cli_help_uses_only_underscore_command_name(capsys):
     assert exc_info.value.code == 0
     help_text = capsys.readouterr().out
     assert help_text.startswith("usage: bdx_run_temperature_export")
+    assert "--query-archiver" in help_text
+    assert "--dump-json" in help_text
     assert "bdx-run-temperature-export" not in help_text
 
 
@@ -491,3 +559,176 @@ def test_cli_input_error_is_concise_and_nonzero(tmp_path: Path):
     assert exit_code != 0
     assert error_output.getvalue().startswith("Error: Run ID must not contain")
     assert "Traceback" not in error_output.getvalue()
+
+
+def test_cli_query_archiver_uses_run_interval_and_prints_each_pv(tmp_path: Path):
+    run_root, run_directory, _ = _prepare_run(tmp_path)
+    config_path = _write_config(tmp_path, run_root)
+    output = io.StringIO()
+    calls = []
+
+    def query(retrieval_url, pvs, start, stop, timeout):
+        calls.append((retrieval_url, pvs, start, stop, timeout))
+        return _fake_archiver_samples(pvs, empty_pvs=(EXPECTED_PVS[2],))
+
+    exit_code = main(
+        ["260714", "--config", str(config_path), "--query-archiver"],
+        output=output,
+        error_output=io.StringIO(),
+        environ={},
+        query_archiver=query,
+    )
+
+    assert exit_code == 0
+    assert calls == [
+        (
+            "http://127.0.0.1:17668/retrieval",
+            tuple(EXPECTED_PVS),
+            datetime(2026, 7, 14, 14, 16, 4, tzinfo=timezone.utc),
+            datetime(2026, 7, 15, 9, 4, 15, tzinfo=timezone.utc),
+            10.0,
+        )
+    ]
+    summary = output.getvalue()
+    assert summary.startswith("CAEN run temperature Archiver query\n")
+    assert "CAEN run temperature export dry-run" not in summary
+    for pv in (EXPECTED_PVS[0], EXPECTED_PVS[1], EXPECTED_PVS[3]):
+        assert f"{pv}:\n  samples: 2" in summary
+    assert (
+        f"{EXPECTED_PVS[2]}:\n"
+        "  samples: 0\n"
+        "  warning: no samples in requested interval"
+    ) in summary
+    assert "minimum: 20" in summary
+    assert "maximum: 21" in summary
+    assert "samples with non-nominal or unavailable status/severity: 1" in summary
+    assert "Configured PVs: 4" in summary
+    assert "PVs with samples: 3" in summary
+    assert "Empty PVs: 1" in summary
+    assert "Total samples: 6" in summary
+    assert not (run_directory / "OTHER" / "SlowControl_260714.root").exists()
+
+
+def test_cli_query_error_is_concise_without_traceback(tmp_path: Path):
+    run_root, _, _ = _prepare_run(tmp_path)
+    config_path = _write_config(tmp_path, run_root)
+    error_output = io.StringIO()
+
+    def fail_query(*_args):
+        raise ArchiverRetrievalError("connection refused")
+
+    exit_code = main(
+        ["260714", "--config", str(config_path), "--query-archiver"],
+        output=io.StringIO(),
+        error_output=error_output,
+        environ={},
+        query_archiver=fail_query,
+    )
+
+    assert exit_code == 2
+    assert error_output.getvalue() == "Error: connection refused\n"
+
+
+def test_cli_dump_json_is_atomic_and_normalized(tmp_path: Path):
+    run_root, run_directory, _ = _prepare_run(tmp_path)
+    config_path = _write_config(tmp_path, run_root)
+    dump_path = tmp_path / "temperature_dump.json"
+
+    exit_code = main(
+        [
+            "260714",
+            "--config",
+            str(config_path),
+            "--query-archiver",
+            "--dump-json",
+            str(dump_path),
+        ],
+        output=io.StringIO(),
+        error_output=io.StringIO(),
+        environ={},
+        query_archiver=lambda _url, pvs, _start, _stop, _timeout: _fake_archiver_samples(
+            pvs, empty_pvs=(EXPECTED_PVS[2],)
+        ),
+    )
+
+    assert exit_code == 0
+    payload = json.loads(dump_path.read_text(encoding="utf-8"))
+    assert payload["run"]["run_id"] == "260714"
+    assert payload["run"]["duration_seconds"] == 67691
+    assert payload["archiver"]["retrieval_url"] == "http://127.0.0.1:17668/retrieval"
+    assert payload["configuration"]["histogram_bin_width_seconds"] == 5.0
+    assert payload["pvs"][EXPECTED_PVS[0]]["name"] == "T00"
+    assert payload["pvs"][EXPECTED_PVS[0]]["sample_count"] == 2
+    assert payload["pvs"][EXPECTED_PVS[0]]["warning"] is None
+    assert payload["pvs"][EXPECTED_PVS[0]]["samples"][0]["pv"] == EXPECTED_PVS[0]
+    empty_pv = payload["pvs"][EXPECTED_PVS[2]]
+    assert empty_pv == {
+        "name": "T02",
+        "sample_count": 0,
+        "first_timestamp": None,
+        "last_timestamp": None,
+        "minimum": None,
+        "maximum": None,
+        "alarm_or_unavailable_count": 0,
+        "warning": "no samples in requested interval",
+        "samples": [],
+    }
+    assert not list(tmp_path.glob(f".{dump_path.name}.*.tmp"))
+    assert not (run_directory / "OTHER" / "SlowControl_260714.root").exists()
+
+
+def test_cli_dump_json_refuses_existing_file_without_overwrite(tmp_path: Path):
+    run_root, _, _ = _prepare_run(tmp_path)
+    config_path = _write_config(tmp_path, run_root)
+    dump_path = tmp_path / "existing.json"
+    dump_path.write_text("original\n", encoding="utf-8")
+    error_output = io.StringIO()
+
+    exit_code = main(
+        [
+            "260714",
+            "--config",
+            str(config_path),
+            "--query-archiver",
+            "--dump-json",
+            str(dump_path),
+        ],
+        output=io.StringIO(),
+        error_output=error_output,
+        environ={},
+        query_archiver=lambda _url, pvs, _start, _stop, _timeout: _fake_archiver_samples(
+            pvs
+        ),
+    )
+
+    assert exit_code == 2
+    assert dump_path.read_text(encoding="utf-8") == "original\n"
+    assert "use --overwrite" in error_output.getvalue()
+
+
+def test_cli_dump_json_overwrite_replaces_existing_file(tmp_path: Path):
+    run_root, _, _ = _prepare_run(tmp_path)
+    config_path = _write_config(tmp_path, run_root)
+    dump_path = tmp_path / "existing.json"
+    dump_path.write_text("original\n", encoding="utf-8")
+
+    exit_code = main(
+        [
+            "260714",
+            "--config",
+            str(config_path),
+            "--query-archiver",
+            "--dump-json",
+            str(dump_path),
+            "--overwrite",
+        ],
+        output=io.StringIO(),
+        error_output=io.StringIO(),
+        environ={},
+        query_archiver=lambda _url, pvs, _start, _stop, _timeout: _fake_archiver_samples(
+            pvs
+        ),
+    )
+
+    assert exit_code == 0
+    assert json.loads(dump_path.read_text(encoding="utf-8"))["run"]["run_id"] == "260714"
