@@ -1,1 +1,0 @@
-bdx_slow_control

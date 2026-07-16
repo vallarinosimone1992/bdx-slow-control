@@ -7,6 +7,7 @@ lib/
 config/runtime.env
 .pytest_cache/
 .ruff_cache/
+*.egg-info/
 __pycache__/
 *.py[co]
 *.o

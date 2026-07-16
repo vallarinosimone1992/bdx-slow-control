@@ -1,6 +1,0 @@
-caproto<2,>=1.1
-pyserial<4,>=3.5
-
-[dev]
-pytest>=7
-ruff>=0.4
