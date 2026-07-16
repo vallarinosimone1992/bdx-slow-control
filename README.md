@@ -93,6 +93,18 @@ source .venv/bin/activate
 
 The bootstrap script installs the package in editable mode and regenerates the Phoebus displays from the configured PV database.
 
+### Optional run export dependencies
+
+The future ROOT output support for `bdx_run_temperature_export` is opt-in. On
+the DAQ server, install the package with the `export` extra:
+
+```bash
+python -m pip install -e '.[export]'
+```
+
+The default installation does not include NumPy or uproot, so Raspberry Pi and
+IOC-only hosts do not acquire these dependencies.
+
 ## Run the default laboratory IOC
 
 The default operational profile is `config/profiles/default`. It contains only

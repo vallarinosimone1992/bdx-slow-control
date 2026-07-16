@@ -18,6 +18,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+export = [
+  "numpy>=1.24",
+  "uproot>=5"
+]
 dev = [
   "pytest>=7",
   "ruff>=0.4"
