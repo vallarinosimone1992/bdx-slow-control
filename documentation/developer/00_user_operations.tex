@@ -221,14 +221,14 @@ Stop individual components with:
 
 \begin{lstlisting}[style=shell]
 bdx_slow_control_kill_phoebus
-bdx_slow_control_kill_archiver
+bdx_archiver_kill
 bdx_slow_control_kill_ioc
 \end{lstlisting}
 
 Stop the complete local stack with:
 
 \begin{lstlisting}[style=shell]
-./scripts/kill_slow_control_all.sh
+bdx_slow_control_kill
 \end{lstlisting}
 
 Normal shutdown is graceful. Use \code{--force} only when a recognized process does not terminate normally.

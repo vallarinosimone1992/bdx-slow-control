@@ -25,23 +25,37 @@ fi
 
 mkdir -p "$USER_BIN"
 
-commands=(
+canonical_commands=(
     bdx_slow_control_start
     bdx_slow_control_kill
+    bdx_slow_control_kill_ioc
+    bdx_slow_control_kill_phoebus
     bdx_archiver_start
+    bdx_archiver_repair
+    bdx_archiver_audit
     bdx_archiver_kill
+)
+
+# Temporary compatibility aliases for existing deployments and external
+# operator procedures. New deployments should use canonical_commands above.
+compatibility_aliases=(
     start_slow_control
     kill_slow_control
     start_archiver
     kill_archiver
     bdx_slow_control_start_archiver
     bdx_slow_control_repair_archiver
-    bdx_archiver_repair
-    bdx_archiver_audit
-    bdx_slow_control_kill_ioc
     bdx_slow_control_kill_archiver
-    bdx_slow_control_kill_phoebus
+)
+
+additional_commands=(
     start-bdx-raspberry-ioc
+)
+
+commands=(
+    "${canonical_commands[@]}"
+    "${compatibility_aliases[@]}"
+    "${additional_commands[@]}"
 )
 
 USER_SYSTEMD_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
@@ -62,8 +76,18 @@ rm -f \
     "$VENV_BIN/launch-bdx-slow-control" \
     "$VENV_BIN/launch-bdx-phoebus"
 
-echo "Installed user commands:"
-for command in "${commands[@]}"; do
+echo "Installed canonical user commands:"
+for command in "${canonical_commands[@]}"; do
+    echo "  $USER_BIN/$command"
+done
+
+echo "Installed temporary compatibility aliases:"
+for command in "${compatibility_aliases[@]}"; do
+    echo "  $USER_BIN/$command"
+done
+
+echo "Installed additional user commands:"
+for command in "${additional_commands[@]}"; do
     echo "  $USER_BIN/$command"
 done
 

@@ -156,18 +156,67 @@ def test_archiver_no_repair_option_still_validates_components(tmp_path: Path, mo
     assert "bdx_stack_launch_phoebus" not in command
 
 
-def test_primary_and_convenient_lifecycle_entrypoints_are_thin_aliases():
+def _assert_entrypoint_mappings(expected: dict[str, str]) -> None:
     text = Path("pyproject.toml").read_text(encoding="utf-8")
 
-    expected = {
-        "bdx_slow_control_start": "operator_startup:slow_control_start_main",
-        "start_slow_control": "operator_startup:slow_control_start_main",
-        "bdx_slow_control_kill": "operator_commands:slow_control_kill_main",
-        "kill_slow_control": "operator_commands:slow_control_kill_main",
-        "bdx_archiver_start": "operator_startup:start_archiver_main",
-        "start_archiver": "operator_startup:start_archiver_main",
-        "bdx_archiver_kill": "operator_commands:archiver_kill_main",
-        "kill_archiver": "operator_commands:archiver_kill_main",
-    }
     for command, target in expected.items():
         assert f'{command} = "bdx_slow_control.{target}"' in text
+
+
+def test_canonical_lifecycle_entrypoints_are_declared():
+    _assert_entrypoint_mappings({
+        "bdx_slow_control_start": "operator_startup:slow_control_start_main",
+        "bdx_slow_control_kill": "operator_commands:slow_control_kill_main",
+        "bdx_slow_control_kill_ioc": "operator_commands:kill_ioc_main",
+        "bdx_slow_control_kill_phoebus": "operator_commands:kill_phoebus_main",
+        "bdx_archiver_start": "operator_startup:start_archiver_main",
+        "bdx_archiver_repair": "operator_startup:repair_archiver_main",
+        "bdx_archiver_audit": "operator_startup:audit_archiver_main",
+        "bdx_archiver_kill": "operator_commands:archiver_kill_main",
+    })
+
+
+def test_legacy_lifecycle_aliases_remain_declared():
+    _assert_entrypoint_mappings({
+        "start_slow_control": "operator_startup:slow_control_start_main",
+        "kill_slow_control": "operator_commands:slow_control_kill_main",
+        "start_archiver": "operator_startup:start_archiver_main",
+        "kill_archiver": "operator_commands:archiver_kill_main",
+        "bdx_slow_control_start_archiver": "operator_startup:start_archiver_main",
+        "bdx_slow_control_repair_archiver": "operator_startup:repair_archiver_main",
+        "bdx_slow_control_kill_archiver": "operator_commands:kill_archiver_main",
+    })
+
+
+def test_user_command_installer_lists_canonical_commands_before_legacy_aliases():
+    text = Path("scripts/install_user_commands.sh").read_text(encoding="utf-8")
+    canonical_start = text.index("canonical_commands=(")
+    compatibility_start = text.index("compatibility_aliases=(")
+    additional_start = text.index("additional_commands=(")
+
+    assert canonical_start < compatibility_start < additional_start
+    canonical_block = text[canonical_start:compatibility_start]
+    compatibility_block = text[compatibility_start:additional_start]
+
+    for command in (
+        "bdx_slow_control_start",
+        "bdx_slow_control_kill",
+        "bdx_slow_control_kill_ioc",
+        "bdx_slow_control_kill_phoebus",
+        "bdx_archiver_start",
+        "bdx_archiver_repair",
+        "bdx_archiver_audit",
+        "bdx_archiver_kill",
+    ):
+        assert f"    {command}\n" in canonical_block
+
+    for alias in (
+        "start_slow_control",
+        "kill_slow_control",
+        "start_archiver",
+        "kill_archiver",
+        "bdx_slow_control_start_archiver",
+        "bdx_slow_control_repair_archiver",
+        "bdx_slow_control_kill_archiver",
+    ):
+        assert f"    {alias}\n" in compatibility_block

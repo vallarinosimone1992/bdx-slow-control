@@ -15,19 +15,27 @@ The installer refreshes the editable virtual-environment installation, creates
 links under `~/.local/bin`, and installs (but does not enable) the user Archiver
 service definition.
 
-## Preferred lifecycle commands
+## Canonical lifecycle commands
 
-| Unit | Start | Stop | Convenient alias |
-|---|---|---|---|
-| Slow control | `bdx_slow_control_start` | `bdx_slow_control_kill` | `start_slow_control`, `kill_slow_control` |
-| Archiver | `bdx_archiver_start` | `bdx_archiver_kill` | `start_archiver`, `kill_archiver` |
+| Unit or action | Canonical command |
+|---|---|
+| Start slow control | `bdx_slow_control_start` |
+| Stop slow control | `bdx_slow_control_kill` |
+| Stop only the IOC | `bdx_slow_control_kill_ioc` |
+| Stop only Phoebus | `bdx_slow_control_kill_phoebus` |
+| Start the Archiver | `bdx_archiver_start` |
+| Repair the Archiver catalog | `bdx_archiver_repair` |
+| Audit the Archiver catalog | `bdx_archiver_audit` |
+| Stop the Archiver | `bdx_archiver_kill` |
+
+Use these names in new deployments, automation, and operator procedures.
 
 ### Normal slow control
 
 Run the start command in an Ubuntu graphical desktop terminal:
 
 ```bash
-start_slow_control
+bdx_slow_control_start
 ```
 
 It checks the Raspberry environment IOC, starts the local project IOC when it
@@ -46,14 +54,14 @@ The command reports one of:
 
 The start command is idempotent: an IOC already listening on the configured
 address and a Phoebus process matching its recorded PID are not duplicated.
-The display defaults to `overview`; for example, `start_slow_control psu` opens
+The display defaults to `overview`; for example, `bdx_slow_control_start psu` opens
 the PSU display. `BDX_MAIN_HOST` comes from the environment or the untracked
 `config/runtime.env` and is `172.22.50.2` on the current prototype host.
 
 Stop normal slow control with:
 
 ```bash
-kill_slow_control
+bdx_slow_control_kill
 ```
 
 It stops Phoebus and project-owned local `bdx-prototype-ioc` processes. It does
@@ -65,7 +73,7 @@ command when processes are already stopped succeeds cleanly.
 Start only management, engine, ETL, and retrieval with:
 
 ```bash
-start_archiver
+bdx_archiver_start
 ```
 
 The command uses the expert environment in
@@ -88,7 +96,7 @@ configured catalog and selectively repairs only missing PVs. Use this expert
 option to start and validate components without catalog repair:
 
 ```bash
-start_archiver --no-repair
+bdx_archiver_start --no-repair
 ```
 
 The command never starts an IOC and never launches Phoebus. Low-level Tomcat
@@ -97,7 +105,7 @@ startup never performs bulk registration.
 Stop only the Archiver with:
 
 ```bash
-kill_archiver
+bdx_archiver_kill
 ```
 
 The command stops retrieval, ETL, engine, and management in that order through
@@ -115,9 +123,7 @@ bdx_archiver_audit
 bdx_archiver_repair
 ```
 
-`bdx_archiver_audit` is equivalent to
-`bdx_slow_control_repair_archiver --audit-only`. The compatibility command
-`bdx_slow_control_repair_archiver` remains available.
+`bdx_archiver_audit` is equivalent to `bdx_archiver_repair --audit-only`.
 
 Repair requires all four endpoints to be healthy. It first classifies all 18
 essential configured PVs. A healthy PV with the expected effective policy, a
@@ -187,16 +193,26 @@ unavailable. Out-of-scope registrations do not affect this state. Live control
 remains active in every state, and recovery clears the alarm without restarting
 the IOC or Phoebus.
 
-## Compatibility and component commands
+## Compatibility aliases
 
-The following legacy/component commands remain available:
+The following legacy aliases are maintained temporarily for compatibility with
+existing installations and external procedures. They retain their existing
+arguments and behavior, but must not be used in new deployments:
 
-- `bdx_slow_control_start_archiver` aliases `bdx_archiver_start`.
-- `bdx_slow_control_kill_archiver` aliases `bdx_archiver_kill`.
-- `bdx_slow_control_kill_ioc` stops only local project IOC processes.
-- `bdx_slow_control_kill_phoebus` stops only recorded Phoebus processes.
-- `start-bdx-raspberry-ioc` starts or verifies the separately deployed
-  Raspberry environment IOC over SSH.
+| Legacy alias | Canonical command |
+|---|---|
+| `start_slow_control` | `bdx_slow_control_start` |
+| `kill_slow_control` | `bdx_slow_control_kill` |
+| `start_archiver` | `bdx_archiver_start` |
+| `kill_archiver` | `bdx_archiver_kill` |
+| `bdx_slow_control_start_archiver` | `bdx_archiver_start` |
+| `bdx_slow_control_repair_archiver` | `bdx_archiver_repair` |
+| `bdx_slow_control_kill_archiver` | `bdx_archiver_kill` |
+
+## Additional component command
+
+`start-bdx-raspberry-ioc` starts or verifies the separately deployed Raspberry
+environment IOC over SSH.
 
 The Raspberry readiness PV remains `BDX:ENV:TEMP:T00:VALUE`. Component shutdown
 commands validate process command lines before signalling them. `SIGKILL` is

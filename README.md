@@ -197,14 +197,35 @@ Chiller:       172.22.50.60:54321
 Archiver:      http://127.0.0.1:17665-17668
 ```
 
-Preferred independent lifecycle commands on Ubuntu are:
+Canonical independent lifecycle commands on Ubuntu are:
 
 ```bash
-start_slow_control
-kill_slow_control
-start_archiver
-kill_archiver
+bdx_slow_control_start
+bdx_slow_control_kill
+bdx_archiver_start
+bdx_archiver_repair
+bdx_archiver_audit
+bdx_archiver_kill
 ```
+
+New deployments, operator procedures, and automation should use these canonical
+names.
+
+### Compatibility aliases
+
+The following legacy aliases remain temporarily available for compatibility
+with existing installations and external operator procedures. Do not use them
+in new deployments:
+
+| Legacy alias | Canonical command |
+|---|---|
+| `start_slow_control` | `bdx_slow_control_start` |
+| `kill_slow_control` | `bdx_slow_control_kill` |
+| `start_archiver` | `bdx_archiver_start` |
+| `kill_archiver` | `bdx_archiver_kill` |
+| `bdx_slow_control_start_archiver` | `bdx_archiver_start` |
+| `bdx_slow_control_repair_archiver` | `bdx_archiver_repair` |
+| `bdx_slow_control_kill_archiver` | `bdx_archiver_kill` |
 
 Lower-level controlled shutdown commands remain available:
 

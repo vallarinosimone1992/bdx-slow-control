@@ -74,13 +74,17 @@ Keep host clocks synchronized. Data Browser retrieval is timestamp-based, and cl
 
 \section{Operator command layer}
 
-The installed Ubuntu commands provide a constrained operator workflow:
+The canonical installed Ubuntu commands provide a constrained operator workflow:
 
 \begin{itemize}
   \item \command{bdx_slow_control_start};
+  \item \command{bdx_slow_control_kill};
   \item \command{bdx_slow_control_kill_ioc};
-  \item \command{bdx_slow_control_kill_archiver};
   \item \command{bdx_slow_control_kill_phoebus};
+  \item \command{bdx_archiver_start};
+  \item \command{bdx_archiver_repair};
+  \item \command{bdx_archiver_audit};
+  \item \command{bdx_archiver_kill};
   \item \command{start-bdx-raspberry-ioc}.
 \end{itemize}
 

@@ -63,10 +63,10 @@ Before changing a setting, check that the relevant communication indicator is he
 \subsection*{4. Stop the local software stack}
 
 \begin{lstlisting}[style=shell]
-./scripts/kill_slow_control_all.sh
+bdx_slow_control_kill
 \end{lstlisting}
 
-This gracefully stops the BDX Phoebus session, local Archiver Appliance, and main IOC. It does not switch off PSU outputs, send an automatic all-off, stop the chiller, or change hardware settings.
+This gracefully stops the BDX Phoebus session and main IOC. It does not modify the independently managed Archiver Appliance, switch off PSU outputs, send an automatic all-off, stop the chiller, or change hardware settings.
 
 \clearpage
 \section{Startup commands}
@@ -133,9 +133,9 @@ A successful result means that the TCP control port is reachable. It does not pr
 Command & Effect \\
 \midrule
 \command{bdx_slow_control_kill_phoebus} & Stop only BDX slow-control Phoebus processes \\
-\command{bdx_slow_control_kill_archiver} & Stop only the repository-managed local Archiver Appliance \\
+\command{bdx_archiver_kill} & Stop only the repository-managed local Archiver Appliance \\
 \command{bdx_slow_control_kill_ioc} & Stop only the BDX main IOC \\
-\command{./scripts/kill_slow_control_all.sh} & Stop Phoebus, Archiver Appliance, and the main IOC \\
+\command{bdx_slow_control_kill} & Stop Phoebus and the main IOC without modifying the Archiver Appliance \\
 \bottomrule
 \end{tabularx}
 
