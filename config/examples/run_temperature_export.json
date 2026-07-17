@@ -1,0 +1,19 @@
+{
+  "run_root": "/home/streamdaq/Documents/BGO_test/DAQ",
+  "run_directory_pattern": "{run_id}",
+  "info_filename_pattern": "{run_id}_info.txt",
+  "output_filename_pattern": "OTHER/SlowControl_{run_id}.root",
+  "run_time_zone": "Europe/Rome",
+  "histogram_bin_width_seconds": 5.0,
+  "missing_alarm_value": -1,
+  "archiver": {
+    "retrieval_url": "http://127.0.0.1:17668/retrieval",
+    "timeout_seconds": 10
+  },
+  "pvs": [
+    "BDX:ENV:TEMP:T00:VALUE",
+    "BDX:ENV:TEMP:T01:VALUE",
+    "BDX:ENV:TEMP:T02:VALUE",
+    "BDX:ENV:TEMP:T03:VALUE"
+  ]
+}

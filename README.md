@@ -93,6 +93,33 @@ source .venv/bin/activate
 
 The bootstrap script installs the package in editable mode and regenerates the Phoebus displays from the configured PV database.
 
+### Optional run export dependencies
+
+ROOT output support for `bdx_run_temperature_export` is opt-in. On the DAQ
+server, install the package with the `export` extra:
+
+```bash
+python -m pip install -e '.[export]'
+```
+
+The default installation does not include NumPy or uproot, so Raspberry Pi and
+IOC-only hosts do not acquire these dependencies.
+
+Create the final run file with:
+
+```bash
+bdx_run_temperature_export 260714 --write-root
+```
+
+The output is written atomically to
+`<run_directory>/OTHER/SlowControl_<run_id>.root`; `OTHER` must already exist,
+and an existing file is replaced only with `--overwrite`. The file contains a
+real `temperature_samples` TTree, mean and count TH1D histograms for every
+configured sensor, and a `metadata` TObjString. The TObjString holds UTF-8 JSON
+and can be read with `str(root_file["metadata"])` in uproot. Missing Archiver
+status or severity fields use the configured `missing_alarm_value` sentinel
+(`-1` by default), which is also recorded in the metadata.
+
 ## Run the default laboratory IOC
 
 The default operational profile is `config/profiles/default`. It contains only
