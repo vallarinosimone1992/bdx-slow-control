@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import pytest
+import uproot
 
 from bdx_slow_control.archiver_retrieval import ArchivedSample, ArchiverRetrievalError
 from bdx_slow_control.config import ConfigurationError
@@ -22,6 +23,7 @@ from bdx_slow_control.run_temperature_export import (
     resolve_run_directory,
     resolve_run_paths,
 )
+from bdx_slow_control.root_temperature_writer import RootExportDependencyError
 
 
 FIXTURE = Path(__file__).parent / "fixtures" / "caen" / "260714_info.txt"
@@ -414,6 +416,29 @@ def test_missing_histogram_bin_width_uses_five_second_default(tmp_path: Path):
     assert config.histogram_bin_width_seconds == DEFAULT_HISTOGRAM_BIN_WIDTH_SECONDS == 5.0
 
 
+def test_missing_alarm_sentinel_defaults_to_minus_one_and_can_be_configured(tmp_path: Path):
+    config_path = _write_config(tmp_path, tmp_path / "DAQ")
+    assert load_run_temperature_export_config(config_path, environ={}).missing_alarm_value == -1
+
+    configured_path = _write_config(tmp_path, tmp_path / "DAQ", missing_alarm_value=-99)
+    assert (
+        load_run_temperature_export_config(configured_path, environ={}).missing_alarm_value
+        == -99
+    )
+
+
+@pytest.mark.parametrize("invalid_value", [True, 1.0, "-1", 2**31, -(2**31) - 1])
+def test_invalid_missing_alarm_sentinel_is_rejected(tmp_path: Path, invalid_value):
+    config_path = _write_config(
+        tmp_path,
+        tmp_path / "DAQ",
+        missing_alarm_value=invalid_value,
+    )
+
+    with pytest.raises(ConfigurationError, match="missing_alarm_value"):
+        load_run_temperature_export_config(config_path, environ={})
+
+
 @pytest.mark.parametrize(
     "invalid_value",
     [0, 0.0, -1, -0.5, True, False, "5", "invalid", None, [], {}],
@@ -459,7 +484,7 @@ def test_cli_dry_run_prints_complete_summary(tmp_path: Path):
     assert "Start UTC: 2026-07-14T14:16:04+00:00" in summary
     assert "Stop UTC: 2026-07-15T09:04:15+00:00" in summary
     assert "Duration: 18:48:11 (67691 seconds)" in summary
-    assert f"Future ROOT output: {run_directory / 'OTHER' / 'SlowControl_260714.root'}" in summary
+    assert f"ROOT output: {run_directory / 'OTHER' / 'SlowControl_260714.root'}" in summary
     assert "Histogram bin width: 5 seconds" in summary
     assert all(pv in summary for pv in EXPECTED_PVS)
 
@@ -657,6 +682,7 @@ def test_cli_dump_json_is_atomic_and_normalized(tmp_path: Path):
     assert payload["run"]["duration_seconds"] == 67691
     assert payload["archiver"]["retrieval_url"] == "http://127.0.0.1:17668/retrieval"
     assert payload["configuration"]["histogram_bin_width_seconds"] == 5.0
+    assert payload["configuration"]["missing_alarm_value"] == -1
     assert payload["pvs"][EXPECTED_PVS[0]]["name"] == "T00"
     assert payload["pvs"][EXPECTED_PVS[0]]["sample_count"] == 2
     assert payload["pvs"][EXPECTED_PVS[0]]["warning"] is None
@@ -732,3 +758,118 @@ def test_cli_dump_json_overwrite_replaces_existing_file(tmp_path: Path):
 
     assert exit_code == 0
     assert json.loads(dump_path.read_text(encoding="utf-8"))["run"]["run_id"] == "260714"
+
+
+def test_cli_write_root_queries_once_writes_root_and_can_dump_json(tmp_path: Path):
+    run_root, run_directory, _ = _prepare_run(tmp_path)
+    other = run_directory / "OTHER"
+    other.mkdir()
+    config_path = _write_config(tmp_path, run_root)
+    dump_path = tmp_path / "diagnostic.json"
+    output = io.StringIO()
+    calls = []
+
+    def query(retrieval_url, pvs, start, stop, timeout):
+        calls.append((retrieval_url, pvs, start, stop, timeout))
+        return _fake_archiver_samples(pvs, empty_pvs=(EXPECTED_PVS[2],))
+
+    exit_code = main(
+        [
+            "260714",
+            "--config",
+            str(config_path),
+            "--write-root",
+            "--dump-json",
+            str(dump_path),
+        ],
+        output=output,
+        error_output=io.StringIO(),
+        environ={},
+        query_archiver=query,
+    )
+
+    root_path = other / "SlowControl_260714.root"
+    assert exit_code == 0
+    assert len(calls) == 1
+    assert root_path.is_file()
+    assert dump_path.is_file()
+    with uproot.open(
+        root_path,
+        handler=uproot.source.file.MultithreadedFileSource,
+    ) as root_file:
+        assert root_file["temperature_samples"].classname == "TTree"
+        assert root_file["temperature_samples"].num_entries == 6
+        assert root_file["temperature_T02"].classname == "TH1D"
+        assert root_file["temperature_T02_counts"].values().sum() == 0
+
+    summary = output.getvalue()
+    assert summary.startswith("CAEN run temperature ROOT export\n")
+    assert f"ROOT file: {root_path}" in summary
+    assert "TTree entries: 6" in summary
+    assert "Histogram bins: 13539" in summary
+    assert "Histogram bin width: 5 seconds" in summary
+    assert "Sensors with data: T00, T01, T03" in summary
+    assert "Empty sensors: T02" in summary
+    assert "ROOT file size:" in summary
+    assert f"Diagnostic JSON dump: {dump_path}" in summary
+
+
+def test_cli_write_root_does_not_require_query_archiver_flag(tmp_path: Path):
+    run_root, run_directory, _ = _prepare_run(tmp_path)
+    (run_directory / "OTHER").mkdir()
+    config_path = _write_config(tmp_path, run_root)
+
+    exit_code = main(
+        ["260714", "--config", str(config_path), "--write-root"],
+        output=io.StringIO(),
+        error_output=io.StringIO(),
+        environ={},
+        query_archiver=lambda _url, pvs, _start, _stop, _timeout: {
+            pv: [] for pv in pvs
+        },
+    )
+
+    assert exit_code == 0
+    assert (run_directory / "OTHER" / "SlowControl_260714.root").is_file()
+
+
+def test_cli_dry_run_is_mutually_exclusive_with_write_root():
+    error_output = io.StringIO()
+
+    exit_code = main(
+        ["260714", "--dry-run", "--write-root"],
+        output=io.StringIO(),
+        error_output=error_output,
+        environ={},
+    )
+
+    assert exit_code == 2
+    assert "choose either" in error_output.getvalue()
+
+
+def test_cli_reports_missing_root_dependencies_without_traceback(tmp_path: Path):
+    run_root, run_directory, _ = _prepare_run(tmp_path)
+    (run_directory / "OTHER").mkdir()
+    config_path = _write_config(tmp_path, run_root)
+    error_output = io.StringIO()
+
+    def fail_write(*_args, **_kwargs):
+        raise RootExportDependencyError(
+            "ROOT export requires the optional NumPy and uproot dependencies"
+        )
+
+    exit_code = main(
+        ["260714", "--config", str(config_path), "--write-root"],
+        output=io.StringIO(),
+        error_output=error_output,
+        environ={},
+        query_archiver=lambda _url, pvs, _start, _stop, _timeout: {
+            pv: [] for pv in pvs
+        },
+        write_root=fail_write,
+    )
+
+    assert exit_code == 2
+    assert error_output.getvalue().startswith("Error: ROOT export requires")
+    assert "NumPy and uproot" in error_output.getvalue()
+    assert "Traceback" not in error_output.getvalue()

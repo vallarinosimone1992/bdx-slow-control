@@ -1,4 +1,4 @@
-"""Parse CAEN run metadata and prepare a future temperature export."""
+"""Parse CAEN run metadata, query temperatures, and export run files."""
 
 from __future__ import annotations
 
@@ -23,6 +23,12 @@ from .archiver_retrieval import (
     summarize_samples,
 )
 from .config import ConfigurationError, load_json, require_list, require_mapping
+from .root_temperature_writer import (
+    MISSING_ALARM_VALUE,
+    RootTemperatureWriterError,
+    RootWriteResult,
+    write_root_file,
+)
 
 
 DEFAULT_CONFIG = Path("config/examples/run_temperature_export.json")
@@ -60,7 +66,7 @@ class RunTemperatureExportError(RuntimeError):
 
 @dataclass(frozen=True)
 class ArchiverSettings:
-    """Archiver settings reserved for the future retrieval increment."""
+    """Archiver endpoint and retrieval timeout."""
 
     retrieval_url: str
     timeout_seconds: float
@@ -77,6 +83,7 @@ class RunTemperatureExportConfig:
     output_filename_pattern: str
     run_time_zone: str
     histogram_bin_width_seconds: float
+    missing_alarm_value: int
     archiver: ArchiverSettings
     pvs: tuple[str, ...]
 
@@ -171,6 +178,12 @@ def load_run_temperature_export_config(
             "histogram_bin_width_seconds must be a finite number greater than zero"
         )
 
+    missing_alarm_value = raw.get("missing_alarm_value", MISSING_ALARM_VALUE)
+    if isinstance(missing_alarm_value, bool) or not isinstance(missing_alarm_value, int):
+        raise ConfigurationError("missing_alarm_value must be an int32 integer")
+    if not -(2**31) <= missing_alarm_value < 2**31:
+        raise ConfigurationError("missing_alarm_value must fit int32")
+
     raw_archiver = require_mapping(raw, "archiver")
     retrieval_url = _required_string(raw_archiver, "retrieval_url")
     try:
@@ -192,6 +205,7 @@ def load_run_temperature_export_config(
         output_filename_pattern=_required_string(raw, "output_filename_pattern"),
         run_time_zone=run_time_zone,
         histogram_bin_width_seconds=histogram_bin_width_seconds,
+        missing_alarm_value=missing_alarm_value,
         archiver=ArchiverSettings(
             retrieval_url=retrieval_url,
             timeout_seconds=timeout_seconds,
@@ -282,7 +296,7 @@ def resolve_output_file(
     config: RunTemperatureExportConfig,
     run_id: str,
 ) -> Path:
-    """Resolve the future ROOT output path without creating it."""
+    """Resolve the ROOT output path without creating it."""
     directory = resolve_run_directory(config, run_id)
     return _resolve_pattern_path(
         directory,
@@ -469,7 +483,7 @@ def format_dry_run_summary(
         f"Start UTC: {metadata.start_time.astimezone(timezone.utc).isoformat()}",
         f"Stop UTC: {metadata.stop_time.astimezone(timezone.utc).isoformat()}",
         f"Duration: {_format_duration(metadata.duration)}",
-        f"Future ROOT output: {paths.output_file}",
+        f"ROOT output: {paths.output_file}",
         f"Histogram bin width: {config.histogram_bin_width_seconds:g} seconds",
         "Configured temperature PVs:",
     ]
@@ -505,6 +519,7 @@ def build_json_dump(
             "run_root": str(config.run_root),
             "run_time_zone": config.run_time_zone,
             "histogram_bin_width_seconds": config.histogram_bin_width_seconds,
+            "missing_alarm_value": config.missing_alarm_value,
             "pvs": list(config.pvs),
         },
         "pvs": {
@@ -568,6 +583,8 @@ QueryArchiver = Callable[
     dict[str, list[ArchivedSample]],
 ]
 
+WriteRoot = Callable[..., RootWriteResult]
+
 
 def _format_archiver_summaries(
     config: RunTemperatureExportConfig,
@@ -615,6 +632,7 @@ def main(
     error_output: TextIO | None = None,
     environ: Mapping[str, str] | None = None,
     query_archiver: QueryArchiver = query_pvs,
+    write_root: WriteRoot = write_root_file,
 ) -> int:
     """Inspect a run and optionally retrieve its archived temperature samples."""
     parser = argparse.ArgumentParser(prog="bdx_run_temperature_export")
@@ -635,27 +653,40 @@ def main(
         action="store_true",
         help="Retrieve and summarize configured PV samples without writing ROOT output",
     )
+    parser.add_argument(
+        "--write-root",
+        action="store_true",
+        help="Retrieve configured PV samples and atomically write the final ROOT file",
+    )
     parser.add_argument("--dump-json", help="Optional path for a normalized diagnostic dump")
     parser.add_argument(
         "--overwrite",
         action="store_true",
-        help="Allow --dump-json to replace an existing file",
+        help="Allow replacement of existing JSON and ROOT output files",
     )
     args = parser.parse_args(argv)
 
     output = output or sys.stdout
     error_output = error_output or sys.stderr
-    if args.dry_run and args.query_archiver:
-        print("Error: choose either --dry-run or --query-archiver", file=error_output)
-        return 2
-    if not args.dry_run and not args.query_archiver:
+    network_mode = args.query_archiver or args.write_root
+    if args.dry_run and network_mode:
         print(
-            "Error: one mode is required: --dry-run or --query-archiver",
+            "Error: choose either --dry-run or a network mode "
+            "(--query-archiver/--write-root)",
             file=error_output,
         )
         return 2
-    if args.dump_json and not args.query_archiver:
-        print("Error: --dump-json requires --query-archiver", file=error_output)
+    if not args.dry_run and not network_mode:
+        print(
+            "Error: one mode is required: --dry-run, --query-archiver, or --write-root",
+            file=error_output,
+        )
+        return 2
+    if args.dump_json and not network_mode:
+        print(
+            "Error: --dump-json requires --query-archiver or --write-root",
+            file=error_output,
+        )
         return 2
 
     try:
@@ -671,13 +702,14 @@ def main(
         print(f"Error: {exc}", file=error_output)
         return 2
 
-    heading = (
-        "CAEN run temperature Archiver query"
-        if args.query_archiver
-        else "CAEN run temperature export dry-run"
-    )
+    if args.write_root:
+        heading = "CAEN run temperature ROOT export"
+    elif args.query_archiver:
+        heading = "CAEN run temperature Archiver query"
+    else:
+        heading = "CAEN run temperature export dry-run"
     print(format_dry_run_summary(config, paths, metadata, heading=heading), file=output)
-    if not args.query_archiver:
+    if not network_mode:
         return 0
 
     try:
@@ -689,6 +721,35 @@ def main(
             config.archiver.timeout_seconds,
         )
         print(_format_archiver_summaries(config, samples_by_pv), file=output)
+        if args.write_root:
+            result = write_root(
+                paths.output_file,
+                run_id=metadata.run_id,
+                start_local=metadata.start_time,
+                stop_local=metadata.stop_time,
+                caen_time_zone=config.run_time_zone,
+                bin_width_seconds=config.histogram_bin_width_seconds,
+                pvs=config.pvs,
+                samples_by_pv=samples_by_pv,
+                archiver_endpoint=config.archiver.retrieval_url,
+                missing_alarm_value=config.missing_alarm_value,
+                overwrite=args.overwrite,
+            )
+            print(
+                "\n".join(
+                    [
+                        f"ROOT file: {result.path}",
+                        f"TTree entries: {result.tree_entries}",
+                        f"Histogram bins: {result.histogram_bins}",
+                        f"Histogram bin width: {result.bin_width_seconds:g} seconds",
+                        "Sensors with data: "
+                        + (", ".join(result.sensors_with_data) or "none"),
+                        "Empty sensors: " + (", ".join(result.empty_sensors) or "none"),
+                        f"ROOT file size: {result.file_size_bytes} bytes",
+                    ]
+                ),
+                file=output,
+            )
         if args.dump_json:
             dump_path = write_json_dump(
                 args.dump_json,
@@ -696,7 +757,13 @@ def main(
                 overwrite=args.overwrite,
             )
             print(f"Diagnostic JSON dump: {dump_path}", file=output)
-    except (ArchiverRetrievalError, RunTemperatureExportError, OSError, ValueError) as exc:
+    except (
+        ArchiverRetrievalError,
+        RootTemperatureWriterError,
+        RunTemperatureExportError,
+        OSError,
+        ValueError,
+    ) as exc:
         print(f"Error: {exc}", file=error_output)
         return 2
     return 0
