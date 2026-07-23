@@ -59,18 +59,34 @@ Long historical ranges may use optimized Archiver retrieval. Live-only resources
 
 Repository-owned Archiver infrastructure is under \file{deploy/archiver-appliance}. It contains scripts, templates, checksums, policies, PV lists, service examples, and tests, but not third-party release binaries, credentials, logs, databases, or archived samples.
 
+The operational catalog intentionally contains 18 essential measurements and applied setpoints from the PSU, chiller, and Raspberry environment IOC. Heartbeat and \pv{LAST_UPDATE} diagnostics are excluded because every archived sample already carries its EPICS event timestamp.
+
+The Archiver lifecycle is independent of the main IOC and Phoebus lifecycle. Use:
+
+\begin{lstlisting}[style=shell]
+bdx_archiver_start
+bdx_archiver_audit
+bdx_archiver_repair
+bdx_archiver_kill
+\end{lstlisting}
+
+\command{bdx_archiver_start} starts and validates the four Archiver Appliance components. Unless \code{--no-repair} is supplied, it also audits the required catalog and selectively repairs only missing, disconnected, or incorrectly configured PVs. It never starts an IOC and never launches Phoebus.
+
+\command{bdx_archiver_audit} performs the same catalog classification without changing registrations. \command{bdx_archiver_repair} requires all four Archiver endpoints to be healthy, repairs only the required entries, and leaves them actively sampled. Existing healthy entries are preserved; out-of-scope registrations are not removed.
+
 When adding or renaming a PV that should be archived:
 
 \begin{enumerate}
-  \item update the appropriate repository PV list;
+  \item update the appropriate repository PV list and policy;
   \item run offline tests and PV-list validation;
-  \item deploy or register the list through the controlled helper;
-  \item confirm \code{connectionState=true} for a representative PV;
+  \item run \command{bdx_archiver_audit} to inspect the deployed state;
+  \item run \command{bdx_archiver_repair} when a controlled repair is required;
+  \item confirm \code{connectionState=true} and the expected effective policy;
   \item verify live and historical retrieval in Phoebus;
-  \item document that samples exist only from the registration time onward.
+  \item document that samples exist only from the successful registration time onward.
 \end{enumerate}
 
-Keep host clocks synchronized. Data Browser retrieval is timestamp-based, and clock skew can make recent samples appear absent.
+Keep host clocks synchronized. Data Browser retrieval is timestamp-based, and clock skew can make recent samples appear absent. Archiver faults do not disable live Channel Access control: Phoebus remains usable for live operation while archive recovery is performed.
 
 \section{Operator command layer}
 
@@ -90,7 +106,9 @@ The canonical installed Ubuntu commands provide a constrained operator workflow:
 
 The start command resolves the repository root, validates \code{BDX_MAIN_HOST}, verifies the caproto client, checks the Raspberry readiness PV, opens a dedicated IOC terminal if required, performs Archiver checks, and launches Phoebus. It must be run from a graphical Ubuntu session.
 
-Shutdown commands target only recognized BDX slow-control processes. They use graceful termination by default and reserve forced killing for an explicit \code{--force}. Software process shutdown must remain separate from hardware state changes.
+\command{bdx_slow_control_kill} stops only the project Phoebus session and main IOC. It deliberately leaves the independently managed Archiver Appliance running. Shutdown commands target only recognized BDX slow-control processes, use graceful termination by default, and reserve forced killing for an explicit \code{--force}. Software process shutdown must remain separate from hardware state changes.
+
+The legacy names \command{start_slow_control}, \command{kill_slow_control}, \command{start_archiver}, \command{kill_archiver}, and the older \command{bdx_slow_control_*_archiver} commands remain temporary compatibility aliases. New deployments, automation, and documentation must use the canonical names above.
 
 When changing operator commands, add regression tests for process discovery, reused PID files, exact command matching, and protection of unrelated BDX DAQ or Phoebus sessions.
 
