@@ -35,7 +35,7 @@ source .venv/bin/activate
 bdx_slow_control_start overview
 \end{lstlisting}
 
-\textbf{What it does:} starts the main IOC when needed, checks the Raspberry temperature IOC, checks or starts the local Archiver Appliance, and opens Phoebus on the overview page.
+\textbf{What it does:} starts the main IOC when needed, checks the Raspberry temperature IOC, checks or starts the local Archiver Appliance, audits and selectively repairs the required archive catalog, and opens Phoebus on the overview page.
 
 \textbf{Expected result:} two terminal windows remain open and Phoebus displays the BDX overview. The command does not enable PSU outputs, start the chiller, or change setpoints.
 
@@ -126,6 +126,23 @@ nc -vz 172.22.50.60 54321   # chiller
 
 A successful result means that the TCP control port is reachable. It does not prove that the device is operating correctly.
 
+\section{Archiver commands}
+
+The Archiver Appliance is managed independently from the main IOC and Phoebus:
+
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\toprule
+Command & Effect \\
+\midrule
+\command{bdx_archiver_start} & Start and validate the Archiver; audit and selectively repair the required catalog unless \code{--no-repair} is supplied \\
+\command{bdx_archiver_audit} & Check the 18 required archived PVs without changing registrations \\
+\command{bdx_archiver_repair} & Repair only missing, disconnected, or incorrectly configured required PVs \\
+\command{bdx_archiver_kill} & Stop only the Archiver Appliance \\
+\bottomrule
+\end{tabularx}
+
+Live Channel Access control remains available if historical retrieval is unavailable. Archive history begins only after a PV is successfully registered and sampled; missing earlier data cannot be reconstructed.
+
 \section{Shutdown commands}
 
 \begin{tabularx}{\textwidth}{@{}l X@{}}
@@ -161,6 +178,8 @@ Phoebus was closed but the IOC is running & Run \command{./scripts/launch_phoebu
 A PSU is unreachable & Run the corresponding \command{nc -vz} check for LV1 or LV2. \\
 \addlinespace
 The chiller is unreachable & Run \command{nc -vz 172.22.50.60 54321}. \\
+\addlinespace
+Live values are present but history is missing & Run \command{bdx_archiver_audit}; repair with \command{bdx_archiver_repair} only after the Archiver components are healthy. Check the selected time range and host clock synchronization. \\
 \addlinespace
 A value is visible but no longer changes & Check the communication indicator in Phoebus and read the corresponding PV again with \command{caproto-get}. \\
 \bottomrule

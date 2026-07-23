@@ -1,0 +1,31 @@
+\section{Run temperature export}
+
+The command \command{bdx_run_temperature_export} retrieves the configured Raspberry temperature PVs from EPICS Archiver Appliance over the interval defined by a DAQ run information file. It can produce a JSON summary and, when the optional export dependencies are installed, a ROOT file for downstream DAQ analysis.
+
+ROOT support is intentionally optional so IOC-only hosts and the Raspberry Pi do not acquire NumPy or uproot. Install it on the DAQ or analysis host with:
+
+\begin{lstlisting}[style=shell]
+python -m pip install -e '.[export]'
+\end{lstlisting}
+
+The default configuration is \file{config/run_temperature_export.json}. It defines the DAQ run root, run-directory and information-file patterns, the Europe/Rome run time zone, the Archiver retrieval endpoint and timeout, the output path, histogram bin width, missing-alarm sentinel, and the temperature PV list.
+
+Create the final ROOT file with:
+
+\begin{lstlisting}[style=shell]
+bdx_run_temperature_export 260714 --write-root
+\end{lstlisting}
+
+The output is written atomically to \file{<run_directory>/OTHER/SlowControl_<run_id>.root}. The \file{OTHER} directory must already exist. An existing output is replaced only when \code{--overwrite} is supplied.
+
+The ROOT output contains:
+
+\begin{itemize}
+  \item a \code{temperature_samples} TTree with normalized timestamps, values, status, and severity;
+  \item mean and sample-count TH1D histograms for each configured sensor;
+  \item a \code{metadata} TObjString containing UTF-8 JSON describing the run interval, configuration, warnings, and output provenance.
+\end{itemize}
+
+Missing Archiver status or severity fields use the configured \code{missing_alarm_value} sentinel, currently \code{-1}; the sentinel is also recorded in the metadata. Retrieval is timestamp-based, therefore the DAQ host, IOC hosts, and Archiver host must use synchronized clocks and the run information file must be interpreted in the configured time zone.
+
+When modifying this workflow, preserve atomic output semantics, explicit overwrite protection, strict Archiver-response validation, and tests covering run-file parsing, time-zone conversion, empty intervals, malformed samples, ROOT structure, and metadata consistency.
