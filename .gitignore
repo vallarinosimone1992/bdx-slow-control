@@ -17,3 +17,7 @@ __pycache__/
 *.pcm
 *.d
 .DS_Store
+
+# Generated manuals are intentionally versioned and distributed with the repository.
+!/BDX_Slow_Control_Quickstart.pdf
+!/BDX_Slow_Control_User_and_Developer_Manual.pdf
