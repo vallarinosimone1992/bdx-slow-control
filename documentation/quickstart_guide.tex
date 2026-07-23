@@ -35,9 +35,13 @@ source .venv/bin/activate
 bdx_slow_control_start overview
 \end{lstlisting}
 
-\textbf{What it does:} starts the main IOC when needed, checks the Raspberry temperature IOC, checks or starts the local Archiver Appliance, audits and selectively repairs the required archive catalog, and opens Phoebus on the overview page.
+\textbf{What it does:} starts or reuses the main IOC, checks whether the Raspberry temperature IOC is responding, reports the independent local Archiver Appliance status without changing it, and opens Phoebus on the overview page.
 
-\textbf{Expected result:} two terminal windows remain open and Phoebus displays the BDX overview. The command does not enable PSU outputs, start the chiller, or change setpoints.
+\textbf{What it does not do:} it never starts, stops, audits, repairs, or registers PVs in the Archiver. Use the dedicated \command{bdx_archiver_*} commands for those actions.
+
+\textbf{Expected result:} the BDX Main IOC terminal remains open when a new IOC is started, and Phoebus displays the BDX overview. The command does not enable PSU outputs, start the chiller, or change setpoints.
+
+\textbf{Implementation:} the installed command is declared in \file{pyproject.toml} and calls \file{src/bdx_slow_control/operator_startup.py}; the Phoebus terminal workflow sources \file{scripts/start_bdx_stack.sh} and launches through the repository Phoebus helpers.
 
 \subsection*{3. Operate from Phoebus}
 
@@ -68,6 +72,8 @@ bdx_slow_control_kill
 
 This gracefully stops the BDX Phoebus session and main IOC. It does not modify the independently managed Archiver Appliance, switch off PSU outputs, send an automatic all-off, stop the chiller, or change hardware settings.
 
+\textbf{Implementation:} \file{src/bdx_slow_control/operator_commands.py} dispatches this command to \file{scripts/kill_slow_control_all.sh}.
+
 \clearpage
 \section{Startup commands}
 
@@ -88,7 +94,7 @@ The same stack is started, but Phoebus opens directly on the selected page.
 start-bdx-raspberry-ioc
 \end{lstlisting}
 
-Starts the Raspberry service through SSH and waits for a temperature PV to respond. Run this when the main startup command reports that the Raspberry IOC is unavailable.
+Starts the Raspberry systemd service through SSH and waits for a temperature PV to respond. Run this when the main startup command reports that the Raspberry IOC is unavailable.
 
 \subsection{Restart the Raspberry temperature IOC}
 
@@ -96,7 +102,7 @@ Starts the Raspberry service through SSH and waits for a temperature PV to respo
 start-bdx-raspberry-ioc --restart
 \end{lstlisting}
 
-Restarts the remote service and verifies that it is responding.
+Restarts the remote service and verifies that it is responding. The command is implemented by \file{src/bdx_slow_control/operator_commands.py}; it runs \command{systemctl start} or \command{systemctl restart} for \command{bdx-environment-ioc} on the Raspberry through SSH.
 
 \subsection{Reopen Phoebus without starting another IOC}
 
@@ -130,31 +136,41 @@ A successful result means that the TCP control port is reachable. It does not pr
 
 The Archiver Appliance is managed independently from the main IOC and Phoebus:
 
-\begin{tabularx}{\textwidth}{@{}l X@{}}
+\begin{longtable}{@{}p{0.25\textwidth}p{0.39\textwidth}p{0.30\textwidth}@{}}
 \toprule
-Command & Effect \\
+Command & Effect & Implementation \\
 \midrule
-\command{bdx_archiver_start} & Start and validate the Archiver; audit and selectively repair the required catalog unless \code{--no-repair} is supplied \\
-\command{bdx_archiver_audit} & Check the 18 required archived PVs without changing registrations \\
-\command{bdx_archiver_repair} & Repair only missing, disconnected, or incorrectly configured required PVs \\
-\command{bdx_archiver_kill} & Stop only the Archiver Appliance \\
+\endhead
+\command{bdx_archiver_start} & Start and validate the four Archiver components; audit and selectively repair the required catalog unless \code{--no-repair} is supplied & \file{src/bdx_slow_control/operator_startup.py}, using functions from \file{scripts/start_bdx_stack.sh} \\
+\addlinespace
+\command{bdx_archiver_audit} & Check the 18 required archived PVs without changing registrations & \file{src/bdx_slow_control/operator_startup.py}, dispatching \file{deploy/archiver-appliance/scripts/repair-archiver.sh} with \code{--audit-only} \\
+\addlinespace
+\command{bdx_archiver_repair} & Repair only missing, disconnected, or incorrectly configured required PVs & \file{src/bdx_slow_control/operator_startup.py}, dispatching \file{deploy/archiver-appliance/scripts/repair-archiver.sh} \\
+\addlinespace
+\command{bdx_archiver_kill} & Stop only the Archiver Appliance & \file{src/bdx_slow_control/operator_commands.py}, dispatching \file{scripts/kill_slow_control_archiver.sh} \\
 \bottomrule
-\end{tabularx}
+\end{longtable}
 
 Live Channel Access control remains available if historical retrieval is unavailable. Archive history begins only after a PV is successfully registered and sampled; missing earlier data cannot be reconstructed.
 
 \section{Shutdown commands}
 
-\begin{tabularx}{\textwidth}{@{}l X@{}}
+\begin{longtable}{@{}p{0.29\textwidth}p{0.34\textwidth}p{0.31\textwidth}@{}}
 \toprule
-Command & Effect \\
+Command & Effect & Script used \\
 \midrule
-\command{bdx_slow_control_kill_phoebus} & Stop only BDX slow-control Phoebus processes \\
-\command{bdx_archiver_kill} & Stop only the repository-managed local Archiver Appliance \\
-\command{bdx_slow_control_kill_ioc} & Stop only the BDX main IOC \\
-\command{bdx_slow_control_kill} & Stop Phoebus and the main IOC without modifying the Archiver Appliance \\
+\endhead
+\command{bdx_slow_control_kill_phoebus} & Stop only BDX slow-control Phoebus processes & \file{scripts/kill_slow_control_phoebus.sh} \\
+\addlinespace
+\command{bdx_archiver_kill} & Stop only the repository-managed local Archiver Appliance & \file{scripts/kill_slow_control_archiver.sh} \\
+\addlinespace
+\command{bdx_slow_control_kill_ioc} & Stop only the BDX main IOC & \file{scripts/kill_slow_control_ioc.sh} \\
+\addlinespace
+\command{bdx_slow_control_kill} & Stop Phoebus and the main IOC without modifying the Archiver Appliance & \file{scripts/kill_slow_control_all.sh} \\
 \bottomrule
-\end{tabularx}
+\end{longtable}
+
+The installed entry points above are declared in \file{pyproject.toml}; \file{src/bdx_slow_control/operator_commands.py} validates the repository and forwards their arguments to the listed scripts.
 
 \begin{warningbox}[Software shutdown is not hardware shutdown]
 Put the equipment in the required state before stopping the IOC. None of these commands automatically switches off PSU outputs or stops the chiller.
@@ -179,6 +195,8 @@ A PSU is unreachable & Run the corresponding \command{nc -vz} check for LV1 or L
 \addlinespace
 The chiller is unreachable & Run \command{nc -vz 172.22.50.60 54321}. \\
 \addlinespace
+Archiver services are absent or degraded at slow-control startup & Start or validate them separately with \command{bdx_archiver_start}; the normal \command{bdx_slow_control_start} command intentionally performs only a read-only health report. \\
+\addlinespace
 Live values are present but history is missing & Run \command{bdx_archiver_audit}; repair with \command{bdx_archiver_repair} only after the Archiver components are healthy. Check the selected time range and host clock synchronization. \\
 \addlinespace
 A value is visible but no longer changes & Check the communication indicator in Phoebus and read the corresponding PV again with \command{caproto-get}. \\
@@ -187,6 +205,6 @@ A value is visible but no longer changes & Check the communication indicator in 
 
 \section{Where to find more detail}
 
-The \emph{BDX Slow Control User and Developer Manual} contains complete operator procedures, display and PV explanations, architecture, configuration, development, testing, and deployment information.
+The \emph{BDX Slow Control User and Developer Manual} contains complete operator procedures, display and PV explanations, architecture, configuration, development, testing, deployment, command implementation references, and release information.
 
 \end{document}

@@ -61,7 +61,7 @@ Do not use \code{127.0.0.1} for normal operation. Remote Channel Access clients 
 
 \subsection{Raspberry environment IOC}
 
-The main startup command checks whether \pv{BDX:ENV:TEMP:T00:VALUE} is reachable. Start the remote service when required:
+The main startup command checks whether \pv{BDX:ENV:TEMP:T00:VALUE} is reachable but does not start the Raspberry service automatically. Start the remote service when required:
 
 \begin{lstlisting}[style=shell]
 start-bdx-raspberry-ioc
@@ -73,7 +73,7 @@ Force a restart with:
 start-bdx-raspberry-ioc --restart
 \end{lstlisting}
 
-The command connects through SSH, runs the appropriate systemd action, and waits for the readiness PV. If it fails, inspect the remote service:
+The installed command is declared in \file{pyproject.toml} and implemented by \file{src/bdx_slow_control/operator_commands.py}. It connects through SSH, runs \command{systemctl start} or \command{systemctl restart} for the remote \command{bdx-environment-ioc} service, and waits for the readiness PV. If it fails, inspect the remote service:
 
 \begin{lstlisting}[style=shell]
 ssh -t pi@172.22.50.10 \
@@ -89,16 +89,19 @@ bdx_slow_control_start overview
 The command:
 
 \begin{enumerate}
-  \item validates the main-host address and local installation;
+  \item resolves the repository and validates the main-host address, caproto client, Phoebus installation, and graphical terminal;
+  \item reports the independent Archiver Appliance endpoint health in read-only mode;
   \item checks the Raspberry environment IOC and reports a warning if unavailable;
   \item opens a terminal for the main aggregated IOC unless one is already listening;
-  \item waits for the IOC and a representative PV;
-  \item checks or starts the local Archiver Appliance;
-  \item checks representative PSU, chiller, and environment archive connections;
+  \item waits for the IOC and a representative PV in the Phoebus terminal workflow;
   \item launches Phoebus on the requested display.
 \end{enumerate}
 
-Startup does not enable PSU outputs, start or stop the chiller, or write setpoints. A normal launch leaves the \textbf{BDX Main IOC} and \textbf{BDX Archiver and Phoebus} terminals open for inspection.
+The command never starts, stops, audits, repairs, or registers PVs in the Archiver Appliance. Use \command{bdx_archiver_start}, \command{bdx_archiver_audit}, \command{bdx_archiver_repair}, or \command{bdx_archiver_kill} explicitly when those actions are required.
+
+The installed entry point is declared in \file{pyproject.toml} and calls \file{src/bdx_slow_control/operator_startup.py}. The Phoebus terminal workflow sources \file{scripts/start_bdx_stack.sh}; the main IOC command executed is \command{bdx-prototype-ioc}.
+
+Startup does not enable PSU outputs, start or stop the chiller, or write setpoints. A normal launch leaves a \textbf{BDX Main IOC} terminal open when a new IOC is started and opens a separate \textbf{BDX Phoebus} terminal for the GUI workflow.
 
 Open a different page initially with:
 
@@ -213,7 +216,36 @@ The detailed Raspberry installation, I2C, diagnostic, systemd, and replacement-h
 
 Phoebus Data Browser combines live Channel Access data with Archiver Appliance retrieval when the PV is registered and actively sampled. Operator pages contain principal plots and \textbf{Full history} actions for archived PVs.
 
-History exists only from the time a PV was successfully registered and sampled. Missing earlier samples cannot be reconstructed. If live values are present but history is empty, check the Archiver connection state, PV registration, retrieval service, selected time range, and clock synchronization between hosts.
+History exists only from the time a PV was successfully registered and sampled. Missing earlier samples cannot be reconstructed. If live values are present but history is empty, run \command{bdx_archiver_audit}, then check the retrieval service, selected time range, and clock synchronization. Use \command{bdx_archiver_repair} only when a catalog repair is actually required.
+
+\section{Operator command implementation reference}
+
+The installed command names are declared in \file{pyproject.toml}. Python entry points validate arguments and dispatch to the following implementation files:
+
+\begin{longtable}{@{}p{0.27\textwidth}p{0.31\textwidth}p{0.36\textwidth}@{}}
+\toprule
+Command & Python entry point & Script or implementation used \\
+\midrule
+\endhead
+\command{bdx_slow_control_start} & \file{operator_startup.py} & sources \file{scripts/start_bdx_stack.sh}; starts \command{bdx-prototype-ioc} and launches Phoebus \\
+\addlinespace
+\command{bdx_archiver_start} & \file{operator_startup.py} & sources \file{scripts/start_bdx_stack.sh} and calls its Archiver start/validation functions \\
+\addlinespace
+\command{bdx_archiver_audit} & \file{operator_startup.py} & \file{deploy/archiver-appliance/scripts/repair-archiver.sh --audit-only} \\
+\addlinespace
+\command{bdx_archiver_repair} & \file{operator_startup.py} & \file{deploy/archiver-appliance/scripts/repair-archiver.sh} \\
+\addlinespace
+\command{bdx_slow_control_kill} & \file{operator_commands.py} & \file{scripts/kill_slow_control_all.sh} \\
+\addlinespace
+\command{bdx_slow_control_kill_ioc} & \file{operator_commands.py} & \file{scripts/kill_slow_control_ioc.sh} \\
+\addlinespace
+\command{bdx_slow_control_kill_phoebus} & \file{operator_commands.py} & \file{scripts/kill_slow_control_phoebus.sh} \\
+\addlinespace
+\command{bdx_archiver_kill} & \file{operator_commands.py} & \file{scripts/kill_slow_control_archiver.sh} \\
+\addlinespace
+\command{start-bdx-raspberry-ioc} & \file{operator_commands.py} & SSH plus remote \command{systemctl start/restart bdx-environment-ioc} \\
+\bottomrule
+\end{longtable}
 
 \section{Stopping the software}
 
@@ -225,13 +257,13 @@ bdx_archiver_kill
 bdx_slow_control_kill_ioc
 \end{lstlisting}
 
-Stop the complete local stack with:
+Stop the normal local slow-control stack with:
 
 \begin{lstlisting}[style=shell]
 bdx_slow_control_kill
 \end{lstlisting}
 
-Normal shutdown is graceful. Use \code{--force} only when a recognized process does not terminate normally.
+This stops Phoebus and the main IOC but deliberately leaves the independently managed Archiver Appliance running. Normal shutdown is graceful. Use \code{--force} only when a recognized process does not terminate normally.
 
 \begin{warningbox}[Software shutdown does not make hardware safe]
 Stopping Phoebus, Archiver Appliance, or the IOC does not switch off PSU outputs, send an automatic all-off, stop the chiller, or change setpoints. Put the equipment in the intended state before stopping the IOC and verify that state directly.
@@ -260,7 +292,9 @@ Chiller unavailable & Run \command{nc -vz 172.22.50.60 54321} and inspect the ma
 \addlinespace
 PV not found & Confirm the correct Channel Access address list, the relevant IOC is running, and no duplicate IOC exposes the same PV names. \\
 \addlinespace
-Live values but no history & Confirm Archiver registration, connection state, retrieval availability, selected time range, and synchronized clocks. \\
+Archiver absent during slow-control startup & Run \command{bdx_archiver_start}; \command{bdx_slow_control_start} intentionally reports Archiver health read-only and continues with live control. \\
+\addlinespace
+Live values but no history & Run \command{bdx_archiver_audit}; confirm retrieval availability, selected time range, and synchronized clocks; repair only when required. \\
 \addlinespace
 Display appears stale & Check \pv{LAST_UPDATE}, \pv{COMM_OK}, and the relevant IOC terminal. \\
 \bottomrule

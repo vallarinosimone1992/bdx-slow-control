@@ -70,9 +70,11 @@ bdx_archiver_repair
 bdx_archiver_kill
 \end{lstlisting}
 
-\command{bdx_archiver_start} starts and validates the four Archiver Appliance components. Unless \code{--no-repair} is supplied, it also audits the required catalog and selectively repairs only missing, disconnected, or incorrectly configured PVs. It never starts an IOC and never launches Phoebus.
+\command{bdx_archiver_start} is declared in \file{pyproject.toml} and implemented by \file{src/bdx_slow_control/operator_startup.py}. It sources \file{scripts/start_bdx_stack.sh}, starts and validates the four Archiver Appliance components, and, unless \code{--no-repair} is supplied, audits and selectively repairs the required catalog. It never starts an IOC and never launches Phoebus.
 
-\command{bdx_archiver_audit} performs the same catalog classification without changing registrations. \command{bdx_archiver_repair} requires all four Archiver endpoints to be healthy, repairs only the required entries, and leaves them actively sampled. Existing healthy entries are preserved; out-of-scope registrations are not removed.
+\command{bdx_archiver_audit} and \command{bdx_archiver_repair} are also implemented by \file{src/bdx_slow_control/operator_startup.py}. Both dispatch to \file{deploy/archiver-appliance/scripts/repair-archiver.sh}; audit adds \code{--audit-only}, while repair performs the controlled catalog changes. Existing healthy entries are preserved and out-of-scope registrations are not removed.
+
+\command{bdx_archiver_kill} is implemented by \file{src/bdx_slow_control/operator_commands.py}, which dispatches to \file{scripts/kill_slow_control_archiver.sh}.
 
 When adding or renaming a PV that should be archived:
 
@@ -90,27 +92,42 @@ Keep host clocks synchronized. Data Browser retrieval is timestamp-based, and cl
 
 \section{Operator command layer}
 
-The canonical installed Ubuntu commands provide a constrained operator workflow:
+The canonical installed Ubuntu commands are declared in \file{pyproject.toml}. They provide a constrained operator workflow while retaining explicit separation between slow-control, Archiver, and Raspberry lifecycle actions.
 
-\begin{itemize}
-  \item \command{bdx_slow_control_start};
-  \item \command{bdx_slow_control_kill};
-  \item \command{bdx_slow_control_kill_ioc};
-  \item \command{bdx_slow_control_kill_phoebus};
-  \item \command{bdx_archiver_start};
-  \item \command{bdx_archiver_repair};
-  \item \command{bdx_archiver_audit};
-  \item \command{bdx_archiver_kill};
-  \item \command{start-bdx-raspberry-ioc}.
-\end{itemize}
+\begin{longtable}{@{}p{0.27\textwidth}p{0.31\textwidth}p{0.36\textwidth}@{}}
+\toprule
+Command & Python entry point & Script or implementation used \\
+\midrule
+\endhead
+\command{bdx_slow_control_start} & \file{src/bdx_slow_control/operator_startup.py} & sources \file{scripts/start_bdx_stack.sh}; starts or reuses \command{bdx-prototype-ioc}, reports Archiver health read-only, and launches Phoebus \\
+\addlinespace
+\command{bdx_slow_control_kill} & \file{src/bdx_slow_control/operator_commands.py} & \file{scripts/kill_slow_control_all.sh} \\
+\addlinespace
+\command{bdx_slow_control_kill_ioc} & \file{src/bdx_slow_control/operator_commands.py} & \file{scripts/kill_slow_control_ioc.sh} \\
+\addlinespace
+\command{bdx_slow_control_kill_phoebus} & \file{src/bdx_slow_control/operator_commands.py} & \file{scripts/kill_slow_control_phoebus.sh} \\
+\addlinespace
+\command{bdx_archiver_start} & \file{src/bdx_slow_control/operator_startup.py} & Archiver functions sourced from \file{scripts/start_bdx_stack.sh} \\
+\addlinespace
+\command{bdx_archiver_repair} & \file{src/bdx_slow_control/operator_startup.py} & \file{deploy/archiver-appliance/scripts/repair-archiver.sh} \\
+\addlinespace
+\command{bdx_archiver_audit} & \file{src/bdx_slow_control/operator_startup.py} & \file{deploy/archiver-appliance/scripts/repair-archiver.sh --audit-only} \\
+\addlinespace
+\command{bdx_archiver_kill} & \file{src/bdx_slow_control/operator_commands.py} & \file{scripts/kill_slow_control_archiver.sh} \\
+\addlinespace
+\command{start-bdx-raspberry-ioc} & \file{src/bdx_slow_control/operator_commands.py} & SSH plus remote \command{systemctl start/restart bdx-environment-ioc} \\
+\bottomrule
+\end{longtable}
 
-The start command resolves the repository root, validates \code{BDX_MAIN_HOST}, verifies the caproto client, checks the Raspberry readiness PV, opens a dedicated IOC terminal if required, performs Archiver checks, and launches Phoebus. It must be run from a graphical Ubuntu session.
+The normal \command{bdx_slow_control_start} path resolves the repository root, validates \code{BDX_MAIN_HOST}, verifies the caproto client, checks the Raspberry readiness PV, opens a dedicated IOC terminal if required, reports Archiver endpoint health without mutating the service, waits for IOC readiness in the Phoebus terminal workflow, and launches Phoebus. It must be run from a graphical Ubuntu session.
+
+In particular, \command{bdx_slow_control_start} never starts, stops, audits, repairs, or registers PVs in the Archiver Appliance. This invariant prevents routine GUI startup from changing the independent archive service.
 
 \command{bdx_slow_control_kill} stops only the project Phoebus session and main IOC. It deliberately leaves the independently managed Archiver Appliance running. Shutdown commands target only recognized BDX slow-control processes, use graceful termination by default, and reserve forced killing for an explicit \code{--force}. Software process shutdown must remain separate from hardware state changes.
 
 The legacy names \command{start_slow_control}, \command{kill_slow_control}, \command{start_archiver}, \command{kill_archiver}, and the older \command{bdx_slow_control_*_archiver} commands remain temporary compatibility aliases. New deployments, automation, and documentation must use the canonical names above.
 
-When changing operator commands, add regression tests for process discovery, reused PID files, exact command matching, and protection of unrelated BDX DAQ or Phoebus sessions.
+When changing operator commands, update both the \file{pyproject.toml} entry-point mapping and this command-reference table. Add regression tests for process discovery, reused PID files, exact command matching, read-only Archiver behavior during slow-control startup, and protection of unrelated BDX DAQ or Phoebus sessions.
 
 \section{Raspberry environment IOC}
 
