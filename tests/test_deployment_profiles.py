@@ -90,6 +90,7 @@ def test_default_operational_chiller_profile_uses_ecosilver_hardware():
     assert device["host"] == "172.22.50.60"
     assert device["port"] == 54321
     assert device["timeout"] == 5.0
+    assert device["reconnect_delay"] == 15.0
     assert device["pressure_enabled"] is False
     assert device["external_temperature_enabled"] is False
     assert device["pressure_required"] is False

@@ -13,6 +13,20 @@ from caproto.server import pvproperty
 from .common import ManagedIOC
 
 
+def _pv_boolean(value) -> bool:
+    """Convert caproto boolean-enum values without treating ``"Off"`` as true."""
+    if isinstance(value, bytes):
+        value = value.decode("ascii", errors="strict")
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"on", "true", "yes", "1"}:
+            return True
+        if normalized in {"off", "false", "no", "0"}:
+            return False
+        raise ValueError(f"Unsupported boolean PV value: {value!r}")
+    return bool(value)
+
+
 class ChillerIOC(ManagedIOC):
     TEMPERATURE_RBV = pvproperty(value=0.0, dtype=float, read_only=True)
     BATH_TEMPERATURE_RBV = pvproperty(value=0.0, dtype=float, read_only=True)
@@ -96,6 +110,9 @@ class ChillerIOC(ManagedIOC):
     def close(self) -> None:
         if self._owns_driver_executor:
             self._driver_executor.shutdown(wait=False, cancel_futures=True)
+        close_driver = getattr(self.driver, "close", None)
+        if callable(close_driver):
+            close_driver()
 
     async def _write_state(self, state) -> None:
         await self.TEMPERATURE_RBV.write(value=state.temperature_c)
@@ -159,7 +176,7 @@ class ChillerIOC(ManagedIOC):
 
     @APPLY_SETPOINT_CMD.putter
     async def APPLY_SETPOINT_CMD(self, instance, value):
-        if not value:
+        if not _pv_boolean(value):
             return False
 
         requested = float(self.SETPOINT_REQUEST.value)
@@ -188,12 +205,13 @@ class ChillerIOC(ManagedIOC):
 
     @RUN_SET.putter
     async def RUN_SET(self, instance, value):
+        running = _pv_boolean(value)
         try:
-            await self._run_driver("set_running", bool(value))
+            await self._run_driver("set_running", running)
         except Exception as exc:
             await self.mark_failure(exc)
             raise
-        return bool(value)
+        return running
 
     @SAFE_SETPOINT_SET.putter
     async def SAFE_SETPOINT_SET(self, instance, value):

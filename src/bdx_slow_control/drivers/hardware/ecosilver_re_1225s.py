@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 import math
 import socket
 import threading
+import time
 from typing import Any
 
 from ...config import ConfigurationError
@@ -14,6 +15,8 @@ from ..base import ChillerDriver, ChillerState
 
 DEFAULT_PORT = 54321
 DEFAULT_TIMEOUT = 5.0
+DEFAULT_RECONNECT_DELAY = 15.0
+MAX_REPLY_BYTES = 4096
 
 
 def parse_float_reply(reply: str) -> float:
@@ -50,33 +53,111 @@ def fault_reply_to_bool(reply: str) -> bool:
 
 
 class LAUDAConnection:
-    """One-command TCP client for the LAUDA CRLF-terminated ASCII protocol."""
+    """Persistent TCP client for the LAUDA CRLF-terminated ASCII protocol."""
 
     def __init__(
         self,
         host: str,
         port: int = DEFAULT_PORT,
         timeout: float = DEFAULT_TIMEOUT,
+        reconnect_delay: float = DEFAULT_RECONNECT_DELAY,
     ) -> None:
         self.host = host
         self.port = int(port)
         self.timeout = float(timeout)
+        self.reconnect_delay = float(reconnect_delay)
+        if self.reconnect_delay < 0:
+            raise ValueError("LAUDA reconnect delay must be non-negative")
+        self._socket: socket.socket | None = None
+        self._receive_buffer = bytearray()
+        self._retry_after = 0.0
+        self._lock = threading.RLock()
 
-    def query(self, command: str) -> str:
+    def close(self) -> None:
+        """Close the persistent connection without imposing reconnect backoff."""
+        with self._lock:
+            self._close_socket()
+            self._retry_after = 0.0
+
+    def _close_socket(self) -> None:
+        sock = self._socket
+        self._socket = None
+        self._receive_buffer.clear()
+        if sock is not None:
+            try:
+                sock.close()
+            except OSError:
+                pass
+
+    def _mark_transport_failure(self) -> None:
+        self._close_socket()
+        self._retry_after = time.monotonic() + self.reconnect_delay
+
+    def _connect(self) -> socket.socket:
+        if self._socket is not None:
+            return self._socket
+
+        remaining = self._retry_after - time.monotonic()
+        if remaining > 0:
+            raise ConnectionError(
+                "LAUDA chiller reconnect deferred after a transport failure "
+                f"for another {remaining:.1f} s"
+            )
+
+        sock: socket.socket | None = None
         try:
-            with socket.create_connection((self.host, self.port), timeout=self.timeout) as sock:
-                sock.settimeout(self.timeout)
-                sock.sendall(f"{command.strip()}\r\n".encode("ascii"))
-                response = sock.recv(1024)
+            sock = socket.create_connection(
+                (self.host, self.port),
+                timeout=self.timeout,
+            )
+            sock.settimeout(self.timeout)
         except OSError as exc:
+            if sock is not None:
+                try:
+                    sock.close()
+                except OSError:
+                    pass
+            self._mark_transport_failure()
             raise ConnectionError(
                 f"LAUDA chiller communication failed for {self.host}:{self.port}: {exc}"
             ) from exc
-        if not response:
-            raise ConnectionError(
-                f"LAUDA chiller at {self.host}:{self.port} returned an empty response"
-            )
-        return response.decode("ascii", errors="replace").strip()
+
+        self._socket = sock
+        self._retry_after = 0.0
+        return sock
+
+    def _read_reply(self, sock: socket.socket) -> str:
+        while True:
+            terminator = self._receive_buffer.find(b"\r\n")
+            if terminator >= 0:
+                raw_reply = bytes(self._receive_buffer[:terminator])
+                del self._receive_buffer[: terminator + 2]
+                return raw_reply.decode("ascii", errors="replace").strip()
+
+            if len(self._receive_buffer) >= MAX_REPLY_BYTES:
+                raise ConnectionError(
+                    "LAUDA chiller reply exceeded "
+                    f"{MAX_REPLY_BYTES} bytes without a CRLF terminator"
+                )
+
+            response = sock.recv(min(1024, MAX_REPLY_BYTES - len(self._receive_buffer)))
+            if not response:
+                raise ConnectionError(
+                    f"LAUDA chiller at {self.host}:{self.port} closed the connection"
+                )
+            self._receive_buffer.extend(response)
+
+    def query(self, command: str) -> str:
+        with self._lock:
+            sock = self._connect()
+            try:
+                sock.sendall(f"{command.strip()}\r\n".encode("ascii"))
+                return self._read_reply(sock)
+            except (OSError, ConnectionError) as exc:
+                self._mark_transport_failure()
+                raise ConnectionError(
+                    f"LAUDA chiller communication failed for {self.host}:{self.port}: {exc}"
+                ) from exc
 
     def command(self, command: str, *, require_ok: bool = False) -> str:
         reply = self.query(command)
@@ -213,17 +294,31 @@ class ECOSilverRE1225SDriver(ChillerDriver):
             self.last_error = None
 
     def set_running(self, running: bool) -> None:
+        requested_running = bool(running)
         with self._lock:
             try:
-                if running:
-                    self.connection.command("START")
-                else:
-                    self.connection.command("STOP")
+                command = "START" if requested_running else "STOP"
+                self.connection.command(command, require_ok=True)
+                standby_status = self.connection.query(self.standby_command)
+                verified_running = standby_reply_to_running(
+                    standby_status,
+                    fallback=not requested_running,
+                )
+                if verified_running != requested_running:
+                    expected = "running" if requested_running else "standby"
+                    raise ConnectionError(
+                        f"LAUDA {command} was acknowledged but the device did not enter "
+                        f"{expected}; {self.standby_command} returned {standby_status!r}"
+                    )
             except Exception as exc:
                 self.last_error = exc
                 raise
-            self._last_running = bool(running)
+            self._last_running = verified_running
             self.last_error = None
+
+    def close(self) -> None:
+        with self._lock:
+            self.connection.close()
 
     def set_safe_setpoint(self, value_c: float) -> None:
         value_c = float(value_c)
@@ -306,6 +401,7 @@ def build_ecosilver_re_1225s_driver(config: dict[str, Any]) -> ECOSilverRE1225SD
             host=host,
             port=int(config.get("port", DEFAULT_PORT)),
             timeout=float(config.get("timeout", DEFAULT_TIMEOUT)),
+            reconnect_delay=float(config.get("reconnect_delay", DEFAULT_RECONNECT_DELAY)),
         ),
         bath_temperature_command=str(config.get("bath_temperature_command", "IN_PV_00")),
         controlled_temperature_command=str(

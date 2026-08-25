@@ -14,6 +14,7 @@
     "host": "172.22.50.60",
     "port": 54321,
     "timeout": 5.0,
+    "reconnect_delay": 15.0,
     "bath_temperature_command": "IN_PV_00",
     "controlled_temperature_command": "IN_PV_01",
     "pressure_command": "IN_PV_02",

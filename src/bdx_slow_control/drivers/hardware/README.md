@@ -66,7 +66,10 @@ operator explicitly requests an all-off action.
 ## LAUDA ECO Silver RE 1225 S chiller
 
 `ecosilver_re_1225s.py` controls the LAUDA chiller through its TCP/IP ASCII
-interface.
+interface. The driver keeps one persistent, serialized TCP connection, reads
+complete CRLF-terminated replies, and reconnects only after the configured
+`reconnect_delay` following a transport failure. The operational profiles use
+the LAUDA-recommended 15 second reconnect delay.
 
 Use `mode: "hardware"` and `driver: "ecosilver_re_1225s"` in a chiller device
 configuration. The main-server profile contains one hardware device:
@@ -77,7 +80,8 @@ BDX:CHILLER:CHILLER1: -> 172.22.50.60:54321
 
 The driver does not start, stop, reset, or put the chiller into Safe Mode
 during IOC startup. `RUN_SET=1` sends `START`; `RUN_SET=0` sends `STOP`.
-`SETPOINT_SET` sends `OUT_SP_00_<value>`.
+Both run commands require an `OK` response and are verified immediately with
+`IN_MODE_02`. `SETPOINT_SET` sends `OUT_SP_00_<value>`.
 
 Safe Mode is not treated as STOP. Expert Safe Mode configuration uses:
 

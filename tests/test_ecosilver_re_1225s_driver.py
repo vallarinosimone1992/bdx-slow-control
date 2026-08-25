@@ -3,6 +3,7 @@ import pytest
 from bdx_slow_control.config import ConfigurationError
 from bdx_slow_control.drivers.hardware.ecosilver_re_1225s import (
     ECOSilverRE1225SDriver,
+    LAUDAConnection,
     build_ecosilver_re_1225s_driver,
     fault_reply_to_bool,
     parse_float_reply,
@@ -11,9 +12,10 @@ from bdx_slow_control.drivers.hardware.ecosilver_re_1225s import (
 
 
 class FakeConnection:
-    def __init__(self, replies=None):
+    def __init__(self, replies=None, *, update_run_state=True):
         self.replies = replies or {}
         self.calls = []
+        self.update_run_state = update_run_state
 
     def query(self, command):
         self.calls.append(("query", command))
@@ -29,7 +31,102 @@ class FakeConnection:
         reply = self.query(command)
         if require_ok and reply != "OK":
             raise ConnectionError(f"Unexpected reply: {reply}")
+        if self.update_run_state and reply == "OK":
+            if command == "START":
+                self.replies["IN_MODE_02"] = "0"
+            elif command == "STOP":
+                self.replies["IN_MODE_02"] = "1"
         return reply
+
+
+class FakeSocket:
+    def __init__(self, replies):
+        self.replies = list(replies)
+        self.sent = []
+        self.timeout = None
+        self.closed = False
+
+    def settimeout(self, timeout):
+        self.timeout = timeout
+
+    def sendall(self, payload):
+        self.sent.append(payload)
+
+    def recv(self, size):
+        reply = self.replies.pop(0)
+        if isinstance(reply, Exception):
+            raise reply
+        return reply
+
+    def close(self):
+        self.closed = True
+
+
+def test_lauda_connection_reuses_one_socket_and_reads_crlf_frames(monkeypatch):
+    sock = FakeSocket([b"EC", b"O\r", b"\n0\r\n"])
+    connections = []
+
+    def create_connection(address, timeout):
+        connections.append((address, timeout))
+        return sock
+
+    monkeypatch.setattr("socket.create_connection", create_connection)
+    connection = LAUDAConnection("192.0.2.10", timeout=2.5)
+
+    assert connection.query("TYPE") == "ECO"
+    assert connection.query("IN_MODE_02") == "0"
+
+    assert connections == [(("192.0.2.10", 54321), 2.5)]
+    assert sock.timeout == 2.5
+    assert sock.sent == [b"TYPE\r\n", b"IN_MODE_02\r\n"]
+    assert sock.closed is False
+
+    connection.close()
+    assert sock.closed is True
+
+
+def test_lauda_connection_reconnects_after_transport_failure(monkeypatch):
+    failed_socket = FakeSocket([ConnectionResetError("peer reset")])
+    recovered_socket = FakeSocket([b"ECO\r\n"])
+    sockets = iter([failed_socket, recovered_socket])
+    connection_count = 0
+
+    def create_connection(address, timeout):
+        nonlocal connection_count
+        connection_count += 1
+        return next(sockets)
+
+    monkeypatch.setattr("socket.create_connection", create_connection)
+    connection = LAUDAConnection("192.0.2.10", reconnect_delay=0)
+
+    with pytest.raises(ConnectionError, match="peer reset"):
+        connection.query("TYPE")
+
+    assert failed_socket.closed is True
+    assert connection.query("TYPE") == "ECO"
+    assert connection_count == 2
+
+
+def test_lauda_connection_honors_reconnect_delay(monkeypatch):
+    failed_socket = FakeSocket([ConnectionResetError("peer reset")])
+    recovered_socket = FakeSocket([b"ECO\r\n"])
+    sockets = iter([failed_socket, recovered_socket])
+    now = [100.0]
+
+    monkeypatch.setattr("socket.create_connection", lambda address, timeout: next(sockets))
+    monkeypatch.setattr(
+        "bdx_slow_control.drivers.hardware.ecosilver_re_1225s.time.monotonic",
+        lambda: now[0],
+    )
+    connection = LAUDAConnection("192.0.2.10", reconnect_delay=15)
+
+    with pytest.raises(ConnectionError, match="peer reset"):
+        connection.query("TYPE")
+    with pytest.raises(ConnectionError, match="deferred.*15.0 s"):
+        connection.query("TYPE")
+
+    now[0] = 115.0
+    assert connection.query("TYPE") == "ECO"
 
 
 def test_parse_float_reply_accepts_decimal_comma_and_rejects_errors():
@@ -105,13 +202,41 @@ def test_ecosilver_read_state_and_setters():
     assert ("command", "OUT_SP_00_21.50", True) in connection.calls
     assert ("command", "OUT_SP_07_18.50", True) in connection.calls
     assert ("command", "OUT_SP_08_12.00", True) in connection.calls
-    assert ("command", "START", False) in connection.calls
-    assert ("command", "STOP", False) in connection.calls
+    assert ("command", "START", True) in connection.calls
+    assert ("command", "STOP", True) in connection.calls
+    assert connection.calls.count(("query", "IN_MODE_02")) == 3
     assert not any(
         call[1].startswith("OUT_MODE")
         for call in connection.calls
         if call[0] == "command"
     )
+
+
+def test_ecosilver_run_command_requires_ok_reply():
+    connection = FakeConnection({"STOP": "IGNORED"})
+    driver = ECOSilverRE1225SDriver(connection=connection)
+
+    with pytest.raises(ConnectionError, match="Unexpected reply"):
+        driver.set_running(False)
+
+    assert driver.last_error is not None
+
+
+def test_ecosilver_run_command_verifies_standby_readback():
+    connection = FakeConnection(
+        {
+            "STOP": "OK",
+            "IN_MODE_02": "0",
+        },
+        update_run_state=False,
+    )
+    driver = ECOSilverRE1225SDriver(connection=connection)
+
+    with pytest.raises(ConnectionError, match="did not enter standby"):
+        driver.set_running(False)
+
+    assert ("query", "IN_MODE_02") in connection.calls
+    assert driver.last_error is not None
 
 
 def test_ecosilver_disabled_external_temperature_and_pressure_are_not_queried():
@@ -181,3 +306,14 @@ def test_ecosilver_ping_reports_type_failure():
 def test_build_ecosilver_driver_rejects_missing_host():
     with pytest.raises(ConfigurationError, match="requires host"):
         build_ecosilver_re_1225s_driver({})
+
+
+def test_build_ecosilver_driver_configures_reconnect_delay():
+    driver = build_ecosilver_re_1225s_driver(
+        {
+            "host": "192.0.2.10",
+            "reconnect_delay": 7.5,
+        }
+    )
+
+    assert driver.connection.reconnect_delay == pytest.approx(7.5)

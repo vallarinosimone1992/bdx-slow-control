@@ -16,6 +16,7 @@ class RecordingChillerDriver:
 
     def __init__(self):
         self.calls = []
+        self.closed = False
         self.state = ChillerState(
             temperature_c=20.4,
             setpoint_c=20.0,
@@ -64,6 +65,9 @@ class RecordingChillerDriver:
 
     def set_communication_timeout(self, value_s):
         self.calls.append(("set_communication_timeout", value_s))
+
+    def close(self):
+        self.closed = True
 
 
 class SlowReadChillerDriver(RecordingChillerDriver):
@@ -214,6 +218,23 @@ def test_chiller_startup_poll_performs_no_control_writes():
             assert driver.calls == [("ping",), ("read_state",)]
         finally:
             group.close()
+
+    asyncio.run(scenario())
+
+
+def test_chiller_stop_put_calls_driver_without_changing_pv_contract():
+    async def scenario():
+        driver = RecordingChillerDriver()
+        group = _group(driver)
+        try:
+            await group.RUN_SET.write(value=False)
+
+            assert driver.calls == [("set_running", False)]
+            assert group.RUN_SET.value is False
+        finally:
+            group.close()
+
+        assert driver.closed is True
 
     asyncio.run(scenario())
 
