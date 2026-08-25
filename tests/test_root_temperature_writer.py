@@ -93,28 +93,116 @@ def _write(path: Path, *, overwrite: bool = False):
     )
 
 
+def _candidate_parts():
+    tree_arrays = prepare_tree_arrays(PVS, _samples(), START_LOCAL, STOP_LOCAL)
+    histograms = build_histograms(PVS, _samples(), START_LOCAL, STOP_LOCAL, 5.0)
+    metadata = build_metadata(
+        run_id="260714",
+        start_local=START_LOCAL,
+        stop_local=STOP_LOCAL,
+        caen_time_zone="Europe/Rome",
+        bin_width_seconds=5.0,
+        pvs=PVS,
+        samples_by_pv=_samples(),
+        archiver_endpoint="http://127.0.0.1:17668/retrieval",
+    )
+    return tree_arrays, histograms, metadata
+
+
 def test_prepare_tree_arrays_is_lossless_sorted_and_typed():
-    arrays = prepare_tree_arrays(PVS, _samples(), START_LOCAL.astimezone(timezone.utc))
+    arrays = prepare_tree_arrays(PVS, _samples(), START_LOCAL, STOP_LOCAL)
 
     assert list(arrays) == list(writer.TREE_SCHEMA)
     assert {name: array.dtype for name, array in arrays.items()} == {
-        "sensor_index": np.dtype("int32"),
-        "seconds": np.dtype("int64"),
-        "nanoseconds": np.dtype("int32"),
+        "sensor_id": np.dtype("int32"),
         "timestamp_ns": np.dtype("int64"),
         "time_from_run_start_s": np.dtype("float64"),
-        "value": np.dtype("float64"),
+        "temperature": np.dtype("float64"),
         "status": np.dtype("int32"),
         "severity": np.dtype("int32"),
     }
-    assert arrays["sensor_index"].tolist() == [0, 1, 3, 0, 0, 1]
-    assert arrays["value"].tolist() == [10.0, 30.0, 40.0, 14.0, 20.0, 32.0]
+    assert arrays["sensor_id"].tolist() == [0, 1, 3, 0, 0, 1]
+    assert arrays["temperature"].tolist() == [10.0, 30.0, 40.0, 14.0, 20.0, 32.0]
     assert arrays["time_from_run_start_s"].tolist() == pytest.approx(
         [0.1, 0.1, 0.1, 1.1, 7.25, 12.0]
     )
     assert arrays["status"].tolist() == [0, 0, 0, -1, 0, 0]
     assert arrays["severity"].tolist() == [0, 0, 0, -1, 0, 0]
-    assert 2 not in arrays["sensor_index"]
+    assert 2 not in arrays["sensor_id"]
+    assert not ({"sensor_index", "seconds", "nanoseconds", "value"} & arrays.keys())
+
+    timestamps = arrays["timestamp_ns"].tolist()
+    assert timestamps == sorted(timestamps)
+    assert [
+        (timestamp_ns // 1_000_000_000, timestamp_ns % 1_000_000_000)
+        for timestamp_ns in timestamps
+    ] == [
+        (sample.seconds, sample.nanoseconds)
+        for sample in sorted(
+            (sample for samples in _samples().values() for sample in samples),
+            key=lambda sample: (
+                sample.timestamp_ns,
+                PVS.index(sample.pv),
+            ),
+        )
+    ]
+
+
+def test_relative_time_preserves_epics_nanoseconds_without_rounding():
+    samples = {pv: [] for pv in PVS}
+    offsets = (
+        (0, 0, 0.0),
+        (0, 100_000_000, 0.1),
+        (0, 999_999_999, 0.999999999),
+        (1, 0, 1.0),
+        (1, 100_000_000, 1.1),
+    )
+    samples[PVS[0]] = [
+        _sample(PVS[0], seconds, nanoseconds, float(index))
+        for index, (seconds, nanoseconds, _expected) in enumerate(offsets)
+    ]
+
+    arrays = prepare_tree_arrays(PVS, samples, START_LOCAL, STOP_LOCAL)
+
+    assert arrays["time_from_run_start_s"].tolist() == pytest.approx(
+        [expected for _seconds, _nanoseconds, expected in offsets],
+        rel=0,
+        abs=1e-15,
+    )
+
+
+def test_sample_before_run_start_is_rejected():
+    samples = {pv: [] for pv in PVS}
+    samples[PVS[0]] = [_sample(PVS[0], -1, 999_999_999, 1.0)]
+
+    with pytest.raises(RootTemperatureWriterError, match="precedes the run start"):
+        prepare_tree_arrays(PVS, samples, START_LOCAL, STOP_LOCAL)
+
+
+def test_sample_after_run_stop_is_rejected():
+    samples = {pv: [] for pv in PVS}
+    samples[PVS[0]] = [_sample(PVS[0], 12, 1, 1.0)]
+
+    with pytest.raises(RootTemperatureWriterError, match="after the run stop"):
+        prepare_tree_arrays(PVS, samples, START_LOCAL, STOP_LOCAL)
+
+
+def test_tree_and_histograms_use_the_same_run_start_origin():
+    samples = {pv: [] for pv in PVS}
+    samples[PVS[0]] = [
+        _sample(PVS[0], 0, 0, 10.0),
+        _sample(PVS[0], 0, 999_999_999, 12.0),
+        _sample(PVS[0], 1, 0, 20.0),
+        _sample(PVS[0], 1, 100_000_000, 22.0),
+    ]
+
+    arrays = prepare_tree_arrays(PVS, samples, START_LOCAL, STOP_LOCAL)
+    histograms = build_histograms(PVS, samples, START_LOCAL, STOP_LOCAL, 1.0)
+
+    assert arrays["time_from_run_start_s"].tolist() == pytest.approx(
+        [0.0, 0.999999999, 1.0, 1.1], rel=0, abs=1e-15
+    )
+    assert histograms["temperature_T00_counts"].contents[:2].tolist() == [2.0, 2.0]
 
 
 def test_build_histograms_has_required_binning_means_sem_and_counts():
@@ -158,7 +246,18 @@ def test_build_metadata_contains_provenance_mapping_and_empty_sensor():
         git_commit="abc123",
     )
 
-    assert metadata["format"] == "bdx-run-temperature-export-metadata-v1"
+    assert metadata["format"] == "bdx-run-temperature-export-metadata-v2"
+    assert metadata["tree_name"] == "temperature_samples"
+    assert metadata["tree_schema"] == writer.TREE_SCHEMA
+    assert metadata["tree_time_semantics"] == {
+        "relative_branch": "time_from_run_start_s",
+        "relative_unit": "second",
+        "relative_type": "float64",
+        "relative_origin": "CAEN run start from <run_id>_info.txt",
+        "relative_calculation": "(timestamp_ns - run_start_timestamp_ns) / 1e9",
+        "absolute_branch": "timestamp_ns",
+        "absolute_unit": "nanosecond since Unix epoch",
+    }
     assert metadata["run_id"] == "260714"
     assert metadata["start_local"] == "2026-07-14T16:16:04+02:00"
     assert metadata["stop_local"] == "2026-07-14T16:16:16+02:00"
@@ -174,8 +273,12 @@ def test_build_metadata_contains_provenance_mapping_and_empty_sensor():
     assert metadata["total_sample_count"] == 6
     assert metadata["missing_status_severity_sentinel"] == -1
     assert "canonical integer codes" in metadata["alarm_field_encoding"]
+    assert metadata["sensor_mapping"] == [
+        {"sensor_id": sensor_id, "short_name": f"T{sensor_id:02d}", "pv": pv}
+        for sensor_id, pv in enumerate(PVS)
+    ]
     assert metadata["sensors"][2] == {
-        "sensor_index": 2,
+        "sensor_id": 2,
         "short_name": "T02",
         "pv": PVS[2],
         "sample_count": 0,
@@ -208,18 +311,17 @@ def test_written_file_contains_real_ttree_th1d_errors_and_json_metadata(tmp_path
         assert "RNTuple" not in root_file[TREE_NAME].classname
         assert root_file[TREE_NAME].num_entries == 6
         assert root_file[TREE_NAME].typenames() == {
-            "sensor_index": "int32_t",
-            "seconds": "int64_t",
-            "nanoseconds": "int32_t",
+            "sensor_id": "int32_t",
             "timestamp_ns": "int64_t",
             "time_from_run_start_s": "double",
-            "value": "double",
+            "temperature": "double",
             "status": "int32_t",
             "severity": "int32_t",
         }
         arrays = root_file[TREE_NAME].arrays(library="np")
-        assert arrays["sensor_index"].tolist() == [0, 1, 3, 0, 0, 1]
-        assert 2 not in arrays["sensor_index"]
+        assert arrays["sensor_id"].tolist() == [0, 1, 3, 0, 0, 1]
+        assert 2 not in arrays["sensor_id"]
+        assert not ({"sensor_index", "seconds", "nanoseconds", "value"} & arrays.keys())
 
         for short_name in ("T00", "T01", "T02", "T03"):
             for suffix in ("", "_counts"):
@@ -238,7 +340,7 @@ def test_written_file_contains_real_ttree_th1d_errors_and_json_metadata(tmp_path
 
         assert root_file[METADATA_NAME].classname == "TObjString"
         metadata = json.loads(str(root_file[METADATA_NAME]))
-        assert metadata["format"] == "bdx-run-temperature-export-metadata-v1"
+        assert metadata["format"] == "bdx-run-temperature-export-metadata-v2"
         assert metadata["run_id"] == "260714"
         assert "total_sample_count" in metadata
         assert "total_samples" not in metadata
@@ -253,7 +355,7 @@ def test_written_file_contains_real_ttree_th1d_errors_and_json_metadata(tmp_path
         )
         assert metadata["package_version"] == __version__
         assert metadata["sensors"][2] == {
-            "sensor_index": 2,
+            "sensor_id": 2,
             "short_name": "T02",
             "pv": PVS[2],
             "sample_count": 0,
@@ -335,8 +437,8 @@ def test_temporary_file_is_removed_when_validation_fails(tmp_path: Path, monkeyp
     [
         ("metadata_type", "total_sample_count must be an integer"),
         ("metadata_tree_count", "does not match temperature_samples entry count"),
-        ("sensor_count", "does not match the sum of sensors sample_count"),
-        ("histogram_count", "does not match the sum of _counts histogram contents"),
+        ("sensor_count", "does not match TTree sensor_id count"),
+        ("histogram_count", "do not match TTree sensor_id count"),
     ],
 )
 def test_incompatible_sample_counts_fail_validation_and_remove_temporary_file(
@@ -417,6 +519,84 @@ def test_validation_rejects_missing_expected_histogram(tmp_path: Path):
         )
 
 
+@pytest.mark.parametrize(
+    ("schema_update", "error"),
+    [
+        ({"sensor_id": "int64"}, "branch types"),
+        ({"seconds": "int64"}, "contains removed branches: seconds"),
+    ],
+)
+def test_validation_rejects_wrong_types_and_removed_branches(
+    tmp_path: Path,
+    schema_update: dict[str, str],
+    error: str,
+):
+    target = tmp_path / "wrong-schema.root"
+    schema = dict(writer.TREE_SCHEMA)
+    schema.update(schema_update)
+    with uproot.recreate(target) as root_file:
+        root_file.mktree(TREE_NAME, schema)
+
+    with pytest.raises(RootTemperatureWriterError, match=error):
+        validate_root_file(
+            target,
+            expected_tree_entries=0,
+            expected_histogram_names=(),
+        )
+
+
+@pytest.mark.parametrize(
+    ("corruption", "error"),
+    [
+        ("negative_time", "contains negative values"),
+        ("inconsistent_time", "is inconsistent with timestamp_ns"),
+        ("ordering", "not sorted by timestamp_ns and then sensor_id"),
+        ("mapping", "does not match configured PV order"),
+    ],
+)
+def test_validation_rejects_tree_time_ordering_and_mapping_corruption(
+    tmp_path: Path,
+    corruption: str,
+    error: str,
+):
+    target = tmp_path / f"{corruption}.root"
+    tree_arrays, histograms, metadata = _candidate_parts()
+    tree_arrays = {name: values.copy() for name, values in tree_arrays.items()}
+    metadata = json.loads(json.dumps(metadata))
+    if corruption == "negative_time":
+        tree_arrays["time_from_run_start_s"][0] = -1.0
+    elif corruption == "inconsistent_time":
+        tree_arrays["time_from_run_start_s"][0] += 0.01
+    elif corruption == "ordering":
+        for values in tree_arrays.values():
+            values[[0, 1]] = values[[1, 0]]
+    else:
+        metadata["sensor_mapping"][0]["pv"] = "BDX:ENV:TEMP:WRONG:VALUE"
+        metadata["sensors"][0]["pv"] = "BDX:ENV:TEMP:WRONG:VALUE"
+
+    writer._write_temporary_file(
+        target,
+        tree_arrays,
+        histograms,
+        metadata,
+        np,
+        uproot,
+    )
+
+    with pytest.raises(RootTemperatureWriterError, match=error):
+        validate_root_file(
+            target,
+            expected_tree_entries=len(tree_arrays["sensor_id"]),
+            expected_histogram_names=tuple(histograms),
+            expected_sensor_mapping=tuple(
+                (sensor_id, f"T{sensor_id:02d}", pv)
+                for sensor_id, pv in enumerate(PVS)
+            ),
+            expected_run_start_timestamp_ns=datetime_to_timestamp_ns(START_LOCAL),
+            expected_run_stop_timestamp_ns=datetime_to_timestamp_ns(STOP_LOCAL),
+        )
+
+
 def test_optional_dependency_error_is_operationally_clear(monkeypatch):
     real_import = writer.importlib.import_module
 
@@ -428,7 +608,7 @@ def test_optional_dependency_error_is_operationally_clear(monkeypatch):
     monkeypatch.setattr(writer.importlib, "import_module", import_without_export_dependencies)
 
     with pytest.raises(RootExportDependencyError) as exc_info:
-        prepare_tree_arrays(PVS, _samples(), START_LOCAL)
+        prepare_tree_arrays(PVS, _samples(), START_LOCAL, STOP_LOCAL)
 
     message = str(exc_info.value)
     assert "ROOT export requires" in message
@@ -440,7 +620,7 @@ def test_time_from_start_uses_integer_nanoseconds():
     samples = {pv: [] for pv in PVS}
     samples[PVS[0]] = [_sample(PVS[0], 0, 123_456_789, 1.0)]
 
-    arrays = prepare_tree_arrays(PVS, samples, START_LOCAL)
+    arrays = prepare_tree_arrays(PVS, samples, START_LOCAL, STOP_LOCAL)
 
     assert datetime_to_timestamp_ns(START_LOCAL) % 1_000_000_000 == 0
     assert arrays["time_from_run_start_s"][0] == pytest.approx(0.123456789)

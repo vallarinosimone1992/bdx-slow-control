@@ -120,6 +120,13 @@ and can be read with `str(root_file["metadata"])` in uproot. Missing Archiver
 status or severity fields use the configured `missing_alarm_value` sentinel
 (`-1` by default), which is also recorded in the metadata.
 
+The TTree has the compact DAQ-correlation schema `sensor_id` (`int32`),
+`timestamp_ns` (`int64`), `time_from_run_start_s` (`float64`), `temperature`
+(`float64`), `status` (`int32`), and `severity` (`int32`). Sensor names and PVs
+are stored in the metadata mapping rather than in a string branch. See the
+[run-temperature ROOT format](docs/run-temperature-root-format.md) for the
+complete schema, time semantics, ordering, histograms, and metadata contract.
+
 ## Run the default laboratory IOC
 
 The default operational profile is `config/profiles/default`. It contains only
