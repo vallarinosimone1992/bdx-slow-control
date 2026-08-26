@@ -9,7 +9,7 @@ usage() {
     cat <<'EOF'
 Usage: kill_slow_control_all.sh [--timeout SECONDS] [--force]
 
-Gracefully stop normal BDX slow control in this order: Phoebus, IOC.
+Gracefully stop normal BDX slow control in this order: Phoebus, notifier, IOC.
 
 The independently managed Archiver Appliance is inspected by neither step and
 is never stopped, restarted, repaired, or otherwise modified.
@@ -65,6 +65,10 @@ fi
 
 run_component "Phoebus" \
     "$SCRIPT_DIR/kill_slow_control_phoebus.sh" \
+    ${TIMEOUT_ARGS[@]+"${TIMEOUT_ARGS[@]}"} \
+    ${force_args[@]+"${force_args[@]}"}
+run_component "BDX notifier" \
+    "$SCRIPT_DIR/kill_slow_control_notifier.sh" \
     ${TIMEOUT_ARGS[@]+"${TIMEOUT_ARGS[@]}"} \
     ${force_args[@]+"${force_args[@]}"}
 run_component "BDX main IOC" \

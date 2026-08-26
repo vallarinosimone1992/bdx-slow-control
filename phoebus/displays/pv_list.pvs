@@ -361,7 +361,70 @@
     </pv>
     <pv>
       <selected>true</selected>
+      <name>BDX:CHILLER:CHILLER1:SIM_COMM_FAILURE_SET</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:CHILLER:CHILLER1:SIM_STAT_SET</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
       <name>BDX:CHILLER:CHILLER1:STANDBY_STATUS</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:CHILLER:CHILLER1:STAT_EXTERNAL_CONTROL_MISSING</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:CHILLER:CHILLER1:STAT_GENERAL_ALARM</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:CHILLER:CHILLER1:STAT_GENERAL_ERROR</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:CHILLER:CHILLER1:STAT_GENERAL_WARNING</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:CHILLER:CHILLER1:STAT_LOW_LEVEL</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:CHILLER:CHILLER1:STAT_OVERTEMPERATURE</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:CHILLER:CHILLER1:STAT_RESERVED</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
@@ -466,6 +529,13 @@
     </pv>
     <pv>
       <selected>true</selected>
+      <name>BDX:ENV:TEMP:T00:SIM_COMM_FAILURE_SET</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
       <name>BDX:ENV:TEMP:T00:STATUS</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
@@ -558,6 +628,13 @@
     <pv>
       <selected>true</selected>
       <name>BDX:ENV:TEMP:T01:SIMULATION</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T01:SIM_COMM_FAILURE_SET</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
@@ -662,6 +739,13 @@
     </pv>
     <pv>
       <selected>true</selected>
+      <name>BDX:ENV:TEMP:T02:SIM_COMM_FAILURE_SET</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
       <name>BDX:ENV:TEMP:T02:STATUS</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
@@ -754,6 +838,13 @@
     <pv>
       <selected>true</selected>
       <name>BDX:ENV:TEMP:T03:SIMULATION</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:ENV:TEMP:T03:SIM_COMM_FAILURE_SET</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
@@ -1012,6 +1103,13 @@
     </pv>
     <pv>
       <selected>true</selected>
+      <name>BDX:PSU:LV1:CH1:OCP_ALARM</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
       <name>BDX:PSU:LV1:CH1:OCP_RBV</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
@@ -1020,6 +1118,13 @@
     <pv>
       <selected>true</selected>
       <name>BDX:PSU:LV1:CH1:OCP_SET</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV1:CH1:OCP_WARNING</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
@@ -1047,6 +1152,13 @@
     </pv>
     <pv>
       <selected>true</selected>
+      <name>BDX:PSU:LV1:CH1:OVP_ALARM</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
       <name>BDX:PSU:LV1:CH1:OVP_RBV</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
@@ -1061,7 +1173,35 @@
     </pv>
     <pv>
       <selected>true</selected>
+      <name>BDX:PSU:LV1:CH1:OVP_WARNING</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
       <name>BDX:PSU:LV1:CH1:SIMULATION</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV1:CH1:SIM_COMM_FAILURE_SET</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV1:CH1:SIM_CURRENT_SET</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV1:CH1:SIM_OUTPUT_MISMATCH_SET</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
@@ -1201,6 +1341,13 @@
     </pv>
     <pv>
       <selected>true</selected>
+      <name>BDX:PSU:LV1:CH2:OCP_ALARM</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
       <name>BDX:PSU:LV1:CH2:OCP_RBV</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
@@ -1209,6 +1356,13 @@
     <pv>
       <selected>true</selected>
       <name>BDX:PSU:LV1:CH2:OCP_SET</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV1:CH2:OCP_WARNING</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
@@ -1236,6 +1390,13 @@
     </pv>
     <pv>
       <selected>true</selected>
+      <name>BDX:PSU:LV1:CH2:OVP_ALARM</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
       <name>BDX:PSU:LV1:CH2:OVP_RBV</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
@@ -1250,7 +1411,35 @@
     </pv>
     <pv>
       <selected>true</selected>
+      <name>BDX:PSU:LV1:CH2:OVP_WARNING</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
       <name>BDX:PSU:LV1:CH2:SIMULATION</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV1:CH2:SIM_COMM_FAILURE_SET</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV1:CH2:SIM_CURRENT_SET</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV1:CH2:SIM_OUTPUT_MISMATCH_SET</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
@@ -1342,6 +1531,13 @@
     <pv>
       <selected>true</selected>
       <name>BDX:PSU:LV1:SIMULATION</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV1:SIM_COMM_FAILURE_SET</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
@@ -1467,6 +1663,13 @@
     </pv>
     <pv>
       <selected>true</selected>
+      <name>BDX:PSU:LV2:CH1:OCP_ALARM</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
       <name>BDX:PSU:LV2:CH1:OCP_RBV</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
@@ -1475,6 +1678,13 @@
     <pv>
       <selected>true</selected>
       <name>BDX:PSU:LV2:CH1:OCP_SET</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV2:CH1:OCP_WARNING</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
@@ -1502,6 +1712,13 @@
     </pv>
     <pv>
       <selected>true</selected>
+      <name>BDX:PSU:LV2:CH1:OVP_ALARM</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
       <name>BDX:PSU:LV2:CH1:OVP_RBV</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
@@ -1516,7 +1733,35 @@
     </pv>
     <pv>
       <selected>true</selected>
+      <name>BDX:PSU:LV2:CH1:OVP_WARNING</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
       <name>BDX:PSU:LV2:CH1:SIMULATION</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV2:CH1:SIM_COMM_FAILURE_SET</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV2:CH1:SIM_CURRENT_SET</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV2:CH1:SIM_OUTPUT_MISMATCH_SET</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
@@ -1656,6 +1901,13 @@
     </pv>
     <pv>
       <selected>true</selected>
+      <name>BDX:PSU:LV2:CH2:OCP_ALARM</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
       <name>BDX:PSU:LV2:CH2:OCP_RBV</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
@@ -1664,6 +1916,13 @@
     <pv>
       <selected>true</selected>
       <name>BDX:PSU:LV2:CH2:OCP_SET</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV2:CH2:OCP_WARNING</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
@@ -1691,6 +1950,13 @@
     </pv>
     <pv>
       <selected>true</selected>
+      <name>BDX:PSU:LV2:CH2:OVP_ALARM</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
       <name>BDX:PSU:LV2:CH2:OVP_RBV</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
@@ -1705,7 +1971,35 @@
     </pv>
     <pv>
       <selected>true</selected>
+      <name>BDX:PSU:LV2:CH2:OVP_WARNING</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
       <name>BDX:PSU:LV2:CH2:SIMULATION</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV2:CH2:SIM_COMM_FAILURE_SET</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV2:CH2:SIM_CURRENT_SET</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV2:CH2:SIM_OUTPUT_MISMATCH_SET</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>
@@ -1797,6 +2091,13 @@
     <pv>
       <selected>true</selected>
       <name>BDX:PSU:LV2:SIMULATION</name>
+      <tolerance>0.1</tolerance>
+      <saved_value_timestamp/>
+      <completion>true</completion>
+    </pv>
+    <pv>
+      <selected>true</selected>
+      <name>BDX:PSU:LV2:SIM_COMM_FAILURE_SET</name>
       <tolerance>0.1</tolerance>
       <saved_value_timestamp/>
       <completion>true</completion>

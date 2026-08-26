@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
 import ipaddress
 import os
 from pathlib import Path
@@ -29,10 +30,20 @@ ARCHIVER_ENDPOINTS = {
     "etl": "http://127.0.0.1:17667/etl/bpl/getVersion",
     "retrieval": "http://127.0.0.1:17668/retrieval/bpl/getVersion",
 }
+NOTIFIER_PROCESS_MARKER = "bdx-slow-control-notifier"
 
 
 class OperatorCommandError(RuntimeError):
     """Raised for an operator-actionable command failure."""
+
+
+@dataclass(frozen=True)
+class NotifierInstallation:
+    root: Path
+    python: Path
+    script: Path
+    config: Path
+    env_file: Path
 
 
 def _repository_root() -> Path:
@@ -113,6 +124,170 @@ def _read_main_host(root: Path, explicit: str | None) -> str:
             f"BDX_MAIN_HOST must be the operational slow-control address, not {host}."
         )
     return host
+
+
+def _runtime_environment_value(root: Path, name: str) -> str | None:
+    """Read one optional value from the process environment or runtime.env."""
+    environment_value = os.environ.get(name, "").strip()
+    if environment_value:
+        return environment_value
+    runtime_env = Path(
+        os.environ.get("BDX_RUNTIME_ENV", root / "config" / "runtime.env")
+    ).expanduser()
+    if not runtime_env.is_file():
+        return None
+    command = (
+        f"source {shlex.quote(str(runtime_env))}; "
+        f'printf "%s" "${{{name}:-}}"'
+    )
+    result = subprocess.run(
+        ["bash", "-lc", command],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    value = result.stdout.strip()
+    return value if result.returncode == 0 and value else None
+
+
+def _resolve_notifier_installation(
+    root: Path,
+    explicit: str | None = None,
+) -> NotifierInstallation:
+    """Resolve bdx-notifier without embedding a machine-specific absolute path."""
+    configured = explicit or _runtime_environment_value(root, "BDX_NOTIFIER_DIR")
+    candidates = []
+    if configured:
+        candidates.append(Path(configured).expanduser())
+    else:
+        candidates.extend(
+            [
+                root / "notifier",
+                root.parent / "bdx-notifier",
+                root.parent.parent / "bdx-notifier",
+                Path.home() / "SlowControl" / "app" / "bdx-notifier",
+                Path("/opt/bdx-notifier"),
+            ]
+        )
+
+    checked = []
+    for candidate in candidates:
+        candidate = candidate.resolve()
+        checked.append(str(candidate))
+        python_candidates = [candidate / ".venv" / "bin" / "python"]
+        if candidate == (root / "notifier").resolve():
+            python_candidates.insert(0, root / ".venv" / "bin" / "python")
+        python = next(
+            (path for path in python_candidates if path.is_file()),
+            python_candidates[0],
+        )
+        script = candidate / "notifier.py"
+        default_config = candidate / "alarms.json"
+        default_env_file = (
+            Path.home() / ".config" / "bdx-notifier" / "config.env"
+            if candidate == (root / "notifier").resolve()
+            else candidate / "config.env"
+        )
+        configured_config = _runtime_environment_value(root, "BDX_NOTIFIER_CONFIG")
+        configured_env_file = _runtime_environment_value(root, "BDX_NOTIFIER_ENV_FILE")
+        config = Path(configured_config).expanduser() if configured_config else default_config
+        env_file = (
+            Path(configured_env_file).expanduser()
+            if configured_env_file
+            else default_env_file
+        )
+        if not config.is_absolute():
+            config = candidate / config
+        if not env_file.is_absolute():
+            env_file = candidate / env_file
+        config = config.resolve()
+        env_file = env_file.resolve()
+        required = (python, script, config, env_file)
+        if all(path.is_file() for path in required):
+            return NotifierInstallation(
+                root=candidate,
+                python=python,
+                script=script,
+                config=config,
+                env_file=env_file,
+            )
+        if configured:
+            missing = ", ".join(str(path) for path in required if not path.is_file())
+            raise OperatorCommandError(
+                f"Configured BDX notifier installation is incomplete; missing: {missing}"
+            )
+
+    raise OperatorCommandError(
+        "BDX notifier installation not found. Set BDX_NOTIFIER_DIR in "
+        f"config/runtime.env. Checked: {', '.join(checked)}"
+    )
+
+
+def _notifier_command(
+    installation: NotifierInstallation,
+    *,
+    dry_run: bool = False,
+) -> list[str]:
+    command = [
+        str(installation.python),
+        str(installation.script),
+        "--service-instance",
+        NOTIFIER_PROCESS_MARKER,
+        "--config",
+        str(installation.config),
+        "--env-file",
+        str(installation.env_file),
+        "--notify-initial",
+    ]
+    if dry_run:
+        command.append("--dry-run")
+    return command
+
+
+def _start_notifier_if_needed(
+    root: Path,
+    host: str,
+    explicit_dir: str | None = None,
+    *,
+    installation: NotifierInstallation | None = None,
+) -> bool:
+    installation = installation or _resolve_notifier_installation(root, explicit_dir)
+    runtime_dir = _runtime_dir(root)
+    pid_file = runtime_dir / "notifier.pid"
+    if _recorded_process_running(pid_file, (NOTIFIER_PROCESS_MARKER,)):
+        print("BDX notifier is already running; leaving it unchanged.")
+        return False
+
+    runtime_dir.mkdir(parents=True, exist_ok=True)
+    log_path = runtime_dir / "notifier.log"
+    environment = os.environ.copy()
+    environment["EPICS_CA_ADDR_LIST"] = f"{host} {RASPBERRY_HOST}"
+    environment["EPICS_CA_AUTO_ADDR_LIST"] = "NO"
+    dry_run_value = (
+        _runtime_environment_value(root, "BDX_NOTIFIER_DRY_RUN") or "false"
+    ).lower()
+    dry_run = dry_run_value in {"1", "true", "yes", "on"}
+    with log_path.open("a", encoding="utf-8") as log_file:
+        process = subprocess.Popen(
+            _notifier_command(installation, dry_run=dry_run),
+            cwd=installation.root,
+            env=environment,
+            stdin=subprocess.DEVNULL,
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
+    pid_file.write_text(f"{process.pid}\n", encoding="utf-8")
+    time.sleep(0.1)
+    return_code = process.poll()
+    if return_code is not None:
+        pid_file.unlink(missing_ok=True)
+        raise OperatorCommandError(
+            f"BDX notifier exited during startup with status {return_code}. "
+            f"Inspect {log_path}."
+        )
+    print(f"Started BDX notifier (PID {process.pid}); log: {log_path}")
+    return True
 
 
 def _port_is_listening(host: str, port: int) -> bool:

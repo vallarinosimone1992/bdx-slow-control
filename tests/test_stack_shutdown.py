@@ -6,6 +6,7 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[1]
 IOC_STOP = ROOT / "scripts/kill_slow_control_ioc.sh"
 PHOEBUS_STOP = ROOT / "scripts/kill_slow_control_phoebus.sh"
+NOTIFIER_STOP = ROOT / "scripts/kill_slow_control_notifier.sh"
 ARCHIVER_STOP = ROOT / "scripts/kill_slow_control_archiver.sh"
 ALL_STOP = ROOT / "scripts/kill_slow_control_all.sh"
 
@@ -231,10 +232,34 @@ def test_phoebus_shutdown_returns_success_when_already_stopped(tmp_path: Path):
     assert "Phoebus is already stopped" in result.stdout
 
 
+def test_notifier_shutdown_validates_marker_and_terminates_pid(tmp_path: Path):
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
+    (runtime / "notifier.pid").write_text("45678\n", encoding="utf-8")
+    (tmp_path / "alive").write_text("", encoding="utf-8")
+    fake_bin = _make_fake_ps(
+        tmp_path,
+        "/custom/python /custom/notifier.py --service-instance bdx-slow-control-notifier",
+    )
+
+    result = _run_script(
+        ["bash", "-c", _mocked_kill_harness(NOTIFIER_STOP, tmp_path)],
+        env={
+            "PATH": f"{fake_bin}{os.pathsep}{os.environ['PATH']}",
+            "BDX_STACK_RUNTIME_DIR": str(runtime),
+        },
+    )
+
+    assert "Stopped 1 BDX notifier process(es)." in result.stdout
+    assert not (runtime / "notifier.pid").exists()
+    assert "-TERM 45678" in (tmp_path / "kill.log").read_text(encoding="utf-8")
+
+
 def test_shutdown_scripts_do_not_use_generic_process_kill_patterns():
     scripts = [
         IOC_STOP,
         PHOEBUS_STOP,
+        NOTIFIER_STOP,
         ARCHIVER_STOP,
         ALL_STOP,
     ]
@@ -367,6 +392,7 @@ def test_normal_slow_control_shutdown_excludes_archiver(tmp_path: Path):
     )
 
     phoebus_index = result.stdout.index("Stopping Phoebus...")
+    notifier_index = result.stdout.index("Stopping BDX notifier...")
     ioc_index = result.stdout.index("Stopping BDX main IOC...")
-    assert phoebus_index < ioc_index
+    assert phoebus_index < notifier_index < ioc_index
     assert "Archiver Appliance" not in result.stdout

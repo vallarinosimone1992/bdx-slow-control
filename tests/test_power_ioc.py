@@ -157,6 +157,30 @@ def test_successful_apply_performs_both_writes_and_updates_readbacks():
     asyncio.run(scenario())
 
 
+def test_protection_status_tracks_ninety_and_one_hundred_percent_thresholds():
+    async def scenario():
+        driver = RecordingPowerDriver()
+        group = _group(driver)
+        driver.state = PowerChannelState(
+            voltage=9.0,
+            current=1.0,
+            current_limit=1.2,
+            output_enabled=True,
+            voltage_setpoint=9.0,
+            ovp=10.0,
+            ocp=1.0,
+        )
+
+        await group.poll_device()
+
+        assert group.OVP_WARNING.value == "On"
+        assert group.OVP_ALARM.value == "Off"
+        assert group.OCP_WARNING.value == "On"
+        assert group.OCP_ALARM.value == "On"
+
+    asyncio.run(scenario())
+
+
 def test_low_voltage_psu_float_pvs_advertise_three_decimal_precision():
     pvdb, _ = build_psu(load_json(Path("config/profiles/main-server/psu.json")))
 

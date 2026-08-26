@@ -12,6 +12,15 @@ def _prepare_root(tmp_path: Path) -> Path:
     (root / "scripts").mkdir()
     (root / ".venv/bin/bdx-prototype-ioc").write_text("", encoding="utf-8")
     (root / "scripts/start_bdx_stack.sh").write_text("", encoding="utf-8")
+    notifier = tmp_path / "bdx-notifier"
+    (notifier / ".venv/bin").mkdir(parents=True)
+    for path in (
+        notifier / ".venv/bin/python",
+        notifier / "notifier.py",
+        notifier / "alarms.json",
+        notifier / "config.env",
+    ):
+        path.write_text("", encoding="utf-8")
     return root
 
 
@@ -87,6 +96,11 @@ def test_start_opens_ioc_and_phoebus_terminals_without_archiver_mutation(
         "_open_terminal",
         lambda title, command: opened.append((title, command)),
     )
+    monkeypatch.setattr(
+        operator_commands,
+        "_start_notifier_if_needed",
+        lambda *args, **kwargs: True,
+    )
 
     operator_startup._start_slow_control([])
 
@@ -145,6 +159,11 @@ def test_start_does_not_duplicate_running_ioc(monkeypatch, tmp_path: Path):
         "_open_terminal",
         lambda title, command: opened.append((title, command)),
     )
+    monkeypatch.setattr(
+        operator_commands,
+        "_start_notifier_if_needed",
+        lambda *args, **kwargs: True,
+    )
 
     operator_startup._start_slow_control([])
 
@@ -194,6 +213,11 @@ def test_start_does_not_duplicate_running_phoebus(monkeypatch, tmp_path: Path):
         "_open_terminal",
         lambda title, command: opened.append((title, command)),
     )
+    monkeypatch.setattr(
+        operator_commands,
+        "_start_notifier_if_needed",
+        lambda *args, **kwargs: False,
+    )
 
     operator_startup._start_slow_control([])
 
@@ -210,6 +234,73 @@ def test_ioc_terminal_records_pid_and_executes_ioc(tmp_path: Path):
     assert "BDX_EPICS_INTERFACE=172.22.50.2" in command
     assert "exec " in command
     assert "bdx-prototype-ioc" in command
+
+
+def test_notifier_installation_uses_adjacent_checkout(tmp_path: Path):
+    root = _prepare_root(tmp_path)
+
+    installation = operator_commands._resolve_notifier_installation(root)
+
+    assert installation.root == (tmp_path / "bdx-notifier").resolve()
+    assert installation.script.name == "notifier.py"
+    assert installation.config.name == "alarms.json"
+    assert installation.env_file.name == "config.env"
+
+
+def test_notifier_installation_prefers_bundled_copy(monkeypatch, tmp_path: Path):
+    root = _prepare_root(tmp_path)
+    bundled = root / "notifier"
+    bundled.mkdir()
+    (root / ".venv/bin/python").write_text("", encoding="utf-8")
+    (bundled / "notifier.py").write_text("", encoding="utf-8")
+    (bundled / "alarms.json").write_text("{}", encoding="utf-8")
+    secret = tmp_path / "external-config.env"
+    secret.write_text("", encoding="utf-8")
+    monkeypatch.setenv("BDX_NOTIFIER_ENV_FILE", str(secret))
+
+    installation = operator_commands._resolve_notifier_installation(root)
+
+    assert installation.root == bundled.resolve()
+    assert installation.python == (root / ".venv/bin/python").resolve()
+    assert installation.env_file == secret.resolve()
+
+
+def test_notifier_command_has_path_independent_process_marker(tmp_path: Path):
+    root = _prepare_root(tmp_path)
+    installation = operator_commands._resolve_notifier_installation(root)
+
+    command = operator_commands._notifier_command(installation, dry_run=True)
+
+    assert "--service-instance" in command
+    assert operator_commands.NOTIFIER_PROCESS_MARKER in command
+    assert "--notify-initial" in command
+    assert "--dry-run" in command
+
+
+def test_notifier_start_is_idempotent(monkeypatch, tmp_path: Path, capsys):
+    root = _prepare_root(tmp_path)
+    installation = operator_commands._resolve_notifier_installation(root)
+    monkeypatch.setattr(
+        operator_commands,
+        "_recorded_process_running",
+        lambda pid_file, markers: True,
+    )
+    monkeypatch.setattr(
+        operator_commands.subprocess,
+        "Popen",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("notifier must not be started twice")
+        ),
+    )
+
+    started = operator_commands._start_notifier_if_needed(
+        root,
+        "172.22.50.2",
+        installation=installation,
+    )
+
+    assert started is False
+    assert "already running" in capsys.readouterr().out
 
 
 def test_ioc_readiness_precedes_phoebus_without_archiver_gate(tmp_path: Path):

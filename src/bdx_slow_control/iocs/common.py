@@ -24,6 +24,7 @@ class ManagedIOC(PVGroup):
     ERROR_CODE = pvproperty(value=0, dtype=int, read_only=True)
     ERROR_MESSAGE = pvproperty(value="", dtype=ChannelType.STRING, read_only=True)
     SIMULATION = pvproperty(value=False, dtype=bool, read_only=True)
+    SIM_COMM_FAILURE_SET = pvproperty(value=False, dtype=bool)
     CLEAR_ERROR_CMD = pvproperty(value=False, dtype=bool)
 
     def __init__(
@@ -112,3 +113,10 @@ class ManagedIOC(PVGroup):
             await self.ERROR_CODE.write(value=0)
             await self.ERROR_MESSAGE.write(value="")
         return False
+
+    @SIM_COMM_FAILURE_SET.putter
+    async def SIM_COMM_FAILURE_SET(self, instance, value):
+        if not bool(getattr(self.driver, "simulation", False)):
+            raise ValueError("Communication fault injection is simulation-only")
+        self.driver.set_simulated_communication_failure(bool(value))
+        return bool(value)

@@ -1,0 +1,658 @@
+{
+  "version": 1,
+  "defaults": {
+    "minor_percent": 5.0,
+    "minor_seconds": 5.0,
+    "major_percent": 10.0,
+    "major_seconds": 0.0,
+    "major_sustained_percent": 5.0,
+    "major_sustained_seconds": 20.0,
+    "recovery_seconds": 5.0
+  },
+  "telegram": {
+    "people": [],
+    "major_people": [],
+    "interlock_people": "all",
+    "verify_membership": true,
+    "membership_cache_seconds": 300
+  },
+  "alarm_templates": [
+    {
+      "for_each": [
+        {"name": "lv1-ch1", "prefix": "BDX:PSU:LV1:CH1", "voltage_setpoint": "VOLTAGE_SET_RBV", "optional": false},
+        {"name": "lv1-ch2", "prefix": "BDX:PSU:LV1:CH2", "voltage_setpoint": "VOLTAGE_SET_RBV", "optional": false},
+        {"name": "lv2-ch1", "prefix": "BDX:PSU:LV2:CH1", "voltage_setpoint": "VOLTAGE_SET_RBV", "optional": false},
+        {"name": "lv2-ch2", "prefix": "BDX:PSU:LV2:CH2", "voltage_setpoint": "VOLTAGE_SET_RBV", "optional": false},
+        {"name": "hv1-ch1", "prefix": "BDX:HV:HV1:CH1", "voltage_setpoint": "VOLTAGE_SET", "optional": true},
+        {"name": "hv1-ch2", "prefix": "BDX:HV:HV1:CH2", "voltage_setpoint": "VOLTAGE_SET", "optional": true}
+      ],
+      "alarms": [
+        {
+          "id": "{name}-voltage-deviation",
+          "kind": "numeric",
+          "label": "{name} voltage differs from the applied setpoint",
+          "pv": "{prefix}:VOLTAGE_RBV",
+          "mode": "deviation",
+          "reference": {"pv": "{prefix}:{voltage_setpoint}"},
+          "conditions": [{"pv": "{prefix}:OUTPUT_RBV", "operator": "truthy"}],
+          "group": "{name}-voltage",
+          "optional": "{optional}"
+        },
+        {
+          "id": "{name}-output-mismatch",
+          "kind": "comparison",
+          "label": "{name} output readback differs from its setting",
+          "pv": "{prefix}:OUTPUT_RBV",
+          "operator": "eq",
+          "reference": {"pv": "{prefix}:OUTPUT_SET"},
+          "stages": [{"level": "MAJOR", "after_seconds": 5}],
+          "recovery_seconds": 5,
+          "limit_description": "OUTPUT_RBV must equal OUTPUT_SET",
+          "group": "{name}-output",
+          "optional": "{optional}"
+        },
+        {
+          "id": "{name}-ovp-proximity",
+          "kind": "numeric",
+          "label": "{name} voltage is close to or above OVP",
+          "pv": "{prefix}:VOLTAGE_RBV",
+          "mode": "ratio",
+          "reference": {"pv": "{prefix}:OVP_RBV"},
+          "conditions": [{"pv": "{prefix}:OUTPUT_RBV", "operator": "truthy"}],
+          "overrides": {
+            "minor_percent": 90,
+            "minor_seconds": 5,
+            "major_percent": 100,
+            "major_seconds": 0,
+            "major_sustained_percent": 100,
+            "major_sustained_seconds": 0
+          },
+          "group": "{name}-voltage-protection",
+          "optional": "{optional}"
+        },
+        {
+          "id": "{name}-ocp-proximity",
+          "kind": "numeric",
+          "label": "{name} current is close to or above OCP",
+          "pv": "{prefix}:CURRENT_RBV",
+          "mode": "ratio",
+          "reference": {"pv": "{prefix}:OCP_RBV"},
+          "conditions": [{"pv": "{prefix}:OUTPUT_RBV", "operator": "truthy"}],
+          "overrides": {
+            "minor_percent": 90,
+            "minor_seconds": 5,
+            "major_percent": 100,
+            "major_seconds": 0,
+            "major_sustained_percent": 100,
+            "major_sustained_seconds": 0
+          },
+          "group": "{name}-current-protection",
+          "optional": "{optional}"
+        },
+        {
+          "id": "{name}-current-safety",
+          "kind": "numeric",
+          "label": "{name} current exceeds its configured safety limit",
+          "pv": "{prefix}:CURRENT_RBV",
+          "mode": "ratio",
+          "reference": {"pv": "{prefix}:CURRENT_LIMIT_RBV"},
+          "conditions": [{"pv": "{prefix}:OUTPUT_RBV", "operator": "truthy"}],
+          "overrides": {
+            "minor_percent": 90,
+            "minor_seconds": 5,
+            "major_percent": 100,
+            "major_seconds": 0,
+            "major_sustained_percent": 100,
+            "major_sustained_seconds": 0,
+            "interlock_percent": 100,
+            "interlock_seconds": 30
+          },
+          "group": "{name}-current-protection",
+          "optional": "{optional}"
+        }
+      ]
+    },
+    {
+      "for_each": [
+        {"name": "t00", "prefix": "BDX:ENV:TEMP:T00"},
+        {"name": "t02", "prefix": "BDX:ENV:TEMP:T02"},
+        {"name": "t03", "prefix": "BDX:ENV:TEMP:T03"}
+      ],
+      "alarms": [
+        {
+          "id": "temperature-{name}-range",
+          "kind": "range",
+          "label": "Ambient temperature {name} is outside the provisional safe range",
+          "pv": "{prefix}:VALUE",
+          "minimum": 10.0,
+          "maximum": 35.0,
+          "stages": [{"level": "MAJOR", "after_seconds": 0}],
+          "recovery_seconds": 5,
+          "group": "environment-{name}",
+          "optional": true
+        },
+        {
+          "id": "temperature-{name}-health",
+          "kind": "state",
+          "label": "Temperature sensor {name} is unavailable",
+          "pv": "{prefix}:STATUS_OK",
+          "alarm_when": false,
+          "stages": [{"level": "MINOR", "after_seconds": 5}, {"level": "MAJOR", "after_seconds": 20}],
+          "recovery_seconds": 5,
+          "limit_description": "STATUS_OK must remain 1",
+          "group": "environment-{name}",
+          "optional": true
+        },
+        {
+          "id": "temperature-{name}-stale",
+          "kind": "stale",
+          "label": "Temperature sensor {name} has stopped updating",
+          "pv": "{prefix}:HEARTBEAT",
+          "stale_after_seconds": 10,
+          "timestamp_mode": "change",
+          "stages": [{"level": "MINOR", "after_seconds": 0}, {"level": "MAJOR", "after_seconds": 15}],
+          "recovery_seconds": 5,
+          "limit_description": "Sensor heartbeat must keep changing",
+          "group": "environment-{name}",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "for_each": [
+        {"name": "humidity-h01", "prefix": "BDX:ENV:HUMIDITY:H01"},
+        {"name": "pressure-p01", "prefix": "BDX:ENV:PRESSURE:P01"}
+      ],
+      "alarms": [
+        {
+          "id": "{name}-health",
+          "kind": "state",
+          "label": "Environmental sensor {name} is unavailable",
+          "pv": "{prefix}:STATUS_OK",
+          "alarm_when": false,
+          "stages": [{"level": "MINOR", "after_seconds": 5}, {"level": "MAJOR", "after_seconds": 20}],
+          "recovery_seconds": 5,
+          "limit_description": "STATUS_OK must remain 1",
+          "group": "environment-{name}",
+          "optional": true
+        },
+        {
+          "id": "{name}-stale",
+          "kind": "stale",
+          "label": "Environmental sensor {name} has stopped updating",
+          "pv": "{prefix}:HEARTBEAT",
+          "stale_after_seconds": 10,
+          "timestamp_mode": "change",
+          "stages": [{"level": "MINOR", "after_seconds": 0}, {"level": "MAJOR", "after_seconds": 15}],
+          "recovery_seconds": 5,
+          "limit_description": "Sensor heartbeat must keep changing",
+          "group": "environment-{name}",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "for_each": [
+        {"name": "lv1", "prefix": "BDX:PSU:LV1", "optional": false},
+        {"name": "lv2", "prefix": "BDX:PSU:LV2", "optional": false},
+        {"name": "hv1", "prefix": "BDX:HV:HV1", "optional": true}
+      ],
+      "alarms": [
+        {
+          "id": "{name}-ioc-state",
+          "kind": "comparison",
+          "label": "{name} IOC is not running",
+          "pv": "{prefix}:IOC_STATE",
+          "operator": "eq",
+          "reference": {"value": "RUNNING"},
+          "stages": [{"level": "MAJOR", "after_seconds": 5}],
+          "recovery_seconds": 5,
+          "limit_description": "IOC_STATE must equal RUNNING",
+          "group": "{name}-health",
+          "optional": "{optional}"
+        },
+        {
+          "id": "{name}-error-code",
+          "kind": "comparison",
+          "label": "{name} IOC reports an error",
+          "pv": "{prefix}:ERROR_CODE",
+          "operator": "eq",
+          "reference": {"value": 0},
+          "stages": [{"level": "MINOR", "after_seconds": 5}, {"level": "MAJOR", "after_seconds": 20}],
+          "recovery_seconds": 5,
+          "limit_description": "ERROR_CODE must equal 0",
+          "group": "{name}-health",
+          "optional": "{optional}"
+        }
+      ]
+    }
+  ],
+  "alarms": [
+    {
+      "id": "global-interlock",
+      "kind": "interlock",
+      "label": "Global interlock has switched the system off",
+      "pv": "BDX:GLOBAL:INTERLOCK_ACTIVE",
+      "alarm_when": true,
+      "activation_seconds": 0,
+      "recovery_seconds": 1,
+      "limit_description": "INTERLOCK_ACTIVE must remain Off (0)",
+      "group": "global-safety"
+    },
+    {
+      "id": "global-ready",
+      "kind": "state",
+      "label": "Global system is not ready",
+      "pv": "BDX:GLOBAL:READY",
+      "alarm_when": false,
+      "stages": [{"level": "MAJOR", "after_seconds": 5}],
+      "recovery_seconds": 5,
+      "limit_description": "READY must remain On (1)",
+      "group": "global-health"
+    },
+    {
+      "id": "global-heartbeat-stale",
+      "kind": "stale",
+      "label": "Global IOC heartbeat is stale",
+      "pv": "BDX:GLOBAL:HEARTBEAT",
+      "stale_after_seconds": 5,
+      "timestamp_mode": "change",
+      "stages": [
+        {"level": "MINOR", "after_seconds": 0},
+        {"level": "MAJOR", "after_seconds": 15}
+      ],
+      "recovery_seconds": 2,
+      "limit_description": "HEARTBEAT must change at least every 5 seconds",
+      "group": "global-health"
+    },
+    {
+      "id": "chiller-temperature-deviation",
+      "kind": "numeric",
+      "label": "Chiller temperature differs from its applied setpoint",
+      "pv": "BDX:CHILLER:CHILLER1:TEMPERATURE_RBV",
+      "mode": "deviation",
+      "reference": {"pv": "BDX:CHILLER:CHILLER1:SETPOINT_RBV"},
+      "group": "chiller-temperature"
+    },
+    {
+      "id": "chiller-communication",
+      "kind": "state",
+      "label": "Chiller communication is unavailable",
+      "pv": "BDX:CHILLER:CHILLER1:COMM_OK",
+      "alarm_when": false,
+      "stages": [{"level": "MAJOR", "after_seconds": 5}],
+      "recovery_seconds": 5,
+      "limit_description": "COMM_OK must remain On (1)",
+      "group": "chiller-health"
+    },
+    {
+      "id": "chiller-heartbeat-stale",
+      "kind": "stale",
+      "label": "Chiller IOC heartbeat is stale",
+      "pv": "BDX:CHILLER:CHILLER1:HEARTBEAT",
+      "stale_after_seconds": 10,
+      "timestamp_mode": "change",
+      "stages": [
+        {"level": "MINOR", "after_seconds": 0},
+        {"level": "MAJOR", "after_seconds": 10}
+      ],
+      "recovery_seconds": 5,
+      "limit_description": "Chiller heartbeat must keep changing",
+      "group": "chiller-health"
+    },
+    {
+      "id": "chiller-ioc-state",
+      "kind": "comparison",
+      "label": "Chiller IOC is not running",
+      "pv": "BDX:CHILLER:CHILLER1:IOC_STATE",
+      "operator": "eq",
+      "reference": {"value": "RUNNING"},
+      "stages": [{"level": "MAJOR", "after_seconds": 5}],
+      "recovery_seconds": 5,
+      "limit_description": "IOC_STATE must equal RUNNING",
+      "group": "chiller-health"
+    },
+    {
+      "id": "chiller-error-code",
+      "kind": "comparison",
+      "label": "Chiller IOC reports an error",
+      "pv": "BDX:CHILLER:CHILLER1:ERROR_CODE",
+      "operator": "eq",
+      "reference": {"value": 0},
+      "stages": [
+        {"level": "MINOR", "after_seconds": 5},
+        {"level": "MAJOR", "after_seconds": 20}
+      ],
+      "recovery_seconds": 5,
+      "limit_description": "ERROR_CODE must equal 0",
+      "group": "chiller-health"
+    },
+    {
+      "id": "chiller-stat-low-level",
+      "kind": "state",
+      "label": "Chiller coolant level is low",
+      "pv": "BDX:CHILLER:CHILLER1:STAT_LOW_LEVEL",
+      "alarm_when": true,
+      "stages": [
+        {"level": "MAJOR", "after_seconds": 0},
+        {"level": "INTERLOCK", "after_seconds": 600}
+      ],
+      "recovery_seconds": 5,
+      "limit_description": "STAT low-level bit must remain 0",
+      "group": "chiller-low-level"
+    },
+    {
+      "id": "chiller-stat-overtemperature",
+      "kind": "state",
+      "label": "Chiller reports overtemperature",
+      "pv": "BDX:CHILLER:CHILLER1:STAT_OVERTEMPERATURE",
+      "alarm_when": true,
+      "stages": [{"level": "MAJOR", "after_seconds": 0}],
+      "recovery_seconds": 5,
+      "limit_description": "STAT overtemperature bit must remain 0",
+      "group": "chiller-stat-major"
+    },
+    {
+      "id": "chiller-stat-general-error",
+      "kind": "state",
+      "label": "Chiller STAT general error bit is active",
+      "pv": "BDX:CHILLER:CHILLER1:STAT_GENERAL_ERROR",
+      "alarm_when": true,
+      "stages": [{"level": "MINOR", "after_seconds": 0}],
+      "recovery_seconds": 5,
+      "limit_description": "STAT general-error bit must remain 0",
+      "group": "chiller-stat-minor"
+    },
+    {
+      "id": "chiller-stat-general-alarm",
+      "kind": "state",
+      "label": "Chiller STAT general alarm bit is active",
+      "pv": "BDX:CHILLER:CHILLER1:STAT_GENERAL_ALARM",
+      "alarm_when": true,
+      "stages": [{"level": "MINOR", "after_seconds": 0}],
+      "recovery_seconds": 5,
+      "limit_description": "STAT general-alarm bit must remain 0",
+      "group": "chiller-stat-minor"
+    },
+    {
+      "id": "chiller-stat-general-warning",
+      "kind": "state",
+      "label": "Chiller STAT general warning bit is active",
+      "pv": "BDX:CHILLER:CHILLER1:STAT_GENERAL_WARNING",
+      "alarm_when": true,
+      "stages": [{"level": "MINOR", "after_seconds": 0}],
+      "recovery_seconds": 5,
+      "limit_description": "STAT general-warning bit must remain 0",
+      "group": "chiller-stat-minor"
+    },
+    {
+      "id": "chiller-stat-reserved",
+      "kind": "state",
+      "label": "Chiller reserved STAT bit is unexpectedly active",
+      "pv": "BDX:CHILLER:CHILLER1:STAT_RESERVED",
+      "alarm_when": true,
+      "stages": [{"level": "MINOR", "after_seconds": 0}],
+      "recovery_seconds": 5,
+      "limit_description": "STAT reserved bit must remain 0",
+      "group": "chiller-stat-minor"
+    },
+    {
+      "id": "chiller-stat-external-control",
+      "kind": "state",
+      "label": "Chiller external control value is missing",
+      "pv": "BDX:CHILLER:CHILLER1:STAT_EXTERNAL_CONTROL_MISSING",
+      "alarm_when": true,
+      "stages": [{"level": "MINOR", "after_seconds": 0}],
+      "recovery_seconds": 5,
+      "limit_description": "STAT external-control-missing bit must remain 0",
+      "group": "chiller-stat-minor"
+    },
+    {
+      "id": "lv1-health",
+      "kind": "state",
+      "label": "LV1 communication is unavailable",
+      "pv": "BDX:PSU:LV1:COMM_OK",
+      "alarm_when": false,
+      "stages": [{"level": "MAJOR", "after_seconds": 5}],
+      "recovery_seconds": 5,
+      "limit_description": "LV1 COMM_OK must remain On (1)",
+      "group": "lv1-health"
+    },
+    {
+      "id": "lv2-health",
+      "kind": "state",
+      "label": "LV2 communication is unavailable",
+      "pv": "BDX:PSU:LV2:COMM_OK",
+      "alarm_when": false,
+      "stages": [{"level": "MAJOR", "after_seconds": 5}],
+      "recovery_seconds": 5,
+      "limit_description": "LV2 COMM_OK must remain On (1)",
+      "group": "lv2-health"
+    },
+    {
+      "id": "lv1-heartbeat-stale",
+      "kind": "stale",
+      "label": "LV1 IOC heartbeat is stale",
+      "pv": "BDX:PSU:LV1:HEARTBEAT",
+      "stale_after_seconds": 10,
+      "timestamp_mode": "change",
+      "stages": [{"level": "MINOR", "after_seconds": 0}, {"level": "MAJOR", "after_seconds": 10}],
+      "recovery_seconds": 5,
+      "limit_description": "LV1 heartbeat must keep changing",
+      "group": "lv1-health"
+    },
+    {
+      "id": "lv2-heartbeat-stale",
+      "kind": "stale",
+      "label": "LV2 IOC heartbeat is stale",
+      "pv": "BDX:PSU:LV2:HEARTBEAT",
+      "stale_after_seconds": 10,
+      "timestamp_mode": "change",
+      "stages": [{"level": "MINOR", "after_seconds": 0}, {"level": "MAJOR", "after_seconds": 10}],
+      "recovery_seconds": 5,
+      "limit_description": "LV2 heartbeat must keep changing",
+      "group": "lv2-health"
+    },
+    {
+      "id": "temperature-t01-range",
+      "kind": "range",
+      "label": "Ambient temperature T01 is outside the provisional safe range",
+      "pv": "BDX:ENV:TEMP:T01:VALUE",
+      "minimum": 10.0,
+      "maximum": 35.0,
+      "stages": [{"level": "MAJOR", "after_seconds": 0}],
+      "recovery_seconds": 5,
+      "group": "environment-t01"
+    },
+    {
+      "id": "temperature-t01-health",
+      "kind": "state",
+      "label": "Temperature sensor T01 is unavailable",
+      "pv": "BDX:ENV:TEMP:T01:STATUS_OK",
+      "alarm_when": false,
+      "stages": [{"level": "MINOR", "after_seconds": 5}, {"level": "MAJOR", "after_seconds": 20}],
+      "recovery_seconds": 5,
+      "limit_description": "T01 STATUS_OK must remain 1",
+      "group": "environment-t01"
+    },
+    {
+      "id": "temperature-t01-stale",
+      "kind": "stale",
+      "label": "Temperature sensor T01 has stopped updating",
+      "pv": "BDX:ENV:TEMP:T01:HEARTBEAT",
+      "stale_after_seconds": 10,
+      "timestamp_mode": "change",
+      "stages": [{"level": "MINOR", "after_seconds": 0}, {"level": "MAJOR", "after_seconds": 15}],
+      "recovery_seconds": 5,
+      "limit_description": "T01 heartbeat must keep changing",
+      "group": "environment-t01"
+    },
+    {
+      "id": "archiver-overall-health",
+      "kind": "state",
+      "label": "Archiver Appliance is unavailable or degraded",
+      "pv": "BDX:ARCHIVER:OK",
+      "alarm_when": false,
+      "stages": [{"level": "MINOR", "after_seconds": 5}, {"level": "MAJOR", "after_seconds": 20}],
+      "recovery_seconds": 10,
+      "limit_description": "Archiver OK must remain On (1)",
+      "group": "archiver-health"
+    },
+    {
+      "id": "archiver-last-check-stale",
+      "kind": "stale",
+      "label": "Archiver health check has stopped updating",
+      "pv": "BDX:ARCHIVER:LAST_CHECK",
+      "stale_after_seconds": 30,
+      "timestamp_mode": "change",
+      "stages": [{"level": "MINOR", "after_seconds": 0}, {"level": "MAJOR", "after_seconds": 30}],
+      "recovery_seconds": 10,
+      "limit_description": "LAST_CHECK must change at least every 30 seconds",
+      "group": "archiver-health"
+    },
+    {
+      "id": "archiver-required-pvs",
+      "kind": "comparison",
+      "label": "Not all required PVs are healthy in the Archiver",
+      "pv": "BDX:ARCHIVER:REQUIRED_HEALTHY",
+      "operator": "gte",
+      "reference": {"pv": "BDX:ARCHIVER:REQUIRED_TOTAL"},
+      "stages": [{"level": "MINOR", "after_seconds": 5}, {"level": "MAJOR", "after_seconds": 20}],
+      "recovery_seconds": 10,
+      "limit_description": "REQUIRED_HEALTHY must equal REQUIRED_TOTAL",
+      "group": "archiver-health"
+    },
+    {
+      "id": "hv1-health",
+      "kind": "state",
+      "label": "HV1 communication is unavailable",
+      "pv": "BDX:HV:HV1:COMM_OK",
+      "alarm_when": false,
+      "stages": [{"level": "MAJOR", "after_seconds": 5}],
+      "recovery_seconds": 5,
+      "limit_description": "HV1 COMM_OK must remain On (1)",
+      "group": "hv1-health",
+      "optional": true
+    },
+    {
+      "id": "hv1-heartbeat-stale",
+      "kind": "stale",
+      "label": "HV1 IOC heartbeat is stale",
+      "pv": "BDX:HV:HV1:HEARTBEAT",
+      "stale_after_seconds": 10,
+      "timestamp_mode": "change",
+      "stages": [{"level": "MINOR", "after_seconds": 0}, {"level": "MAJOR", "after_seconds": 10}],
+      "recovery_seconds": 5,
+      "limit_description": "HV1 heartbeat must keep changing",
+      "group": "hv1-health",
+      "optional": true
+    },
+    {
+      "id": "daq-health",
+      "kind": "state",
+      "label": "DAQ crate communication is unavailable",
+      "pv": "BDX:DAQ:CRATE01:COMM_OK",
+      "alarm_when": false,
+      "stages": [{"level": "MAJOR", "after_seconds": 5}],
+      "recovery_seconds": 5,
+      "limit_description": "DAQ COMM_OK must remain On (1)",
+      "group": "daq-health",
+      "optional": true
+    },
+    {
+      "id": "daq-heartbeat-stale",
+      "kind": "stale",
+      "label": "DAQ IOC heartbeat is stale",
+      "pv": "BDX:DAQ:CRATE01:HEARTBEAT",
+      "stale_after_seconds": 10,
+      "timestamp_mode": "change",
+      "stages": [{"level": "MINOR", "after_seconds": 0}, {"level": "MAJOR", "after_seconds": 10}],
+      "recovery_seconds": 5,
+      "limit_description": "DAQ heartbeat must keep changing",
+      "group": "daq-health",
+      "optional": true
+    },
+    {
+      "id": "daq-ioc-state",
+      "kind": "comparison",
+      "label": "DAQ IOC is not running",
+      "pv": "BDX:DAQ:CRATE01:IOC_STATE",
+      "operator": "eq",
+      "reference": {"value": "RUNNING"},
+      "stages": [{"level": "MAJOR", "after_seconds": 5}],
+      "recovery_seconds": 5,
+      "limit_description": "IOC_STATE must equal RUNNING",
+      "group": "daq-health",
+      "optional": true
+    },
+    {
+      "id": "daq-error",
+      "kind": "comparison",
+      "label": "DAQ reports an error",
+      "pv": "BDX:DAQ:CRATE01:ERROR",
+      "operator": "eq",
+      "reference": {"value": ""},
+      "stages": [{"level": "MINOR", "after_seconds": 5}, {"level": "MAJOR", "after_seconds": 20}],
+      "recovery_seconds": 5,
+      "limit_description": "DAQ ERROR must remain empty",
+      "group": "daq-health",
+      "optional": true
+    },
+    {
+      "id": "daq-state-mismatch",
+      "kind": "comparison",
+      "label": "DAQ state differs from the expected state",
+      "pv": "BDX:DAQ:CRATE01:STATE_RBV",
+      "operator": "eq",
+      "reference": {"pv": "BDX:DAQ:CRATE01:EXPECTED_STATE_RBV"},
+      "stages": [{"level": "MINOR", "after_seconds": 5}, {"level": "MAJOR", "after_seconds": 20}],
+      "recovery_seconds": 5,
+      "limit_description": "DAQ STATE_RBV must equal EXPECTED_STATE_RBV",
+      "group": "daq-state",
+      "optional": true
+    },
+    {
+      "id": "daq-ready-during-run",
+      "kind": "state",
+      "label": "DAQ is not ready during an active measurement",
+      "pv": "BDX:DAQ:CRATE01:READY",
+      "alarm_when": false,
+      "stages": [{"level": "MAJOR", "after_seconds": 0}],
+      "recovery_seconds": 5,
+      "limit_description": "READY must remain On during a measurement",
+      "conditions": [{"pv": "BDX:DAQ:CRATE01:MEASUREMENT_ACTIVE", "operator": "truthy"}],
+      "group": "daq-state",
+      "optional": true
+    },
+    {
+      "id": "example-lv-channel-voltage",
+      "enabled": false,
+      "kind": "numeric",
+      "label": "LV channel voltage differs from the applied setpoint",
+      "pv": "BDX:PSU:LV1:CH1:VOLTAGE_RBV",
+      "mode": "deviation",
+      "reference": {"pv": "BDX:PSU:LV1:CH1:VOLTAGE_SET_RBV"},
+      "conditions": [{"pv": "BDX:PSU:LV1:CH1:OUTPUT_RBV", "operator": "truthy"}]
+    },
+    {
+      "id": "example-current-safety",
+      "enabled": false,
+      "kind": "numeric",
+      "label": "LV channel current is close to or above its safety limit",
+      "pv": "BDX:PSU:LV1:CH1:CURRENT_RBV",
+      "mode": "ratio",
+      "reference": {"pv": "BDX:PSU:LV1:CH1:CURRENT_LIMIT_RBV"},
+      "conditions": [{"pv": "BDX:PSU:LV1:CH1:OUTPUT_RBV", "operator": "truthy"}],
+      "overrides": {
+        "minor_percent": 90,
+        "minor_seconds": 5,
+        "major_percent": 100,
+        "major_seconds": 0,
+        "major_sustained_percent": 100,
+        "major_sustained_seconds": 0,
+        "interlock_percent": 100,
+        "interlock_seconds": 30
+      }
+    }
+  ]
+}

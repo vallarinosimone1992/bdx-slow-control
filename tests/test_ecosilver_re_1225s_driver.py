@@ -6,6 +6,7 @@ from bdx_slow_control.drivers.hardware.ecosilver_re_1225s import (
     LAUDAConnection,
     build_ecosilver_re_1225s_driver,
     fault_reply_to_bool,
+    parse_stat_reply,
     parse_float_reply,
     standby_reply_to_running,
 )
@@ -140,9 +141,8 @@ def test_status_reply_helpers():
     assert standby_reply_to_running("1") is False
     assert standby_reply_to_running("0") is True
     assert standby_reply_to_running("UNKNOWN", fallback=True) is True
-    assert fault_reply_to_bool("OK") is False
-    assert fault_reply_to_bool("0000") is False
-    assert fault_reply_to_bool("0004") is True
+    assert fault_reply_to_bool("0000000") is False
+    assert fault_reply_to_bool("0000100") is True
 
 
 def test_ecosilver_read_state_and_setters():
@@ -159,7 +159,7 @@ def test_ecosilver_read_state_and_setters():
             "IN_SP_07": "18.00",
             "IN_SP_08": "10.00",
             "STATUS": "OK",
-            "STAT": "0000",
+            "STAT": "0000000",
             "OUT_SP_00_21.50": "OK",
             "OUT_SP_07_18.50": "OK",
             "OUT_SP_08_12.00": "OK",
@@ -189,7 +189,7 @@ def test_ecosilver_read_state_and_setters():
     assert state.communication_timeout_s == pytest.approx(10.0)
     assert state.standby_status == "0"
     assert state.device_status == "OK"
-    assert state.fault_diagnosis == "0000"
+    assert state.fault_diagnosis == "0000000"
     assert ("query", "IN_PV_00") in connection.calls
     assert ("query", "IN_PV_01") in connection.calls
 
@@ -210,6 +210,21 @@ def test_ecosilver_read_state_and_setters():
         for call in connection.calls
         if call[0] == "command"
     )
+
+
+def test_stat_reply_decodes_all_seven_documented_bits():
+    status = parse_stat_reply("1010101")
+
+    assert status.general_error is True
+    assert status.general_alarm is False
+    assert status.general_warning is True
+    assert status.overtemperature is False
+    assert status.low_level is True
+    assert status.reserved is False
+    assert status.external_control_missing is True
+
+    with pytest.raises(ValueError, match="seven binary"):
+        parse_stat_reply("0000")
 
 
 def test_ecosilver_run_command_requires_ok_reply():
@@ -251,7 +266,7 @@ def test_ecosilver_disabled_external_temperature_and_pressure_are_not_queried():
             "IN_SP_07": "",
             "IN_SP_08": "",
             "STATUS": "OK",
-            "STAT": "0000",
+            "STAT": "0000000",
         }
     )
     driver = ECOSilverRE1225SDriver(connection=connection)
@@ -280,7 +295,7 @@ def test_ecosilver_ping_and_read_state_perform_no_control_writes():
             "IN_SP_07": "18.00",
             "IN_SP_08": "10.00",
             "STATUS": "OK",
-            "STAT": "0000",
+            "STAT": "0000000",
         }
     )
     driver = ECOSilverRE1225SDriver(connection=connection)

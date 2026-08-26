@@ -5,6 +5,10 @@ lib/
 .venv/
 .runtime/
 config/runtime.env
+/notifier/config.env
+/notifier/.venv/
+/notifier/*.log
+/notifier/*.pid
 .pytest_cache/
 .ruff_cache/
 *.egg-info/

@@ -55,13 +55,17 @@ def _start_slow_control(argv: Sequence[str] | None) -> None:
     parser = argparse.ArgumentParser(
         prog="bdx_slow_control_start",
         description=(
-            "Start the main IOC, verify readiness, and launch Phoebus. The independent "
-            "Archiver is inspected read-only and is never started or repaired."
+            "Start the main IOC and notifier, verify readiness, and launch Phoebus. "
+            "The independent Archiver is inspected read-only and is never started or repaired."
         ),
     )
     parser.add_argument("display", nargs="?", default="overview")
     parser.add_argument("--main-host")
     parser.add_argument("--phoebus-home")
+    parser.add_argument(
+        "--notifier-dir",
+        help="bdx-notifier installation; otherwise use runtime.env or standard locations",
+    )
     args = parser.parse_args(argv)
 
     if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
@@ -74,6 +78,10 @@ def _start_slow_control(argv: Sequence[str] | None) -> None:
     host = common._read_main_host(root, args.main_host)
     caproto_get = common._caproto_get(root)
     phoebus_home = common._resolve_phoebus_home(args.phoebus_home)
+    notifier_installation = common._resolve_notifier_installation(
+        root,
+        args.notifier_dir,
+    )
     common._terminal_program()
 
     common.report_archiver_health()
@@ -94,6 +102,12 @@ def _start_slow_control(argv: Sequence[str] | None) -> None:
     else:
         common._open_terminal("BDX Main IOC", common._ioc_terminal_command(root, host))
         print("Opened terminal: BDX Main IOC")
+
+    common._start_notifier_if_needed(
+        root,
+        host,
+        installation=notifier_installation,
+    )
 
     phoebus_pid_file = common._runtime_dir(root) / "phoebus.pid"
     if common._recorded_process_running(

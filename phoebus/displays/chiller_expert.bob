@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>BDX CHILLER EXPERT</name>
   <width>1400</width>
-  <height>1398</height>
+  <height>1659</height>
   <widget type="label" version="2.0.0">
     <name>Label_1</name>
     <x>20</x>
@@ -1200,7 +1200,7 @@
     <y>1313</y>
     <width>570</width>
     <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:STANDBY_STATUS</text>
+    <text>BDX:CHILLER:CHILLER1:SIM_COMM_FAILURE_SET</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -1215,15 +1215,25 @@
     <y>1313</y>
     <width>250</width>
     <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:STANDBY_STATUS</pv_name>
+    <pv_name>BDX:CHILLER:CHILLER1:SIM_COMM_FAILURE_SET</pv_name>
+  </widget>
+  <widget type="bool_button" version="2.0.0">
+    <name>Boolean_101</name>
+    <x>870</x>
+    <y>1313</y>
+    <width>135</width>
+    <height>25</height>
+    <pv_name>BDX:CHILLER:CHILLER1:SIM_COMM_FAILURE_SET</pv_name>
+    <off_label>OFF</off_label>
+    <on_label>ON</on_label>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_101</name>
+    <name>Label_102</name>
     <x>20</x>
     <y>1342</y>
     <width>570</width>
     <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:TEMPERATURE_DEVIATION_RBV</text>
+    <text>BDX:CHILLER:CHILLER1:SIM_STAT_SET</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -1233,20 +1243,28 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_102</name>
+    <name>Readback_103</name>
     <x>600</x>
     <y>1342</y>
     <width>250</width>
     <height>25</height>
-    <pv_name>BDX:CHILLER:CHILLER1:TEMPERATURE_DEVIATION_RBV</pv_name>
+    <pv_name>BDX:CHILLER:CHILLER1:SIM_STAT_SET</pv_name>
+  </widget>
+  <widget type="textentry" version="2.0.0">
+    <name>Setpoint_104</name>
+    <x>870</x>
+    <y>1342</y>
+    <width>270</width>
+    <height>25</height>
+    <pv_name>BDX:CHILLER:CHILLER1:SIM_STAT_SET</pv_name>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label_103</name>
+    <name>Label_105</name>
     <x>20</x>
     <y>1371</y>
     <width>570</width>
     <height>25</height>
-    <text>BDX:CHILLER:CHILLER1:TEMPERATURE_RBV</text>
+    <text>BDX:CHILLER:CHILLER1:STANDBY_STATUS</text>
     <font>
       <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
     </font>
@@ -1256,9 +1274,216 @@
     <transparent>false</transparent>
   </widget>
   <widget type="textupdate" version="2.0.0">
-    <name>Readback_104</name>
+    <name>Readback_106</name>
     <x>600</x>
     <y>1371</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:CHILLER:CHILLER1:STANDBY_STATUS</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_107</name>
+    <x>20</x>
+    <y>1400</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:CHILLER:CHILLER1:STAT_EXTERNAL_CONTROL_MISSING</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_108</name>
+    <x>600</x>
+    <y>1400</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:CHILLER:CHILLER1:STAT_EXTERNAL_CONTROL_MISSING</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_109</name>
+    <x>20</x>
+    <y>1429</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:CHILLER:CHILLER1:STAT_GENERAL_ALARM</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_110</name>
+    <x>600</x>
+    <y>1429</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:CHILLER:CHILLER1:STAT_GENERAL_ALARM</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_111</name>
+    <x>20</x>
+    <y>1458</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:CHILLER:CHILLER1:STAT_GENERAL_ERROR</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_112</name>
+    <x>600</x>
+    <y>1458</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:CHILLER:CHILLER1:STAT_GENERAL_ERROR</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_113</name>
+    <x>20</x>
+    <y>1487</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:CHILLER:CHILLER1:STAT_GENERAL_WARNING</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_114</name>
+    <x>600</x>
+    <y>1487</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:CHILLER:CHILLER1:STAT_GENERAL_WARNING</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_115</name>
+    <x>20</x>
+    <y>1516</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:CHILLER:CHILLER1:STAT_LOW_LEVEL</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_116</name>
+    <x>600</x>
+    <y>1516</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:CHILLER:CHILLER1:STAT_LOW_LEVEL</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_117</name>
+    <x>20</x>
+    <y>1545</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:CHILLER:CHILLER1:STAT_OVERTEMPERATURE</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_118</name>
+    <x>600</x>
+    <y>1545</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:CHILLER:CHILLER1:STAT_OVERTEMPERATURE</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_119</name>
+    <x>20</x>
+    <y>1574</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:CHILLER:CHILLER1:STAT_RESERVED</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_120</name>
+    <x>600</x>
+    <y>1574</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:CHILLER:CHILLER1:STAT_RESERVED</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_121</name>
+    <x>20</x>
+    <y>1603</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:CHILLER:CHILLER1:TEMPERATURE_DEVIATION_RBV</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="235" green="240" blue="244" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_122</name>
+    <x>600</x>
+    <y>1603</y>
+    <width>250</width>
+    <height>25</height>
+    <pv_name>BDX:CHILLER:CHILLER1:TEMPERATURE_DEVIATION_RBV</pv_name>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_123</name>
+    <x>20</x>
+    <y>1632</y>
+    <width>570</width>
+    <height>25</height>
+    <text>BDX:CHILLER:CHILLER1:TEMPERATURE_RBV</text>
+    <font>
+      <font name="Default" family="Liberation Sans" style="REGULAR" size="11.0" />
+    </font>
+    <background_color>
+      <color red="247" green="249" blue="251" />
+    </background_color>
+    <transparent>false</transparent>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Readback_124</name>
+    <x>600</x>
+    <y>1632</y>
     <width>250</width>
     <height>25</height>
     <pv_name>BDX:CHILLER:CHILLER1:TEMPERATURE_RBV</pv_name>

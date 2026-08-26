@@ -19,6 +19,18 @@ DEFAULT_RECONNECT_DELAY = 15.0
 MAX_REPLY_BYTES = 4096
 
 
+@dataclass(frozen=True)
+class LaudaStat:
+    raw: str
+    general_error: bool
+    general_alarm: bool
+    general_warning: bool
+    overtemperature: bool
+    low_level: bool
+    reserved: bool
+    external_control_missing: bool
+
+
 def parse_float_reply(reply: str) -> float:
     """Parse a LAUDA numeric ASCII reply."""
     if reply.startswith("ERR"):
@@ -41,15 +53,32 @@ def standby_reply_to_running(reply: str, fallback: bool = False) -> bool:
     return fallback
 
 
+def parse_stat_reply(reply: str) -> LaudaStat:
+    """Decode the seven binary flags returned by the LAUDA ``STAT`` command."""
+    raw = reply.strip()
+    if len(raw) != 7 or any(bit not in "01" for bit in raw):
+        raise ValueError(
+            "LAUDA STAT reply must contain exactly seven binary characters; "
+            f"received {reply!r}"
+        )
+    flags = tuple(bit == "1" for bit in raw)
+    return LaudaStat(raw, *flags)
+
+
 def fault_reply_to_bool(reply: str) -> bool:
-    """Convert the LAUDA fault diagnosis reply into a boolean fault state."""
-    normalized = reply.strip().upper()
-    if not normalized or normalized in {"OK", "NONE", "NO FAULT", "NO_FAULT"}:
-        return False
-    if normalized.startswith("ERR"):
-        return True
-    digits = "".join(character for character in normalized if character.isdigit())
-    return bool(digits) and int(digits) != 0
+    """Return whether any LAUDA ``STAT`` flag is active."""
+    status = parse_stat_reply(reply)
+    return any(
+        (
+            status.general_error,
+            status.general_alarm,
+            status.general_warning,
+            status.overtemperature,
+            status.low_level,
+            status.reserved,
+            status.external_control_missing,
+        )
+    )
 
 
 class LAUDAConnection:
@@ -243,6 +272,7 @@ class ECOSilverRE1225SDriver(ChillerDriver):
                 )
                 device_status = self._query_optional(self.device_status_command)
                 fault_diagnosis = self._query_optional(self.fault_command)
+                stat = parse_stat_reply(fault_diagnosis)
                 fault = fault_reply_to_bool(fault_diagnosis)
             except Exception as exc:
                 self.last_error = exc
@@ -273,6 +303,13 @@ class ECOSilverRE1225SDriver(ChillerDriver):
                 external_temperature_valid=external_temperature_valid,
                 safe_setpoint_c=safe_setpoint_c,
                 communication_timeout_s=communication_timeout_s,
+                stat_general_error=stat.general_error,
+                stat_general_alarm=stat.general_alarm,
+                stat_general_warning=stat.general_warning,
+                stat_overtemperature=stat.overtemperature,
+                stat_low_level=stat.low_level,
+                stat_reserved=stat.reserved,
+                stat_external_control_missing=stat.external_control_missing,
             )
 
     def set_setpoint(self, value_c: float) -> None:

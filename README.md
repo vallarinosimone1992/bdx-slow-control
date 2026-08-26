@@ -265,15 +265,17 @@ Lower-level controlled shutdown commands remain available:
 
 ```bash
 ./scripts/kill_slow_control_phoebus.sh
+./scripts/kill_slow_control_notifier.sh
 ./scripts/kill_slow_control_archiver.sh
 ./scripts/kill_slow_control_ioc.sh
 ./scripts/kill_slow_control_all.sh
 ```
 
 Despite the command names, normal shutdown is graceful. The IOC and direct
-Phoebus launchers receive `SIGTERM`; `SIGKILL` is used only when `--force` is
-supplied explicitly. `kill_slow_control_all.sh` stops Phoebus and the IOC only;
-it never modifies the Archiver. The Archiver-specific command delegates to the
+Phoebus, notifier, and IOC processes receive `SIGTERM`; `SIGKILL` is used only
+when `--force` is supplied explicitly. `kill_slow_control_all.sh` stops Phoebus,
+the Telegram notifier, and the IOC only; it never modifies the Archiver. The
+Archiver-specific command delegates to the
 installed user-local Archiver stop script:
 
 ```bash
@@ -287,6 +289,14 @@ recorded PIDs before acting on them. They stop software processes only: they do
 not switch off PSU outputs, send `ALLOFF`, stop or modify the chiller, change
 voltage or current settings, alter network configuration, or modify the
 Raspberry clock.
+
+The versioned `notifier/` directory is part of the normal lifecycle and uses
+the main project virtual environment. Its Telegram secret is not stored in the
+checkout: by default it is loaded from
+`$HOME/.config/bdx-notifier/config.env`. Optional `BDX_NOTIFIER_DIR`,
+`BDX_NOTIFIER_CONFIG`, and `BDX_NOTIFIER_ENV_FILE` overrides belong in the
+untracked `config/runtime.env`. Notifier output is written to
+`.runtime/bdx-stack/notifier.log`.
 
 If LV2 is not reachable on port `9221`, first verify Ethernet routing and the
 instrument TCP port without writing any PVs:
@@ -449,6 +459,33 @@ The global and overview displays provide:
 - global all-off with confirmation;
 - live update-period selection;
 - update-frequency readback.
+
+The chiller IOC decodes the seven binary characters returned by `STAT` into
+dedicated read-only PVs:
+
+```text
+STAT_GENERAL_ERROR
+STAT_GENERAL_ALARM
+STAT_GENERAL_WARNING
+STAT_OVERTEMPERATURE
+STAT_LOW_LEVEL
+STAT_RESERVED
+STAT_EXTERNAL_CONTROL_MISSING
+```
+
+Power channels expose derived `OVP_WARNING`, `OVP_ALARM`, `OCP_WARNING`, and
+`OCP_ALARM` PVs. Warning means that the measured value has reached 90% of the
+configured protection threshold; alarm means that it has reached or exceeded
+the threshold.
+
+The simulated profile also provides controlled fault injection through
+`SIM_COMM_FAILURE_SET`, chiller `SIM_STAT_SET`, and channel
+`SIM_CURRENT_SET`/`SIM_OUTPUT_MISMATCH_SET`. Hardware profiles expose the same
+contract but reject writes to simulation-only controls.
+
+The simulated DAQ crate publishes `MEASUREMENT_ACTIVE`, `RUN_ID_RBV`,
+`EXPECTED_STATE_RBV`, `RUN_START_TIME`, and `RUN_END_TIME`. These form the
+initial bridge contract for a future CAEN COMPASS wrapper or log/file watcher.
 
 The trend widgets subscribe to live Channel Access updates. Generated Data
 Browser plots use a moving time window ending at `now`; set `BDX_TREND_RANGE`,

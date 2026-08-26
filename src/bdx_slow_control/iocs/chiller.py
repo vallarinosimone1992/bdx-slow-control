@@ -57,6 +57,14 @@ class ChillerIOC(ManagedIOC):
     STANDBY_STATUS = pvproperty(value="", dtype=ChannelType.STRING, read_only=True)
     DEVICE_STATUS = pvproperty(value="", dtype=ChannelType.STRING, read_only=True)
     FAULT_DIAGNOSIS = pvproperty(value="", dtype=ChannelType.STRING, read_only=True)
+    STAT_GENERAL_ERROR = pvproperty(value=False, dtype=bool, read_only=True)
+    STAT_GENERAL_ALARM = pvproperty(value=False, dtype=bool, read_only=True)
+    STAT_GENERAL_WARNING = pvproperty(value=False, dtype=bool, read_only=True)
+    STAT_OVERTEMPERATURE = pvproperty(value=False, dtype=bool, read_only=True)
+    STAT_LOW_LEVEL = pvproperty(value=False, dtype=bool, read_only=True)
+    STAT_RESERVED = pvproperty(value=False, dtype=bool, read_only=True)
+    STAT_EXTERNAL_CONTROL_MISSING = pvproperty(value=False, dtype=bool, read_only=True)
+    SIM_STAT_SET = pvproperty(value="0000000", dtype=ChannelType.STRING)
     TEMPERATURE_DEVIATION_RBV = pvproperty(value=0.0, dtype=float, read_only=True)
     DEVIATION_WARNING = pvproperty(value=False, dtype=bool, read_only=True)
     DEVIATION_ALARM = pvproperty(value=False, dtype=bool, read_only=True)
@@ -136,6 +144,15 @@ class ChillerIOC(ManagedIOC):
         await self.STANDBY_STATUS.write(value=state.standby_status)
         await self.DEVICE_STATUS.write(value=state.device_status)
         await self.FAULT_DIAGNOSIS.write(value=state.fault_diagnosis)
+        await self.STAT_GENERAL_ERROR.write(value=state.stat_general_error)
+        await self.STAT_GENERAL_ALARM.write(value=state.stat_general_alarm)
+        await self.STAT_GENERAL_WARNING.write(value=state.stat_general_warning)
+        await self.STAT_OVERTEMPERATURE.write(value=state.stat_overtemperature)
+        await self.STAT_LOW_LEVEL.write(value=state.stat_low_level)
+        await self.STAT_RESERVED.write(value=state.stat_reserved)
+        await self.STAT_EXTERNAL_CONTROL_MISSING.write(
+            value=state.stat_external_control_missing
+        )
         await self._write_deviation(state.controlled_temperature_c, state.setpoint_c)
         if not self._setpoint_request_initialized:
             await self.SETPOINT_REQUEST.write(value=state.setpoint_c)
@@ -230,6 +247,16 @@ class ChillerIOC(ManagedIOC):
             await self.mark_failure(exc)
             raise
         return float(value)
+
+    @SIM_STAT_SET.putter
+    async def SIM_STAT_SET(self, instance, value):
+        if not bool(getattr(self.driver, "simulation", False)):
+            raise ValueError("STAT fault injection is simulation-only")
+        text = str(value).strip()
+        self.driver.set_simulated_fault_diagnosis(text)
+        state = await self._run_driver("read_state")
+        await self._write_state(state)
+        return text
 
     def _validate_setpoint(self, value: float) -> None:
         if value < self.minimum_setpoint_c or value > self.maximum_setpoint_c:

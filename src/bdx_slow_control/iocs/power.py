@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 
 from caproto import ChannelType
 from caproto.server import pvproperty
@@ -105,6 +106,12 @@ class PowerChannelIOC(ManagedIOC):
         read_only=True,
         precision=PSU_FLOAT_PRECISION,
     )
+    OVP_WARNING = pvproperty(value=False, dtype=bool, read_only=True)
+    OVP_ALARM = pvproperty(value=False, dtype=bool, read_only=True)
+    OCP_WARNING = pvproperty(value=False, dtype=bool, read_only=True)
+    OCP_ALARM = pvproperty(value=False, dtype=bool, read_only=True)
+    SIM_CURRENT_SET = pvproperty(value=math.nan, dtype=float)
+    SIM_OUTPUT_MISMATCH_SET = pvproperty(value=False, dtype=bool)
 
     def __init__(self, *args, channel: int, **kwargs) -> None:
         self.channel = int(channel)
@@ -118,6 +125,17 @@ class PowerChannelIOC(ManagedIOC):
         await self.OUTPUT_RBV.write(value=state.output_enabled)
         await self.OVP_RBV.write(value=state.ovp)
         await self.OCP_RBV.write(value=state.ocp)
+        await self._write_protection_status(state)
+
+    async def _write_protection_status(self, state) -> None:
+        voltage = abs(float(state.voltage))
+        current = abs(float(state.current))
+        ovp = float(state.ovp)
+        ocp = float(state.ocp)
+        await self.OVP_WARNING.write(value=ovp > 0 and voltage >= 0.9 * ovp)
+        await self.OVP_ALARM.write(value=ovp > 0 and voltage >= ovp)
+        await self.OCP_WARNING.write(value=ocp > 0 and current >= 0.9 * ocp)
+        await self.OCP_ALARM.write(value=ocp > 0 and current >= ocp)
 
     @VOLTAGE_SET.putter
     async def VOLTAGE_SET(self, instance, value):
@@ -164,6 +182,27 @@ class PowerChannelIOC(ManagedIOC):
             raise
         return float(value)
 
+    @SIM_CURRENT_SET.putter
+    async def SIM_CURRENT_SET(self, instance, value):
+        if not bool(getattr(self.driver, "simulation", False)):
+            raise ValueError("Current injection is simulation-only")
+        numeric = float(value)
+        self.driver.set_simulated_current(
+            self.channel,
+            None if math.isnan(numeric) else numeric,
+        )
+        return numeric
+
+    @SIM_OUTPUT_MISMATCH_SET.putter
+    async def SIM_OUTPUT_MISMATCH_SET(self, instance, value):
+        if not bool(getattr(self.driver, "simulation", False)):
+            raise ValueError("Output mismatch injection is simulation-only")
+        self.driver.set_simulated_output_readback(
+            self.channel,
+            not bool(self.OUTPUT_SET.value) if value else None,
+        )
+        return bool(value)
+
 
 class LowVoltagePowerChannelIOC(PowerChannelIOC):
     """Low-voltage PSU channel with staged operator setpoints."""
@@ -205,6 +244,7 @@ class LowVoltagePowerChannelIOC(PowerChannelIOC):
         await self.OUTPUT_STATE.write(value="ON" if state.output_enabled else "OFF")
         await self.OVP_RBV.write(value=state.ovp)
         await self.OCP_RBV.write(value=state.ocp)
+        await self._write_protection_status(state)
         if not self._requests_initialized:
             await self.VOLTAGE_REQUEST.write(value=state.voltage_setpoint)
             await self.CURRENT_LIMIT_REQUEST.write(value=state.current_limit)
@@ -262,3 +302,4 @@ class LowVoltagePowerChannelIOC(PowerChannelIOC):
         await self.OUTPUT_STATE.write(value="ON" if state.output_enabled else "OFF")
         await self.OVP_RBV.write(value=state.ovp)
         await self.OCP_RBV.write(value=state.ocp)
+        await self._write_protection_status(state)

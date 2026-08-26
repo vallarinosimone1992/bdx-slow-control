@@ -39,6 +39,13 @@ class ChillerState:
     external_temperature_valid: bool = True
     safe_setpoint_c: float = 0.0
     communication_timeout_s: float = 0.0
+    stat_general_error: bool = False
+    stat_general_alarm: bool = False
+    stat_general_warning: bool = False
+    stat_overtemperature: bool = False
+    stat_low_level: bool = False
+    stat_reserved: bool = False
+    stat_external_control_missing: bool = False
 
 
 @dataclass(frozen=True)
@@ -57,6 +64,10 @@ class BaseDriver(ABC):
     @abstractmethod
     def ping(self) -> bool:
         """Return whether communication is available."""
+
+    def set_simulated_communication_failure(self, active: bool) -> None:
+        """Inject a communication failure in simulation drivers."""
+        raise NotImplementedError("Communication fault injection is simulation-only")
 
 
 class PowerSupplyDriver(BaseDriver, ABC):
@@ -102,6 +113,12 @@ class PowerSupplyDriver(BaseDriver, ABC):
     def all_outputs_off(self) -> bool:
         pass
 
+    def set_simulated_current(self, channel: int, value: float | None) -> None:
+        raise NotImplementedError("Current injection is simulation-only")
+
+    def set_simulated_output_readback(self, channel: int, value: bool | None) -> None:
+        raise NotImplementedError("Output readback injection is simulation-only")
+
 
 class ChillerDriver(BaseDriver, ABC):
     @abstractmethod
@@ -121,6 +138,9 @@ class ChillerDriver(BaseDriver, ABC):
 
     def set_communication_timeout(self, value_s: float) -> None:
         raise NotImplementedError("Safe Mode communication timeout control is not implemented")
+
+    def set_simulated_fault_diagnosis(self, value: str) -> None:
+        raise NotImplementedError("STAT injection is simulation-only")
 
 
 class SensorDriver(BaseDriver, ABC):

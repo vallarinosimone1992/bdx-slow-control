@@ -36,12 +36,17 @@ class SimulatedPowerSupplyDriver(PowerSupplyDriver):
                 "output_enabled": False,
                 "ovp": float(initial_ovp),
                 "ocp": float(initial_ocp),
+                "injected_current": None,
+                "injected_output": None,
             }
             for channel in channels
         }
 
     def ping(self) -> bool:
         return self._connected
+
+    def set_simulated_communication_failure(self, active: bool) -> None:
+        self._connected = not bool(active)
 
     def _state(self, channel: int) -> dict[str, float | bool]:
         try:
@@ -51,10 +56,20 @@ class SimulatedPowerSupplyDriver(PowerSupplyDriver):
 
     def read_channel(self, channel: int) -> PowerChannelState:
         state = self._state(channel)
-        output_enabled = bool(state["output_enabled"])
+        injected_output = state["injected_output"]
+        output_enabled = (
+            bool(injected_output)
+            if injected_output is not None
+            else bool(state["output_enabled"])
+        )
         voltage = float(state["voltage"]) if output_enabled else 0.0
         current_limit = float(state["current_limit"])
-        simulated_load = min(current_limit, abs(voltage) * 0.01) if output_enabled else 0.0
+        injected_current = state["injected_current"]
+        simulated_load = (
+            float(injected_current)
+            if injected_current is not None
+            else min(current_limit, abs(voltage) * 0.01) if output_enabled else 0.0
+        )
         return PowerChannelState(
             voltage=voltage,
             current=simulated_load,
@@ -97,6 +112,12 @@ class SimulatedPowerSupplyDriver(PowerSupplyDriver):
     def all_outputs_off(self) -> bool:
         return all(not bool(state["output_enabled"]) for state in self._channels.values())
 
+    def set_simulated_current(self, channel: int, value: float | None) -> None:
+        self._state(channel)["injected_current"] = None if value is None else float(value)
+
+    def set_simulated_output_readback(self, channel: int, value: bool | None) -> None:
+        self._state(channel)["injected_output"] = value
+
 
 class SimulatedHighVoltageDriver(SimulatedPowerSupplyDriver, HighVoltageDriver):
     """Simulation backend for a multi-channel HV supply."""
@@ -127,9 +148,13 @@ class SimulatedChillerDriver(ChillerDriver):
         self._communication_timeout = 10.0
         self._running = False
         self._fault = False
+        self._fault_diagnosis = "0000000"
 
     def ping(self) -> bool:
         return self._connected
+
+    def set_simulated_communication_failure(self, active: bool) -> None:
+        self._connected = not bool(active)
 
     def read_state(self) -> ChillerState:
         target = self._setpoint if self._running else 23.0
@@ -148,7 +173,14 @@ class SimulatedChillerDriver(ChillerDriver):
             safe_mode_status="SIMULATION",
             standby_status="0" if self._running else "1",
             device_status="SIMULATION",
-            fault_diagnosis="",
+            fault_diagnosis=self._fault_diagnosis,
+            stat_general_error=self._fault_diagnosis[0] == "1",
+            stat_general_alarm=self._fault_diagnosis[1] == "1",
+            stat_general_warning=self._fault_diagnosis[2] == "1",
+            stat_overtemperature=self._fault_diagnosis[3] == "1",
+            stat_low_level=self._fault_diagnosis[4] == "1",
+            stat_reserved=self._fault_diagnosis[5] == "1",
+            stat_external_control_missing=self._fault_diagnosis[6] == "1",
             pressure_enabled=self._pressure_enabled,
             pressure_valid=self._pressure_enabled and self._running,
             external_temperature_enabled=self._external_temperature_enabled,
@@ -175,6 +207,13 @@ class SimulatedChillerDriver(ChillerDriver):
             raise ValueError("Communication timeout must be non-negative")
         self._communication_timeout = float(value_s)
 
+    def set_simulated_fault_diagnosis(self, value: str) -> None:
+        text = str(value).strip()
+        if len(text) != 7 or any(bit not in "01" for bit in text):
+            raise ValueError("Simulated STAT must contain exactly seven binary characters")
+        self._fault_diagnosis = text
+        self._fault = "1" in text
+
 
 class SimulatedSensorDriver(SensorDriver):
     simulation = True
@@ -187,6 +226,9 @@ class SimulatedSensorDriver(SensorDriver):
 
     def ping(self) -> bool:
         return self._connected
+
+    def set_simulated_communication_failure(self, active: bool) -> None:
+        self._connected = not bool(active)
 
     def read_value(self) -> float:
         elapsed = time.monotonic() - self._start
@@ -205,6 +247,9 @@ class SimulatedDaqCrateDriver(DaqCrateDriver):
 
     def ping(self) -> bool:
         return self._connected
+
+    def set_simulated_communication_failure(self, active: bool) -> None:
+        self._connected = not bool(active)
 
     def read_state(self) -> DaqCrateState:
         return DaqCrateState(

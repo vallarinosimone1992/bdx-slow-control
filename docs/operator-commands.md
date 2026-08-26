@@ -39,7 +39,8 @@ bdx_slow_control_start
 ```
 
 It checks the Raspberry environment IOC, starts the local project IOC when it
-is not already listening, verifies the IOC listener and a live IOC PV, reports
+is not already listening, starts the Telegram notifier when it is not already
+running, verifies the IOC listener and a live IOC PV, reports
 Archiver endpoint health read-only, and launches Phoebus. It never starts,
 stops, repairs, registers,
 pauses, or resumes the Archiver. Archiver absence is not an error: Phoebus
@@ -53,10 +54,34 @@ The command reports one of:
 - `Archiver services: completely absent.`
 
 The start command is idempotent: an IOC already listening on the configured
-address and a Phoebus process matching its recorded PID are not duplicated.
+address, an active notifier with its recorded PID, and a Phoebus process
+matching its recorded PID are not duplicated.
 The display defaults to `overview`; for example, `bdx_slow_control_start psu` opens
 the PSU display. `BDX_MAIN_HOST` comes from the environment or the untracked
 `config/runtime.env` and is `172.22.50.2` on the current prototype host.
+
+The notifier included in this repository is discovered automatically. Keep the
+Telegram secret outside the checkout:
+
+```bash
+mkdir -p "$HOME/.config/bdx-notifier"
+chmod 700 "$HOME/.config/bdx-notifier"
+chmod 600 "$HOME/.config/bdx-notifier/config.env"
+BDX_NOTIFIER_ENV_FILE="$HOME/.config/bdx-notifier/config.env"
+BDX_NOTIFIER_DRY_RUN=false
+```
+
+`BDX_NOTIFIER_DIR` remains available for an external installation. The notifier
+PID and log are stored under `.runtime/bdx-stack/`.
+
+Before starting the live service, verify Telegram delivery without touching
+EPICS:
+
+```bash
+.venv/bin/python notifier/notifier.py \
+  --env-file "$HOME/.config/bdx-notifier/config.env" \
+  --test-telegram
+```
 
 Stop normal slow control with:
 
@@ -64,9 +89,11 @@ Stop normal slow control with:
 bdx_slow_control_kill
 ```
 
-It stops Phoebus and project-owned local `bdx-prototype-ioc` processes. It does
-not inspect or modify the Archiver and does not write an EPICS PV. Repeating the
-command when processes are already stopped succeeds cleanly.
+It stops Phoebus, the BDX notifier, and project-owned local
+`bdx-prototype-ioc` processes, in that order. Stopping the notifier before the
+IOC prevents an intentional shutdown from generating a connection-loss alert.
+It does not inspect or modify the Archiver and does not write an EPICS PV.
+Repeating the command when processes are already stopped succeeds cleanly.
 
 ### Expert Archiver lifecycle
 
