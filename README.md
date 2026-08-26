@@ -474,7 +474,7 @@ STAT_EXTERNAL_CONTROL_MISSING
 ```
 
 Power channels expose derived `OVP_WARNING`, `OVP_ALARM`, `OCP_WARNING`, and
-`OCP_ALARM` PVs. Warning means that the measured value has reached 90% of the
+`OCP_ALARM` PVs. Warning means that the measured value has reached 95% of the
 configured protection threshold; alarm means that it has reached or exceeded
 the threshold.
 

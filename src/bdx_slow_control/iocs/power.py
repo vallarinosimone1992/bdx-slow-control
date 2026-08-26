@@ -115,10 +115,12 @@ class PowerChannelIOC(ManagedIOC):
 
     def __init__(self, *args, channel: int, **kwargs) -> None:
         self.channel = int(channel)
+        self._output_setting_initialized = False
         super().__init__(*args, **kwargs)
 
     async def poll_device(self) -> None:
         state = self.driver.read_channel(self.channel)
+        await self._initialize_output_setting(state)
         await self.VOLTAGE_RBV.write(value=state.voltage)
         await self.CURRENT_LIMIT_RBV.write(value=state.current_limit)
         await self.CURRENT_RBV.write(value=state.current)
@@ -127,14 +129,24 @@ class PowerChannelIOC(ManagedIOC):
         await self.OCP_RBV.write(value=state.ocp)
         await self._write_protection_status(state)
 
+    async def _initialize_output_setting(self, state) -> None:
+        if not self._output_setting_initialized:
+            # Reconcile the command PV with hardware state after an IOC restart.
+            # verify_value=False bypasses the putter, so this never writes hardware.
+            await self.OUTPUT_SET.write(
+                value=state.output_enabled,
+                verify_value=False,
+            )
+            self._output_setting_initialized = True
+
     async def _write_protection_status(self, state) -> None:
         voltage = abs(float(state.voltage))
         current = abs(float(state.current))
         ovp = float(state.ovp)
         ocp = float(state.ocp)
-        await self.OVP_WARNING.write(value=ovp > 0 and voltage >= 0.9 * ovp)
+        await self.OVP_WARNING.write(value=ovp > 0 and voltage >= 0.95 * ovp)
         await self.OVP_ALARM.write(value=ovp > 0 and voltage >= ovp)
-        await self.OCP_WARNING.write(value=ocp > 0 and current >= 0.9 * ocp)
+        await self.OCP_WARNING.write(value=ocp > 0 and current >= 0.95 * ocp)
         await self.OCP_ALARM.write(value=ocp > 0 and current >= ocp)
 
     @VOLTAGE_SET.putter
@@ -236,6 +248,7 @@ class LowVoltagePowerChannelIOC(PowerChannelIOC):
 
     async def poll_device(self) -> None:
         state = self.driver.read_channel(self.channel)
+        await self._initialize_output_setting(state)
         await self.VOLTAGE_RBV.write(value=state.voltage)
         await self.VOLTAGE_SET_RBV.write(value=state.voltage_setpoint)
         await self.CURRENT_LIMIT_RBV.write(value=state.current_limit)

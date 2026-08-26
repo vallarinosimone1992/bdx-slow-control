@@ -115,7 +115,16 @@ ID in `alarms.json`:
 }
 ```
 
-`MINOR` does not mention anyone. `MAJOR` mentions `major_people`.
+For production, keep recipient identities outside Git by setting these entries
+in `$HOME/.config/bdx-notifier/config.env`:
+
+```text
+TELEGRAM_PEOPLE=123456789:Operator One,987654321:Operator Two
+TELEGRAM_MAJOR_PEOPLE=123456789
+```
+
+These values override the corresponding repository policy. `MINOR` does not
+mention anyone. `MAJOR` mentions the IDs in `TELEGRAM_MAJOR_PEOPLE`.
 `INTERLOCK` with `"all"` mentions all configured people. With membership
 verification enabled, `getChatMember` excludes users no longer in the group;
 the bot normally needs administrator access for reliable checks of other users.
@@ -142,8 +151,9 @@ Test Telegram delivery without connecting to EPICS or reading/writing any PV:
   --test-telegram
 ```
 
-The command sends one harmless message and exits. It is suitable for the real
-slow-control host before starting the notifier service.
+The command sends one harmless message, applies the configured MAJOR mention
+policy, and exits. It is suitable for the real slow-control host before
+starting the notifier service.
 
 With the prototype IOC, representative injection commands are:
 

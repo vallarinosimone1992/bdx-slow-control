@@ -71,11 +71,19 @@ BDX_NOTIFIER_ENV_FILE="$HOME/.config/bdx-notifier/config.env"
 BDX_NOTIFIER_DRY_RUN=false
 ```
 
+The protected notifier environment also holds private mention recipients:
+
+```text
+TELEGRAM_PEOPLE=123456789:Operator One,987654321:Operator Two
+TELEGRAM_MAJOR_PEOPLE=123456789
+```
+
 `BDX_NOTIFIER_DIR` remains available for an external installation. The notifier
 PID and log are stored under `.runtime/bdx-stack/`.
 
 Before starting the live service, verify Telegram delivery without touching
-EPICS:
+EPICS. The message includes the configured MAJOR recipients, allowing mention
+policy to be tested safely:
 
 ```bash
 .venv/bin/python notifier/notifier.py \

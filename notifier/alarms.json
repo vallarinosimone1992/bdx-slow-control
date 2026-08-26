@@ -60,7 +60,7 @@
           "reference": {"pv": "{prefix}:OVP_RBV"},
           "conditions": [{"pv": "{prefix}:OUTPUT_RBV", "operator": "truthy"}],
           "overrides": {
-            "minor_percent": 90,
+            "minor_percent": 95,
             "minor_seconds": 5,
             "major_percent": 100,
             "major_seconds": 0,
@@ -79,7 +79,7 @@
           "reference": {"pv": "{prefix}:OCP_RBV"},
           "conditions": [{"pv": "{prefix}:OUTPUT_RBV", "operator": "truthy"}],
           "overrides": {
-            "minor_percent": 90,
+            "minor_percent": 95,
             "minor_seconds": 5,
             "major_percent": 100,
             "major_seconds": 0,

@@ -18,9 +18,11 @@ from notifier import (
     Person,
     TelegramSender,
     TelegramPolicy,
+    TelegramDeliveryError,
     load_config,
     DEFAULT_CONFIG_FILE,
     main,
+    telegram_policy_from_environment,
 )
 
 
@@ -37,6 +39,39 @@ def config_for(*rules):
 
 
 class AlarmEngineTests(unittest.TestCase):
+    def test_private_recipient_environment_overrides_repository_policy(self):
+        policy = config_for().telegram
+        with patch.dict(
+            "notifier.os.environ",
+            {
+                "TELEGRAM_PEOPLE": "101:Major Operator,202:Second Operator",
+                "TELEGRAM_MAJOR_PEOPLE": "101",
+            },
+            clear=True,
+        ):
+            overridden = telegram_policy_from_environment(policy)
+
+        self.assertEqual(overridden.major_people, (101,))
+        self.assertEqual(overridden.people[101].name, "Major Operator")
+        self.assertEqual(overridden.people[202].name, "Second Operator")
+
+    def test_telegram_error_includes_sanitized_api_description(self):
+        sender = TelegramSender("secret-token", "chat", config_for().telegram, dry_run=False)
+        response = Mock(status_code=400, ok=False)
+        response.json.return_value = {
+            "ok": False,
+            "description": "Bad Request: migrated",
+        }
+        sender._session.post = Mock(return_value=response)
+        try:
+            with self.assertRaisesRegex(
+                TelegramDeliveryError,
+                r"HTTP 400: Bad Request: migrated",
+            ):
+                sender.send_test_message()
+        finally:
+            sender.close()
+
     def test_telegram_test_sends_once_without_starting_epics(self):
         sender = Mock()
         with (

@@ -398,6 +398,52 @@ def _parse_people(raw: dict[str, Any]) -> TelegramPolicy:
     )
 
 
+def telegram_policy_from_environment(policy: TelegramPolicy) -> TelegramPolicy:
+    """Apply private Telegram recipient overrides from config.env."""
+    people_value = os.getenv("TELEGRAM_PEOPLE", "").strip()
+    major_value = os.getenv("TELEGRAM_MAJOR_PEOPLE", "").strip()
+    if not people_value and not major_value:
+        return policy
+
+    people = dict(policy.people)
+    if people_value:
+        people = {}
+        for entry in people_value.split(","):
+            raw_id, separator, raw_name = entry.strip().partition(":")
+            if not separator or not raw_id.strip() or not raw_name.strip():
+                raise ConfigurationError(
+                    "TELEGRAM_PEOPLE must contain comma-separated user_id:name entries"
+                )
+            try:
+                user_id = int(raw_id)
+            except ValueError as exc:
+                raise ConfigurationError(
+                    "TELEGRAM_PEOPLE user IDs must be positive integers"
+                ) from exc
+            if user_id <= 0:
+                raise ConfigurationError(
+                    "TELEGRAM_PEOPLE user IDs must be positive integers"
+                )
+            people[user_id] = Person(user_id=user_id, name=raw_name.strip())
+
+    major_people = policy.major_people
+    if major_value:
+        try:
+            major_people = tuple(
+                dict.fromkeys(int(item.strip()) for item in major_value.split(","))
+            )
+        except ValueError as exc:
+            raise ConfigurationError(
+                "TELEGRAM_MAJOR_PEOPLE must contain comma-separated numeric user IDs"
+            ) from exc
+    unknown = sorted(set(major_people).difference(people))
+    if unknown:
+        raise ConfigurationError(
+            f"TELEGRAM_MAJOR_PEOPLE contains unknown user IDs: {unknown}"
+        )
+    return replace(policy, people=people, major_people=major_people)
+
+
 def _render_template(value: Any, variables: dict[str, Any]) -> Any:
     if isinstance(value, str):
         if value.startswith("{") and value.endswith("}") and value.count("{") == 1:
@@ -1200,11 +1246,15 @@ class TelegramSender:
 
     def send_test_message(self) -> None:
         """Send one harmless delivery test without connecting to EPICS."""
-        self._send(
+        message = (
             "<b>\u2705 [BDX] TELEGRAM TEST</b>\n"
             "Notifier configuration and Telegram delivery are working.\n"
             "No EPICS PV was read or written."
         )
+        mentions = self._mentions("MAJOR")
+        if mentions:
+            message = f"{message}\n\n{mentions}"
+        self._send(message)
 
     def _send(self, message: str) -> None:
         if self.dry_run:
@@ -1216,12 +1266,21 @@ class TelegramSender:
                 data={"chat_id": self._chat_id, "text": message, "parse_mode": "HTML"},
                 timeout=10,
             )
-            response.raise_for_status()
-            payload = response.json()
         except requests.RequestException as exc:
-            raise TelegramDeliveryError("Telegram request failed") from exc
-        if not payload.get("ok", False):
-            raise TelegramDeliveryError("Telegram API rejected the message")
+            raise TelegramDeliveryError(
+                f"Telegram connection failed ({type(exc).__name__})"
+            ) from exc
+        try:
+            payload = response.json()
+        except requests.JSONDecodeError as exc:
+            raise TelegramDeliveryError(
+                f"Telegram sendMessage returned invalid JSON (HTTP {response.status_code})"
+            ) from exc
+        if not response.ok or not payload.get("ok", False):
+            description = str(payload.get("description", "request rejected"))
+            raise TelegramDeliveryError(
+                f"Telegram sendMessage failed (HTTP {response.status_code}: {description})"
+            )
 
     def close(self) -> None:
         self._session.close()
@@ -1417,6 +1476,10 @@ def main(argv: list[str] | None = None) -> int:
     load_dotenv(args.env_file)
     try:
         config = load_config(args.config)
+        config = replace(
+            config,
+            telegram=telegram_policy_from_environment(config.telegram),
+        )
         sender = TelegramSender(
             os.getenv("TELEGRAM_BOT_TOKEN"),
             os.getenv("TELEGRAM_CHAT_ID"),

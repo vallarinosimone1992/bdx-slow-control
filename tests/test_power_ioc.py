@@ -157,16 +157,16 @@ def test_successful_apply_performs_both_writes_and_updates_readbacks():
     asyncio.run(scenario())
 
 
-def test_protection_status_tracks_ninety_and_one_hundred_percent_thresholds():
+def test_protection_status_tracks_ninety_five_and_one_hundred_percent_thresholds():
     async def scenario():
         driver = RecordingPowerDriver()
         group = _group(driver)
         driver.state = PowerChannelState(
-            voltage=9.0,
+            voltage=9.5,
             current=1.0,
             current_limit=1.2,
             output_enabled=True,
-            voltage_setpoint=9.0,
+            voltage_setpoint=9.5,
             ovp=10.0,
             ocp=1.0,
         )
@@ -177,6 +177,28 @@ def test_protection_status_tracks_ninety_and_one_hundred_percent_thresholds():
         assert group.OVP_ALARM.value == "Off"
         assert group.OCP_WARNING.value == "On"
         assert group.OCP_ALARM.value == "On"
+
+    asyncio.run(scenario())
+
+
+def test_first_poll_reconciles_output_setting_without_hardware_write():
+    async def scenario():
+        driver = RecordingPowerDriver()
+        driver.state = PowerChannelState(
+            voltage=12.0,
+            current=0.1,
+            current_limit=0.5,
+            output_enabled=True,
+            voltage_setpoint=12.0,
+            ovp=15.0,
+            ocp=1.0,
+        )
+        group = _group(driver)
+
+        await group.poll_device()
+
+        assert group.OUTPUT_SET.value is True
+        assert ("set_output", 1, True) not in driver.calls
 
     asyncio.run(scenario())
 
