@@ -16,7 +16,7 @@ pv-list:
 	bdx-pv-list --config-dir config
 
 displays:
-	bdx-generate-displays --config-dir config --output-dir phoebus/displays
+	bdx-generate-displays --catalog config/display-catalogs/deployed-prototype.json --output-dir phoebus/displays
 
 run-psu:
 	bdx-psu-ioc --config config/psu.json
