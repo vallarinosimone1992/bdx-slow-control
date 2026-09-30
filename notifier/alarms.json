@@ -108,7 +108,13 @@
           "recovery_seconds": 5,
           "limit_description": "OUTPUT_RBV must equal OUTPUT_SET",
           "group": "{name}-output",
-          "optional": "{optional}"
+          "optional": "{optional}",
+          "conditions": [
+            {
+              "pv": "{prefix}:OUTPUT_MONITOR_READY",
+              "operator": "truthy"
+            }
+          ]
         },
         {
           "id": "{name}-ovp-proximity",
