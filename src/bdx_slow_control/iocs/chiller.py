@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import math
+import time
 from functools import partial
 
 from caproto import ChannelType
@@ -25,6 +26,9 @@ def _pv_boolean(value) -> bool:
             return False
         raise ValueError(f"Unsupported boolean PV value: {value!r}")
     return bool(value)
+
+
+CHILLER_SETTLING_TIMEOUT_SECONDS = 300.0
 
 
 class ChillerIOC(ManagedIOC):
@@ -69,6 +73,7 @@ class ChillerIOC(ManagedIOC):
     DEVIATION_WARNING = pvproperty(value=False, dtype=bool, read_only=True)
     DEVIATION_ALARM = pvproperty(value=False, dtype=bool, read_only=True)
     DEVIATION_STATUS = pvproperty(value="UNKNOWN", dtype=ChannelType.STRING, read_only=True)
+    DEVIATION_SETTLING = pvproperty(value=False, dtype=bool, read_only=True)
 
     def __init__(
         self,
@@ -85,6 +90,7 @@ class ChillerIOC(ManagedIOC):
         self.warning_deviation_c = float(warning_deviation_c)
         self.alarm_deviation_c = float(alarm_deviation_c)
         self._setpoint_request_initialized = False
+        self._settling_started_at: float | None = None
         self._driver_executor = driver_executor or ThreadPoolExecutor(
             max_workers=1,
             thread_name_prefix="bdx-chiller",
@@ -158,7 +164,20 @@ class ChillerIOC(ManagedIOC):
             await self.SETPOINT_REQUEST.write(value=state.setpoint_c)
             self._setpoint_request_initialized = True
 
+    def _start_settling(self) -> None:
+        self._settling_started_at = time.monotonic()
+
     async def _write_deviation(self, controlled_temperature_c: float, setpoint_c: float) -> None:
+        running = _pv_boolean(self.RUN_RBV.value)
+        if not running:
+            self._settling_started_at = None
+            await self.DEVIATION_SETTLING.write(value=False)
+            await self.TEMPERATURE_DEVIATION_RBV.write(value=math.nan)
+            await self.DEVIATION_WARNING.write(value=False)
+            await self.DEVIATION_ALARM.write(value=False)
+            await self.DEVIATION_STATUS.write(value="STANDBY")
+            return
+
         if not math.isfinite(controlled_temperature_c) or not math.isfinite(setpoint_c):
             await self.TEMPERATURE_DEVIATION_RBV.write(value=math.nan)
             await self.DEVIATION_WARNING.write(value=False)
@@ -167,6 +186,21 @@ class ChillerIOC(ManagedIOC):
             return
 
         deviation = abs(controlled_temperature_c - setpoint_c)
+        if self._settling_started_at is not None:
+            elapsed = time.monotonic() - self._settling_started_at
+            if deviation < self.warning_deviation_c:
+                self._settling_started_at = None
+            elif elapsed < CHILLER_SETTLING_TIMEOUT_SECONDS:
+                await self.DEVIATION_SETTLING.write(value=True)
+                await self.TEMPERATURE_DEVIATION_RBV.write(value=deviation)
+                await self.DEVIATION_WARNING.write(value=False)
+                await self.DEVIATION_ALARM.write(value=False)
+                await self.DEVIATION_STATUS.write(value="SETTLING")
+                return
+            else:
+                self._settling_started_at = None
+
+        await self.DEVIATION_SETTLING.write(value=False)
         alarm = deviation >= self.alarm_deviation_c
         warning = deviation >= self.warning_deviation_c
         await self.TEMPERATURE_DEVIATION_RBV.write(value=deviation)
@@ -186,6 +220,7 @@ class ChillerIOC(ManagedIOC):
         self._validate_setpoint(value)
         try:
             await self._run_driver("set_setpoint", value)
+            self._start_settling()
         except Exception as exc:
             await self.mark_failure(exc)
             raise
@@ -206,6 +241,7 @@ class ChillerIOC(ManagedIOC):
 
         try:
             await self._run_driver("set_setpoint", requested)
+            self._start_settling()
             state = await self._run_driver("read_state")
         except Exception as exc:
             await self.APPLY_STATUS.write(value="FAILED")
@@ -225,6 +261,10 @@ class ChillerIOC(ManagedIOC):
         running = _pv_boolean(value)
         try:
             await self._run_driver("set_running", running)
+            if running:
+                self._start_settling()
+            else:
+                self._settling_started_at = None
         except Exception as exc:
             await self.mark_failure(exc)
             raise
