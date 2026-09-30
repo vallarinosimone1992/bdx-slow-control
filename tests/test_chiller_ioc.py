@@ -123,7 +123,7 @@ def _group(driver=None, runtime_settings=None):
         runtime_settings=runtime_settings or RuntimeSettings(),
         minimum_setpoint_c=5.0,
         maximum_setpoint_c=40.0,
-        warning_deviation_c=0.2,
+        warning_deviation_c=0.3,
         alarm_deviation_c=0.5,
     )
 
@@ -210,6 +210,42 @@ def test_chiller_settling_suppresses_deviation_until_recovered_or_timeout():
             group.close()
 
     asyncio.run(scenario())
+
+def test_chiller_settling_requires_ten_seconds_continuously_in_band():
+    async def scenario():
+        driver = RecordingChillerDriver()
+        group = _group(driver)
+        try:
+            driver.state = replace(
+                driver.state,
+                running=True,
+                controlled_temperature_c=20.25,
+                setpoint_c=20.0,
+            )
+            with patch(
+                "bdx_slow_control.iocs.chiller.time.monotonic",
+                side_effect=[0.0, 1.0, 6.0, 11.0],
+            ):
+                group._start_settling()
+
+                await group._write_state(driver.state)
+                assert group.DEVIATION_SETTLING.value == "On"
+                assert group.DEVIATION_STATUS.value == "SETTLING"
+
+                await group._write_state(driver.state)
+                assert group.DEVIATION_SETTLING.value == "On"
+                assert group.DEVIATION_STATUS.value == "SETTLING"
+
+                await group._write_state(driver.state)
+                assert group.DEVIATION_SETTLING.value == "Off"
+                assert group.DEVIATION_STATUS.value == "OK"
+                assert group.DEVIATION_WARNING.value == "Off"
+                assert group.DEVIATION_ALARM.value == "Off"
+        finally:
+            group.close()
+
+    asyncio.run(scenario())
+
 
 def test_chiller_setpoint_request_does_not_change_hardware_before_apply():
     async def scenario():
