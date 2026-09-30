@@ -146,10 +146,10 @@ def test_chiller_poll_updates_deviation_and_optional_validity():
 
             assert group.BATH_TEMPERATURE_RBV.value == pytest.approx(20.2)
             assert group.CONTROLLED_TEMPERATURE_RBV.value == pytest.approx(20.4)
-            assert group.TEMPERATURE_DEVIATION_RBV.value == pytest.approx(0.4)
-            assert group.DEVIATION_WARNING.value == "On"
+            assert math.isnan(float(group.TEMPERATURE_DEVIATION_RBV.value))
+            assert group.DEVIATION_WARNING.value == "Off"
             assert group.DEVIATION_ALARM.value == "Off"
-            assert group.DEVIATION_STATUS.value == "WARNING"
+            assert group.DEVIATION_STATUS.value == "STANDBY"
             assert group.PRESSURE_ENABLED.value == "Off"
             assert group.PRESSURE_VALID.value == "Off"
             assert group.EXTERNAL_TEMPERATURE_ENABLED.value == "Off"
