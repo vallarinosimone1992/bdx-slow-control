@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Configurable EPICS-to-Telegram alarm notifier for BDX."""
+"""Configurable EPICS alarm notifier for BDX (Telegram and email)."""
 
 from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass, replace
+from email.message import EmailMessage
 from html import escape
 import json
 import logging
@@ -13,6 +14,7 @@ import os
 from pathlib import Path
 import queue
 import signal
+import smtplib
 import sys
 import threading
 import time
@@ -34,8 +36,21 @@ class ConfigurationError(ValueError):
     """Raised when alarms.json is invalid."""
 
 
-class TelegramDeliveryError(RuntimeError):
+class NotificationDeliveryError(RuntimeError):
+    """Base class for notification delivery failures."""
+
+
+class TelegramDeliveryError(NotificationDeliveryError):
     """Raised without exposing the bot token in an exception message."""
+
+
+class EmailDeliveryError(NotificationDeliveryError):
+    """Raised for SMTP delivery failures."""
+
+
+@dataclass(frozen=True)
+class NotificationPolicy:
+    routing: dict[str, tuple[str, ...]]
 
 
 @dataclass(frozen=True)
@@ -209,6 +224,7 @@ Rule = NumericRule | StateRule | StaleRule | ComparisonRule | RangeRule
 class NotifierConfig:
     defaults: NumericPolicy
     telegram: TelegramPolicy
+    notifications: NotificationPolicy
     rules: tuple[Rule, ...]
 
     @property
@@ -398,6 +414,27 @@ def _parse_people(raw: dict[str, Any]) -> TelegramPolicy:
     )
 
 
+def _parse_notifications(raw: dict[str, Any]) -> NotificationPolicy:
+    default = {
+        "MINOR": ("telegram",),
+        "MAJOR": ("telegram", "email"),
+        "INTERLOCK": ("telegram", "email"),
+    }
+    routing: dict[str, tuple[str, ...]] = {}
+    for level in LEVEL_RANK:
+        value = raw.get(level, list(default[level]))
+        if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
+            raise ConfigurationError(f"notifications.{level} must be a list of channel names")
+        channels = tuple(dict.fromkeys(item.strip().lower() for item in value if item.strip()))
+        unknown = sorted(set(channels).difference({"telegram", "email"}))
+        if unknown:
+            raise ConfigurationError(
+                f"notifications.{level} contains unsupported channels: {unknown}"
+            )
+        routing[level] = channels
+    return NotificationPolicy(routing=routing)
+
+
 def telegram_policy_from_environment(policy: TelegramPolicy) -> TelegramPolicy:
     """Apply private Telegram recipient overrides from config.env."""
     people_value = os.getenv("TELEGRAM_PEOPLE", "").strip()
@@ -493,9 +530,14 @@ def load_config(path: Path) -> NotifierConfig:
 
     defaults_raw = raw.get("defaults", {})
     telegram_raw = raw.get("telegram", {})
+    notifications_raw = raw.get("notifications", {})
     alarm_items = _expanded_alarm_items(raw)
-    if not isinstance(defaults_raw, dict) or not isinstance(telegram_raw, dict):
-        raise ConfigurationError("defaults and telegram must be objects")
+    if (
+        not isinstance(defaults_raw, dict)
+        or not isinstance(telegram_raw, dict)
+        or not isinstance(notifications_raw, dict)
+    ):
+        raise ConfigurationError("defaults, telegram and notifications must be objects")
     defaults = _policy_from_mapping(defaults_raw)
     rules: list[Rule] = []
     seen_ids: set[str] = set()
@@ -691,6 +733,7 @@ def load_config(path: Path) -> NotifierConfig:
     return NotifierConfig(
         defaults=defaults,
         telegram=_parse_people(telegram_raw),
+        notifications=_parse_notifications(notifications_raw),
         rules=tuple(rules),
     )
 
@@ -1286,11 +1329,120 @@ class TelegramSender:
         self._session.close()
 
 
+class EmailSender:
+    def __init__(
+        self,
+        *,
+        enabled: bool,
+        server: str,
+        port: int,
+        from_address: str | None,
+        to_addresses: tuple[str, ...],
+        dry_run: bool,
+    ) -> None:
+        self.enabled = bool(enabled)
+        self.server = server
+        self.port = int(port)
+        self.from_address = (from_address or "").strip()
+        self.to_addresses = tuple(address.strip() for address in to_addresses if address.strip())
+        self.dry_run = dry_run
+        if self.enabled and not self.dry_run:
+            if not self.server:
+                raise ConfigurationError("SMTP_SERVER is required when SMTP is enabled")
+            if not self.from_address:
+                raise ConfigurationError("SMTP_FROM is required when SMTP is enabled")
+            if not self.to_addresses:
+                raise ConfigurationError("SMTP_TO is required when SMTP is enabled")
+
+    def send_event(self, event: AlarmEvent) -> None:
+        heading = f"RESOLVED {event.level}" if event.resolved else event.level
+        subject = f"[BDX][{heading}] {event.label}"
+        lines = [
+            f"BDX Slow Control - {heading}",
+            "",
+            f"Condition: {event.label}",
+            f"PV: {event.pv}",
+            f"Value: {event.value}",
+            f"Limit: {event.limit}",
+        ]
+        if event.deviation_percent is not None:
+            lines.append(f"Deviation: {event.deviation_percent:.2f}%")
+        self._send(subject, "\n".join(lines))
+
+    def send_test_message(self) -> None:
+        self._send(
+            "[BDX Slow Control] Email test",
+            "BDX Slow Control email notification test.\n"
+            "No EPICS PV was read or written.",
+        )
+
+    def _send(self, subject: str, body: str) -> None:
+        if not self.enabled:
+            LOG.info("Email delivery disabled; skipping subject %s", subject)
+            return
+        if self.dry_run:
+            LOG.info("DRY RUN email to %s: %s\n%s", self.to_addresses, subject, body)
+            return
+        msg = EmailMessage()
+        msg["From"] = self.from_address
+        msg["To"] = ", ".join(self.to_addresses)
+        msg["Subject"] = subject
+        msg.set_content(body)
+        try:
+            with smtplib.SMTP(self.server, self.port, timeout=10) as smtp:
+                smtp.send_message(msg)
+        except (OSError, smtplib.SMTPException) as exc:
+            raise EmailDeliveryError(
+                f"SMTP delivery failed via {self.server}:{self.port} "
+                f"({type(exc).__name__}: {exc})"
+            ) from exc
+
+
+class NotificationSender:
+    def __init__(
+        self,
+        policy: NotificationPolicy,
+        telegram: TelegramSender,
+        email: EmailSender,
+    ) -> None:
+        self.policy = policy
+        self.telegram = telegram
+        self.email = email
+
+    def send_event(self, event: AlarmEvent) -> None:
+        errors: list[str] = []
+        for channel in self.policy.routing.get(event.level, ()):
+            try:
+                if channel == "telegram":
+                    self.telegram.send_event(event)
+                elif channel == "email":
+                    self.email.send_event(event)
+            except NotificationDeliveryError as exc:
+                errors.append(str(exc))
+        if errors:
+            raise NotificationDeliveryError("; ".join(errors))
+
+    def send_connection_event(self, *, resolved: bool, detail: str) -> None:
+        event = AlarmEvent(
+            rule_id="epics-connection",
+            label=detail,
+            pv="EPICS Channel Access",
+            level="MAJOR",
+            resolved=resolved,
+            value=resolved,
+            limit="all configured PVs must remain connected",
+        )
+        self.send_event(event)
+
+    def close(self) -> None:
+        self.telegram.close()
+
+
 class BdxNotifier:
     def __init__(
         self,
         config: NotifierConfig,
-        sender: TelegramSender,
+        sender: NotificationSender,
         *,
         notify_initial: bool,
         connection_timeout: float,
@@ -1359,8 +1511,8 @@ class BdxNotifier:
         for reduced_event in self.group_reducer.process(event):
             try:
                 self.sender.send_event(reduced_event)
-            except TelegramDeliveryError as exc:
-                LOG.error("%s; event %s was not delivered", exc, reduced_event.rule_id)
+            except NotificationDeliveryError as exc:
+                LOG.error("%s; event %s was not fully delivered", exc, reduced_event.rule_id)
 
     def _process_value(self, pv_name: str, value: Any, now: float) -> None:
         self.engine.set_sample(pv_name, value, now)
@@ -1428,7 +1580,7 @@ class BdxNotifier:
                         event.resolved,
                     )
                     self._deliver(event)
-            except TelegramDeliveryError as exc:
+            except NotificationDeliveryError as exc:
                 LOG.error("%s", exc)
             except Exception:
                 LOG.exception("Failed to process notifier event for %s", pv_name)
@@ -1457,6 +1609,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="send one Telegram test message and exit without connecting to EPICS",
     )
+    parser.add_argument(
+        "--test-email",
+        action="store_true",
+        help="send one email test message and exit without connecting to EPICS",
+    )
     parser.add_argument("--notify-initial", action="store_true")
     parser.add_argument("--connection-timeout", type=float, default=5.0)
     parser.add_argument("--retry-seconds", type=float, default=5.0)
@@ -1480,25 +1637,53 @@ def main(argv: list[str] | None = None) -> int:
             config,
             telegram=telegram_policy_from_environment(config.telegram),
         )
-        sender = TelegramSender(
+        telegram_sender = TelegramSender(
             os.getenv("TELEGRAM_BOT_TOKEN"),
             os.getenv("TELEGRAM_CHAT_ID"),
             config.telegram,
             dry_run=args.dry_run,
         )
-    except ConfigurationError as exc:
+        smtp_enabled = os.getenv("SMTP_ENABLED", "false").strip().lower() in {
+            "1", "true", "yes", "on"
+        }
+        smtp_to = tuple(
+            item.strip()
+            for item in os.getenv("SMTP_TO", "").split(",")
+            if item.strip()
+        )
+        email_sender = EmailSender(
+            enabled=smtp_enabled,
+            server=os.getenv("SMTP_SERVER", "smtp3.ge.infn.it").strip(),
+            port=int(os.getenv("SMTP_PORT", "25")),
+            from_address=os.getenv("SMTP_FROM"),
+            to_addresses=smtp_to,
+            dry_run=args.dry_run,
+        )
+        sender = NotificationSender(config.notifications, telegram_sender, email_sender)
+    except (ConfigurationError, ValueError) as exc:
         LOG.error("%s", exc)
         return 2
 
     if args.test_telegram:
         try:
-            sender.send_test_message()
+            telegram_sender.send_test_message()
         except TelegramDeliveryError as exc:
             LOG.error("%s", exc)
             return 1
         finally:
-            sender.close()
+            telegram_sender.close()
         LOG.info("Telegram test message delivered")
+        return 0
+
+    if args.test_email:
+        try:
+            email_sender.send_test_message()
+        except EmailDeliveryError as exc:
+            LOG.error("%s", exc)
+            return 1
+        finally:
+            telegram_sender.close()
+        LOG.info("Email test message delivered")
         return 0
 
     notifier = BdxNotifier(
