@@ -163,27 +163,6 @@
           "enabled": "{lv_monitoring}"
         },
         {
-          "id": "{name}-current-change-10s",
-          "kind": "comparison",
-          "label": "{name} current changed by at least 10% within 10 seconds",
-          "pv": "{prefix}:CURRENT_CHANGE_10S_PERCENT",
-          "operator": "lt",
-          "reference": {
-            "value": 10
-          },
-          "stages": [
-            {
-              "level": "MINOR",
-              "after_seconds": 0
-            }
-          ],
-          "recovery_seconds": 5,
-          "limit_description": "10 s current change must remain below 10%",
-          "group": "{name}-current-dynamics",
-          "optional": "{optional}",
-          "enabled": "{lv_monitoring}"
-        },
-        {
           "id": "{name}-current-change-2s",
           "kind": "comparison",
           "label": "{name} current changed by at least 10% within 2 seconds",
@@ -205,13 +184,13 @@
           "enabled": "{lv_monitoring}"
         },
         {
-          "id": "{name}-voltage-span-minor",
+          "id": "{name}-current-change-10s",
           "kind": "comparison",
-          "label": "{name} voltage readback span exceeds 0.1 V over 30 seconds",
-          "pv": "{prefix}:VOLTAGE_SPAN_30S",
-          "operator": "lte",
+          "label": "{name} current changed by at least 10% within 10 seconds",
+          "pv": "{prefix}:CURRENT_CHANGE_10S_PERCENT",
+          "operator": "lt",
           "reference": {
-            "value": 0.1
+            "value": 10
           },
           "stages": [
             {
@@ -220,8 +199,8 @@
             }
           ],
           "recovery_seconds": 5,
-          "limit_description": "30 s voltage span must remain below 0.1 V",
-          "group": "{name}-voltage-stability",
+          "limit_description": "10 s current change must remain below 10%",
+          "group": "{name}-current-dynamics",
           "optional": "{optional}",
           "enabled": "{lv_monitoring}"
         },
@@ -242,6 +221,27 @@
           ],
           "recovery_seconds": 5,
           "limit_description": "30 s voltage span must remain below 0.5 V",
+          "group": "{name}-voltage-stability",
+          "optional": "{optional}",
+          "enabled": "{lv_monitoring}"
+        },
+        {
+          "id": "{name}-voltage-span-minor",
+          "kind": "comparison",
+          "label": "{name} voltage readback span exceeds 0.1 V over 30 seconds",
+          "pv": "{prefix}:VOLTAGE_SPAN_30S",
+          "operator": "lte",
+          "reference": {
+            "value": 0.1
+          },
+          "stages": [
+            {
+              "level": "MINOR",
+              "after_seconds": 0
+            }
+          ],
+          "recovery_seconds": 5,
+          "limit_description": "30 s voltage span must remain below 0.1 V",
           "group": "{name}-voltage-stability",
           "optional": "{optional}",
           "enabled": "{lv_monitoring}"
