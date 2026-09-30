@@ -102,6 +102,7 @@ class _CachedChannel:
     output_enabled: bool = False
     ovp: float = 10.0
     ocp: float = 1.0
+    limit_status_latch: int = 0
 
 
 @dataclass
@@ -156,6 +157,8 @@ class CPX400DPDriver(PowerSupplyDriver):
                         )
                 if self.clear_status:
                     self.connection.command("*CLS")
+                    for cached in self._cache.values():
+                        cached.limit_status_latch = 0
                 if self.configure_independent:
                     self.connection.command("CONFIG 2")
             except Exception as exc:
@@ -194,6 +197,7 @@ class CPX400DPDriver(PowerSupplyDriver):
                 output_enabled = self._query_output_enabled(channel)
                 ovp = self._query_numeric(f"OVP{channel}?")
                 ocp = self._query_numeric(f"OCP{channel}?")
+                limit_status = int(round(self._query_numeric(f"LSR{channel}?")))
             except Exception as exc:
                 self._initialized = False
                 self.last_error = exc
@@ -206,6 +210,11 @@ class CPX400DPDriver(PowerSupplyDriver):
             cached.output_enabled = output_enabled
             cached.ovp = ovp
             cached.ocp = ocp
+            # LSR<N>? is a query-and-clear event register.  Keep a software
+            # latch so a protection trip remains visible to EPICS until the
+            # operator explicitly attempts to re-enable the output.
+            cached.limit_status_latch |= limit_status
+            latched = cached.limit_status_latch
             self.last_error = None
             return PowerChannelState(
                 voltage=voltage,
@@ -215,6 +224,12 @@ class CPX400DPDriver(PowerSupplyDriver):
                 voltage_setpoint=voltage_setpoint,
                 ovp=ovp,
                 ocp=ocp,
+                trip_active=bool(latched & (1 << 6)),
+                ocp_tripped=bool(latched & (1 << 3)),
+                ovp_tripped=bool(latched & (1 << 2)),
+                unregulated=bool(latched & (1 << 4)),
+                constant_current=bool(latched & (1 << 1)),
+                constant_voltage=bool(latched & (1 << 0)),
             )
 
     def set_voltage(self, channel: int, value: float) -> None:
@@ -240,6 +255,9 @@ class CPX400DPDriver(PowerSupplyDriver):
         with self._lock:
             self._command(f"OP{channel} {1 if enabled else 0}")
             self._cache[channel].output_enabled = bool(enabled)
+            if enabled:
+                # A fresh enable attempt starts a new protection episode.
+                self._cache[channel].limit_status_latch = 0
 
     def set_ovp(self, channel: int, value: float) -> None:
         channel = self._require_channel(channel)
