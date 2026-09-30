@@ -1076,7 +1076,11 @@ def generate_overview(
     if environment_group:
         overview_groups.append(environment_group)
     overview_groups.extend(groups.get("chiller", []))
-    overview_groups.extend(groups.get("psu", []))
+    overview_groups.extend(
+        group
+        for group in groups.get("psu", [])
+        if group.title.endswith("actual voltage and current")
+    )
 
     plot_rows = (len(overview_groups) + 1) // 2
     display = Display("BDX Slow Control Overview", 1400, max(980, 300 + plot_rows * 405))
