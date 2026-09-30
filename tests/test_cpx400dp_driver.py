@@ -56,6 +56,7 @@ def test_cpx400dp_read_channel_uses_real_hardware_queries():
             "OP1?": "1",
             "OVP1?": "6.000V",
             "OCP1?": "0.700A",
+            "LSR1?": "73",
         }
     )
     driver = CPX400DPDriver(
@@ -72,6 +73,9 @@ def test_cpx400dp_read_channel_uses_real_hardware_queries():
     assert state.output_enabled is True
     assert state.ovp == pytest.approx(6.0)
     assert state.ocp == pytest.approx(0.7)
+    assert state.trip_active is True
+    assert state.ocp_tripped is True
+    assert state.constant_voltage is True
     assert ("query", "V1O?") in connection.calls
     assert ("query", "I1O?") in connection.calls
     assert ("query", "V1?") in connection.calls
@@ -79,6 +83,7 @@ def test_cpx400dp_read_channel_uses_real_hardware_queries():
     assert ("query", "OP1?") in connection.calls
     assert ("query", "OVP1?") in connection.calls
     assert ("query", "OCP1?") in connection.calls
+    assert ("query", "LSR1?") in connection.calls
 
 
 def test_cpx400dp_setters_use_official_command_syntax():
