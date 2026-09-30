@@ -15,6 +15,12 @@ class PowerChannelState:
     voltage_setpoint: float = 0.0
     ovp: float = 0.0
     ocp: float = 0.0
+    trip_active: bool = False
+    ocp_tripped: bool = False
+    ovp_tripped: bool = False
+    unregulated: bool = False
+    constant_current: bool = False
+    constant_voltage: bool = False
 
 
 @dataclass(frozen=True)
@@ -118,6 +124,9 @@ class PowerSupplyDriver(BaseDriver, ABC):
 
     def set_simulated_output_readback(self, channel: int, value: bool | None) -> None:
         raise NotImplementedError("Output readback injection is simulation-only")
+
+    def set_simulated_ocp_trip(self, channel: int, active: bool) -> None:
+        raise NotImplementedError("OCP trip injection is simulation-only")
 
 
 class ChillerDriver(BaseDriver, ABC):
