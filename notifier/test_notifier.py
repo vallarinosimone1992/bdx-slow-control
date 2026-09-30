@@ -326,6 +326,25 @@ class AlarmEngineTests(unittest.TestCase):
         self.assertIn("BDX:GLOBAL:INTERLOCK_ACTIVE", config.required_pvs)
         self.assertTrue(any(rule.rule_id == "chiller-temperature-deviation" for rule in config.rules))
 
+
+    def test_global_ready_rule_is_suppressed_in_standby_and_safe(self):
+        config = load_config(DEFAULT_CONFIG_FILE)
+        rule = next(rule for rule in config.rules if rule.rule_id == "global-ready")
+        engine = AlarmEngine(config_for(rule))
+
+        engine.set_sample("BDX:GLOBAL:READY", False, 0.0)
+        engine.set_sample("BDX:GLOBAL:SYSTEM_STATE", "STANDBY", 0.0)
+        engine.prime(0.0, notify_initial=False)
+        self.assertEqual(engine.evaluate(10.0), [])
+
+        engine.set_sample("BDX:GLOBAL:SYSTEM_STATE", "SAFE", 11.0)
+        self.assertEqual(engine.evaluate(20.0), [])
+
+        engine.set_sample("BDX:GLOBAL:SYSTEM_STATE", "RUNNING", 21.0)
+        self.assertEqual(engine.evaluate(25.9), [])
+        events = engine.evaluate(26.0)
+        self.assertEqual([(event.level, event.resolved) for event in events], [("MINOR", False)])
+
     def test_mentions_follow_level_policy(self):
         people = {
             101: Person(user_id=101, name="Major Operator"),
