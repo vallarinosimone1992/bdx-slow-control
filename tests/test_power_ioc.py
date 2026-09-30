@@ -1,4 +1,5 @@
 import asyncio
+import math
 from unittest.mock import patch
 
 import pytest
@@ -236,6 +237,57 @@ def test_hardware_ocp_trip_drives_interlock_after_twenty_seconds():
 
     asyncio.run(scenario())
 
+
+
+def test_low_voltage_diagnostics_ignore_commanded_transient_during_grace_period():
+    async def scenario():
+        driver = RecordingPowerDriver()
+        group = _group(driver)
+        driver.state = PowerChannelState(
+            voltage=12.0,
+            current=0.1,
+            current_limit=0.5,
+            output_enabled=True,
+            voltage_setpoint=12.0,
+            ovp=15.0,
+            ocp=1.0,
+        )
+
+        with patch(
+            "bdx_slow_control.iocs.power.time.monotonic",
+            side_effect=[0.0, 1.0, 5.0, 7.0],
+        ):
+            await group._write_diagnostics(driver.state)
+            assert math.isnan(float(group.CURRENT_CHANGE_2S_PERCENT.value))
+
+            driver.state = PowerChannelState(
+                voltage=12.0,
+                current=1.0,
+                current_limit=0.5,
+                output_enabled=True,
+                voltage_setpoint=12.0,
+                ovp=15.0,
+                ocp=1.0,
+            )
+            await group._write_diagnostics(driver.state)
+            assert math.isnan(float(group.CURRENT_CHANGE_2S_PERCENT.value))
+
+            await group._write_diagnostics(driver.state)
+            assert math.isnan(float(group.CURRENT_CHANGE_2S_PERCENT.value))
+
+            driver.state = PowerChannelState(
+                voltage=12.0,
+                current=1.3,
+                current_limit=0.5,
+                output_enabled=True,
+                voltage_setpoint=12.0,
+                ovp=15.0,
+                ocp=1.0,
+            )
+            await group._write_diagnostics(driver.state)
+            assert float(group.CURRENT_CHANGE_2S_PERCENT.value) > 10.0
+
+    asyncio.run(scenario())
 
 def test_low_voltage_diagnostic_pvs_are_exposed():
     pvdb, _ = build_psu(load_json(Path("config/profiles/main-server/psu.json")))
