@@ -128,6 +128,27 @@ class AlarmEngineTests(unittest.TestCase):
             [("MAJOR", True)],
         )
 
+    def test_near_zero_deviation_uses_reference_floor(self):
+        rule = NumericRule(
+            rule_id="voltage",
+            label="Voltage deviation",
+            pv="VALUE",
+            mode="deviation",
+            reference_pv="SETPOINT",
+            reference_value=None,
+            policy=NumericPolicy(),
+            reference_floor=0.2,
+        )
+        engine = AlarmEngine(config_for(rule))
+        engine.set_sample("VALUE", 0.001, 0.0)
+        engine.set_sample("SETPOINT", 0.0, 0.0)
+        self.assertEqual(engine.prime(0.0, notify_initial=False), [])
+        self.assertEqual(engine.evaluate(30.0), [])
+
+        engine.set_sample("VALUE", 0.03, 31.0)
+        events = engine.evaluate(31.0)
+        self.assertEqual([(event.level, event.resolved) for event in events], [("MAJOR", False)])
+
     def test_direct_major_above_ten_percent_is_immediate(self):
         rule = NumericRule(
             rule_id="temperature",
