@@ -1,6 +1,7 @@
 import asyncio
 import math
 import threading
+from unittest.mock import patch
 import time
 
 import pytest
@@ -157,6 +158,57 @@ def test_chiller_poll_updates_deviation_and_optional_validity():
 
     asyncio.run(scenario())
 
+
+
+def test_chiller_deviation_is_suppressed_while_stopped():
+    async def scenario():
+        driver = RecordingChillerDriver()
+        group = _group(driver)
+        try:
+            driver.state = replace(
+                driver.state,
+                running=False,
+                controlled_temperature_c=25.0,
+                setpoint_c=20.0,
+            )
+            await group._write_state(driver.state)
+            assert group.DEVIATION_STATUS.value == "STANDBY"
+            assert group.DEVIATION_WARNING.value == "Off"
+            assert group.DEVIATION_ALARM.value == "Off"
+        finally:
+            group.close()
+
+    asyncio.run(scenario())
+
+
+def test_chiller_settling_suppresses_deviation_until_recovered_or_timeout():
+    async def scenario():
+        driver = RecordingChillerDriver()
+        group = _group(driver)
+        try:
+            driver.state = replace(
+                driver.state,
+                running=True,
+                controlled_temperature_c=25.0,
+                setpoint_c=20.0,
+            )
+            with patch(
+                "bdx_slow_control.iocs.chiller.time.monotonic",
+                side_effect=[0.0, 1.0, 301.0],
+            ):
+                group._start_settling()
+                await group._write_state(driver.state)
+                assert group.DEVIATION_SETTLING.value == "On"
+                assert group.DEVIATION_STATUS.value == "SETTLING"
+                assert group.DEVIATION_ALARM.value == "Off"
+
+                await group._write_state(driver.state)
+                assert group.DEVIATION_SETTLING.value == "Off"
+                assert group.DEVIATION_ALARM.value == "On"
+        finally:
+            group.close()
+
+    asyncio.run(scenario())
 
 def test_chiller_setpoint_request_does_not_change_hardware_before_apply():
     async def scenario():
