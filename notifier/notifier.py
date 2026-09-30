@@ -988,6 +988,17 @@ class AlarmEngine:
                 if rule.reference_pv is not None
                 else rule.reference_value
             )
+            # Rolling diagnostics intentionally publish NaN until their time
+            # window is populated.  Treat unavailable/non-finite numeric
+            # diagnostics as inactive instead of generating startup alarms.
+            try:
+                numeric_value = float(value)
+                numeric_reference = float(reference)
+            except (TypeError, ValueError):
+                pass
+            else:
+                if not math.isfinite(numeric_value) or not math.isfinite(numeric_reference):
+                    return False, value, "diagnostic window not yet available", now
             matches = self._compare(value, reference, rule.operator)
             return not matches, value, rule.limit_description, now
         value = float(self.samples[rule.pv])
