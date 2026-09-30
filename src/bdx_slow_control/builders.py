@@ -23,7 +23,11 @@ from .drivers.factory import (
 from .iocs.chiller import ChillerIOC
 from .iocs.archiver_status import ArchiverStatusIOC
 from .iocs.daq import DaqCrateIOC
-from .iocs.environment import EnvironmentalSensorIOC, EnvironmentSummaryIOC
+from .iocs.environment import (
+    EnvironmentalSensorIOC,
+    EnvironmentSummaryIOC,
+    TemperatureSensorIOC,
+)
 from .iocs.global_system import GlobalIOC
 from .iocs.power import LowVoltagePowerChannelIOC, PowerChannelIOC, PowerChannelLimits, PowerDeviceIOC
 from .runtime import RuntimeSettings
@@ -162,12 +166,20 @@ def build_environment(config: dict[str, Any], context: PrototypeContext | None =
     for raw_sensor in require_list(config, "sensors"):
         if not isinstance(raw_sensor, dict):
             raise ConfigurationError("Each sensor entry must be an object")
+        sensor_kind = str(raw_sensor.get("kind", "unknown"))
+        sensor_class = (
+            TemperatureSensorIOC
+            if sensor_kind == "temperature"
+            else EnvironmentalSensorIOC
+        )
+        sensor_prefix = normalized_prefix(raw_sensor.get("prefix"))
         groups.append(
-            EnvironmentalSensorIOC(
-                prefix=normalized_prefix(raw_sensor.get("prefix")),
+            sensor_class(
+                prefix=sensor_prefix,
                 driver=build_sensor_driver(raw_sensor),
                 unit=str(raw_sensor.get("unit", "")),
-                sensor_kind=str(raw_sensor.get("kind", "unknown")),
+                sensor_kind=sensor_kind,
+                sensor_name=sensor_prefix.rstrip(":"),
                 summary=summary,
                 runtime_settings=context.runtime,
             )
