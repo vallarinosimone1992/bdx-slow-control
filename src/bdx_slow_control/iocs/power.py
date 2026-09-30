@@ -15,6 +15,7 @@ from .common import ManagedIOC
 PSU_FLOAT_PRECISION = 3
 CURRENT_CHANGE_REFERENCE_FLOOR_A = 0.010
 DIAGNOSTIC_HISTORY_SECONDS = 35.0
+DIAGNOSTIC_CONTROL_GRACE_SECONDS = 5.0
 OCP_INTERLOCK_SECONDS = 20.0
 
 
@@ -283,6 +284,8 @@ class LowVoltagePowerChannelIOC(PowerChannelIOC):
         self.limits = limits or PowerChannelLimits()
         self._requests_initialized = False
         self._diagnostic_history = deque()
+        self._diagnostic_control_state: tuple[bool, float, float] | None = None
+        self._diagnostic_grace_until: float | None = None
         self._ocp_trip_started_at: float | None = None
         self._ocp_interlock_active = False
         super().__init__(*args, **kwargs)
@@ -334,13 +337,48 @@ class LowVoltagePowerChannelIOC(PowerChannelIOC):
 
     async def _write_diagnostics(self, state) -> None:
         now = time.monotonic()
+        control_state = (
+            bool(state.output_enabled),
+            float(state.voltage_setpoint),
+            float(state.current_limit),
+        )
+        control_changed = (
+            self._diagnostic_control_state is not None
+            and control_state != self._diagnostic_control_state
+        )
+        first_active_sample = (
+            self._diagnostic_control_state is None
+            and bool(state.output_enabled)
+        )
+        self._diagnostic_control_state = control_state
+
+        if control_changed or first_active_sample:
+            # Operator-commanded changes naturally produce current/voltage
+            # transients.  Drop the previous rolling baseline and allow the
+            # hardware a short settling period before rebuilding diagnostics.
+            self._diagnostic_history.clear()
+            self._diagnostic_grace_until = now + DIAGNOSTIC_CONTROL_GRACE_SECONDS
+
         if not bool(state.output_enabled):
+            self._diagnostic_history.clear()
+            self._diagnostic_grace_until = None
+            await self.CURRENT_CHANGE_2S_PERCENT.write(value=math.nan)
+            await self.CURRENT_CHANGE_10S_PERCENT.write(value=math.nan)
+            await self.VOLTAGE_SPAN_30S.write(value=math.nan)
+            await self.CURRENT_SPAN_30S.write(value=math.nan)
+            return
+
+        if (
+            self._diagnostic_grace_until is not None
+            and now < self._diagnostic_grace_until
+        ):
             self._diagnostic_history.clear()
             await self.CURRENT_CHANGE_2S_PERCENT.write(value=math.nan)
             await self.CURRENT_CHANGE_10S_PERCENT.write(value=math.nan)
             await self.VOLTAGE_SPAN_30S.write(value=math.nan)
             await self.CURRENT_SPAN_30S.write(value=math.nan)
             return
+        self._diagnostic_grace_until = None
 
         sample = (
             now,
