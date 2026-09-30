@@ -101,14 +101,16 @@ The supplied configuration implements:
 - the seven decoded LAUDA `STAT` bits, including low-level escalation from
   `MAJOR` to `INTERLOCK` after 600 seconds;
 - chiller temperature deviation alarms;
-- LV and simulated HV output consistency, setpoint deviation, OVP/OCP
-  proximity, and a 30-second over-current interlock;
-- 10--35 degC provisional ambient temperature limits;
+- LV output consistency and setpoint deviation, hardware OCP trip escalation,
+  2 s / 10 s current-change diagnostics, and 30 s voltage/current stability spans;
+- ambient-temperature monitoring at 15--28 degC, critical 10/35 degC limits,
+  rolling 10-minute / 1-hour temperature changes, and inter-sensor spread;
 - environmental, DAQ, and Archiver health/staleness monitoring.
 
 An `INTERLOCK` level in the notifier is a high-priority notification. The
-notifier remains read-only and does not itself issue `ALLOFF` or other hardware
-commands.
+notifier remains read-only. Hardware actions are implemented in the IOC layer;
+for the CPX400DP hardware OCP event, the affected channel is explicitly commanded
+OFF after 20 seconds as an idempotent safety action.
 
 ## Notification routing
 
