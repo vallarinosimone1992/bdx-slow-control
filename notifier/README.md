@@ -1,7 +1,9 @@
 # BDX Notifier
 
 Persistent EPICS Channel Access monitor for BDX slow-control alarms. Alarm
-rules, timing, thresholds, and Telegram recipients are stored in `alarms.json`.
+rules, timing, thresholds, and notification routing are stored in `alarms.json`.
+MINOR alarms are routed to Telegram; MAJOR and INTERLOCK alarms are routed to
+Telegram and email by default.
 
 ## Installation
 
@@ -15,8 +17,19 @@ chmod 600 "$HOME/.config/bdx-notifier/config.env"
 ```
 
 Edit `$HOME/.config/bdx-notifier/config.env` and insert
-`TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`. The real file must stay outside
-the checkout and out of version control.
+`TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`. On the INFN Genova slow-control
+host also enable the institutional SMTP relay:
+
+```text
+SMTP_ENABLED=true
+SMTP_SERVER=smtp3.ge.infn.it
+SMTP_PORT=25
+SMTP_FROM=svallarino@ge.infn.it
+SMTP_TO=bdx-slow-control-notification@ge.infn.it
+```
+
+The real file must stay outside the checkout and out of version control. SMTP
+uses the host-authorized relay and does not store an SMTP username or password.
 
 ## Alarm policy
 
@@ -96,6 +109,26 @@ The supplied configuration implements:
 An `INTERLOCK` level in the notifier is a high-priority notification. The
 notifier remains read-only and does not itself issue `ALLOFF` or other hardware
 commands.
+
+## Notification routing
+
+The default routing is configured in `alarms.json`:
+
+- `MINOR`: Telegram;
+- `MAJOR`: Telegram and email;
+- `INTERLOCK`: Telegram and email.
+
+Resolution messages use the same level and therefore the same channels as the
+alarm that was announced. Delivery failures are logged and never block IOC or
+hardware interlock logic.
+
+Test SMTP delivery without connecting to EPICS:
+
+```bash
+.venv/bin/python notifier/notifier.py \
+  --env-file "$HOME/.config/bdx-notifier/config.env" \
+  --test-email
+```
 
 ## Telegram mentions
 
