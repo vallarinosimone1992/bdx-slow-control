@@ -205,6 +205,42 @@ def test_first_poll_reconciles_output_setting_without_hardware_write():
     asyncio.run(scenario())
 
 
+
+def test_output_mismatch_monitor_rearms_only_after_next_poll():
+    async def scenario():
+        driver = RecordingPowerDriver()
+        group = _group(driver)
+        driver.state = PowerChannelState(
+            voltage=12.0,
+            current=0.1,
+            current_limit=0.5,
+            output_enabled=True,
+            voltage_setpoint=12.0,
+            ovp=15.0,
+            ocp=1.0,
+        )
+
+        await group.poll_device()
+        assert group.OUTPUT_MONITOR_READY.value == "On"
+
+        await group.OUTPUT_SET.write(value=False)
+        assert group.OUTPUT_MONITOR_READY.value == "Off"
+
+        driver.state = PowerChannelState(
+            voltage=0.0,
+            current=0.0,
+            current_limit=0.5,
+            output_enabled=False,
+            voltage_setpoint=12.0,
+            ovp=15.0,
+            ocp=1.0,
+        )
+        await group.poll_device()
+        assert group.OUTPUT_RBV.value == "Off"
+        assert group.OUTPUT_MONITOR_READY.value == "On"
+
+    asyncio.run(scenario())
+
 def test_hardware_ocp_trip_drives_interlock_after_twenty_seconds():
     async def scenario():
         driver = RecordingPowerDriver()
