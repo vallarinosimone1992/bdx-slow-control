@@ -495,11 +495,11 @@
           "stages": [
             {
               "level": "MINOR",
-              "after_seconds": 5
+              "after_seconds": 10
             },
             {
               "level": "MAJOR",
-              "after_seconds": 20
+              "after_seconds": 60
             }
           ],
           "recovery_seconds": 5,
@@ -646,11 +646,11 @@
       "stages": [
         {
           "level": "MINOR",
-          "after_seconds": 5
+          "after_seconds": 10
         },
         {
           "level": "MAJOR",
-          "after_seconds": 20
+          "after_seconds": 60
         }
       ],
       "recovery_seconds": 5,
