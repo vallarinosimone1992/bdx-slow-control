@@ -1546,24 +1546,22 @@ class BdxNotifier:
             self.connected_pvs.add(pv_name)
             if set(self.config.mandatory_pvs).issubset(self.connected_pvs):
                 if self.connection_baseline_ready and self.connection_alarm_active:
-                    self.sender.send_connection_event(
-                        resolved=True,
-                        detail="All monitored EPICS PVs reconnected",
-                    )
+                    LOG.info("All mandatory EPICS PVs reconnected")
                 self.connection_baseline_ready = True
                 self.connection_alarm_active = False
             return
+
         self.connected_pvs.discard(pv_name)
         if (
             pv_name in self.config.mandatory_pvs
             and self.connection_baseline_ready
             and not self.connection_alarm_active
         ):
+            # Do not bypass the configured alarm delays with an immediate
+            # email/Telegram message here.  COMM_OK and heartbeat/stale rules
+            # implement the 10 s MINOR / 60 s MAJOR communication policy.
             self.connection_alarm_active = True
-            self.sender.send_connection_event(
-                resolved=False,
-                detail=f"First unavailable PV: {pv_name}",
-            )
+            LOG.warning("Mandatory EPICS PV disconnected: %s", pv_name)
 
     def run(self) -> None:
         self.connect()
