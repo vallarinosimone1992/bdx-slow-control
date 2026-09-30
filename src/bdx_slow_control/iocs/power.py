@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from collections import deque
 from dataclasses import dataclass
 import math
+import time
 
 from caproto import ChannelType
 from caproto.server import pvproperty
@@ -11,6 +13,9 @@ from caproto.server import pvproperty
 from .common import ManagedIOC
 
 PSU_FLOAT_PRECISION = 3
+CURRENT_CHANGE_REFERENCE_FLOOR_A = 0.010
+DIAGNOSTIC_HISTORY_SECONDS = 35.0
+OCP_INTERLOCK_SECONDS = 20.0
 
 
 @dataclass(frozen=True)
@@ -110,8 +115,15 @@ class PowerChannelIOC(ManagedIOC):
     OVP_ALARM = pvproperty(value=False, dtype=bool, read_only=True)
     OCP_WARNING = pvproperty(value=False, dtype=bool, read_only=True)
     OCP_ALARM = pvproperty(value=False, dtype=bool, read_only=True)
+    TRIP_ACTIVE = pvproperty(value=False, dtype=bool, read_only=True)
+    OCP_TRIPPED = pvproperty(value=False, dtype=bool, read_only=True)
+    OVP_TRIPPED = pvproperty(value=False, dtype=bool, read_only=True)
+    UNREGULATED = pvproperty(value=False, dtype=bool, read_only=True)
+    CONSTANT_CURRENT = pvproperty(value=False, dtype=bool, read_only=True)
+    CONSTANT_VOLTAGE = pvproperty(value=False, dtype=bool, read_only=True)
     SIM_CURRENT_SET = pvproperty(value=math.nan, dtype=float)
     SIM_OUTPUT_MISMATCH_SET = pvproperty(value=False, dtype=bool)
+    SIM_OCP_TRIP_SET = pvproperty(value=False, dtype=bool)
 
     def __init__(self, *args, channel: int, **kwargs) -> None:
         self.channel = int(channel)
@@ -148,6 +160,12 @@ class PowerChannelIOC(ManagedIOC):
         await self.OVP_ALARM.write(value=ovp > 0 and voltage >= ovp)
         await self.OCP_WARNING.write(value=ocp > 0 and current >= 0.95 * ocp)
         await self.OCP_ALARM.write(value=ocp > 0 and current >= ocp)
+        await self.TRIP_ACTIVE.write(value=bool(state.trip_active))
+        await self.OCP_TRIPPED.write(value=bool(state.ocp_tripped))
+        await self.OVP_TRIPPED.write(value=bool(state.ovp_tripped))
+        await self.UNREGULATED.write(value=bool(state.unregulated))
+        await self.CONSTANT_CURRENT.write(value=bool(state.constant_current))
+        await self.CONSTANT_VOLTAGE.write(value=bool(state.constant_voltage))
 
     @VOLTAGE_SET.putter
     async def VOLTAGE_SET(self, instance, value):
@@ -215,6 +233,13 @@ class PowerChannelIOC(ManagedIOC):
         )
         return bool(value)
 
+    @SIM_OCP_TRIP_SET.putter
+    async def SIM_OCP_TRIP_SET(self, instance, value):
+        if not bool(getattr(self.driver, "simulation", False)):
+            raise ValueError("OCP trip injection is simulation-only")
+        self.driver.set_simulated_ocp_trip(self.channel, bool(value))
+        return bool(value)
+
 
 class LowVoltagePowerChannelIOC(PowerChannelIOC):
     """Low-voltage PSU channel with staged operator setpoints."""
@@ -235,6 +260,19 @@ class LowVoltagePowerChannelIOC(PowerChannelIOC):
     APPLY_CMD = pvproperty(value=False, dtype=bool)
     APPLY_STATUS = pvproperty(value="IDLE", dtype=ChannelType.STRING, read_only=True)
     APPLY_MESSAGE = pvproperty(value="", dtype=ChannelType.STRING, read_only=True)
+    CURRENT_CHANGE_2S_PERCENT = pvproperty(
+        value=math.nan, dtype=float, read_only=True, precision=2
+    )
+    CURRENT_CHANGE_10S_PERCENT = pvproperty(
+        value=math.nan, dtype=float, read_only=True, precision=2
+    )
+    VOLTAGE_SPAN_30S = pvproperty(
+        value=math.nan, dtype=float, read_only=True, precision=PSU_FLOAT_PRECISION
+    )
+    CURRENT_SPAN_30S = pvproperty(
+        value=math.nan, dtype=float, read_only=True, precision=PSU_FLOAT_PRECISION
+    )
+    OCP_INTERLOCK_ACTIVE = pvproperty(value=False, dtype=bool, read_only=True)
 
     def __init__(
         self,
@@ -244,6 +282,9 @@ class LowVoltagePowerChannelIOC(PowerChannelIOC):
     ) -> None:
         self.limits = limits or PowerChannelLimits()
         self._requests_initialized = False
+        self._diagnostic_history = deque()
+        self._ocp_trip_started_at: float | None = None
+        self._ocp_interlock_active = False
         super().__init__(*args, **kwargs)
 
     async def poll_device(self) -> None:
@@ -258,10 +299,108 @@ class LowVoltagePowerChannelIOC(PowerChannelIOC):
         await self.OVP_RBV.write(value=state.ovp)
         await self.OCP_RBV.write(value=state.ocp)
         await self._write_protection_status(state)
+        await self._write_diagnostics(state)
+        await self._update_ocp_interlock(state)
         if not self._requests_initialized:
             await self.VOLTAGE_REQUEST.write(value=state.voltage_setpoint)
             await self.CURRENT_LIMIT_REQUEST.write(value=state.current_limit)
             self._requests_initialized = True
+
+    @staticmethod
+    def _percent_change(current: float, reference: float) -> float:
+        denominator = max(
+            abs(float(current)),
+            abs(float(reference)),
+            CURRENT_CHANGE_REFERENCE_FLOOR_A,
+        )
+        return abs(float(current) - float(reference)) / denominator * 100.0
+
+    def _sample_at_or_before(self, target: float):
+        for sample in reversed(self._diagnostic_history):
+            if sample[0] <= target:
+                return sample
+        return None
+
+    @staticmethod
+    def _settings_stable(samples) -> bool:
+        if not samples:
+            return False
+        voltages = [sample[3] for sample in samples]
+        currents = [sample[4] for sample in samples]
+        return (
+            max(voltages) - min(voltages) < 1e-9
+            and max(currents) - min(currents) < 1e-9
+        )
+
+    async def _write_diagnostics(self, state) -> None:
+        now = time.monotonic()
+        if not bool(state.output_enabled):
+            self._diagnostic_history.clear()
+            await self.CURRENT_CHANGE_2S_PERCENT.write(value=math.nan)
+            await self.CURRENT_CHANGE_10S_PERCENT.write(value=math.nan)
+            await self.VOLTAGE_SPAN_30S.write(value=math.nan)
+            await self.CURRENT_SPAN_30S.write(value=math.nan)
+            return
+
+        sample = (
+            now,
+            float(state.voltage),
+            float(state.current),
+            float(state.voltage_setpoint),
+            float(state.current_limit),
+        )
+        self._diagnostic_history.append(sample)
+        cutoff = now - DIAGNOSTIC_HISTORY_SECONDS
+        while self._diagnostic_history and self._diagnostic_history[0][0] < cutoff:
+            self._diagnostic_history.popleft()
+
+        for seconds, pv in (
+            (2.0, self.CURRENT_CHANGE_2S_PERCENT),
+            (10.0, self.CURRENT_CHANGE_10S_PERCENT),
+        ):
+            reference = self._sample_at_or_before(now - seconds)
+            relevant = [
+                item for item in self._diagnostic_history
+                if item[0] >= now - seconds
+            ]
+            if reference is None or not self._settings_stable(relevant + [reference]):
+                value = math.nan
+            else:
+                value = self._percent_change(float(state.current), reference[2])
+            await pv.write(value=value)
+
+        window = [
+            item for item in self._diagnostic_history
+            if item[0] >= now - 30.0
+        ]
+        covers_window = bool(window) and window[0][0] <= now - 29.0
+        if covers_window and self._settings_stable(window):
+            voltage_span = max(item[1] for item in window) - min(item[1] for item in window)
+            current_span = max(item[2] for item in window) - min(item[2] for item in window)
+        else:
+            voltage_span = math.nan
+            current_span = math.nan
+        await self.VOLTAGE_SPAN_30S.write(value=voltage_span)
+        await self.CURRENT_SPAN_30S.write(value=current_span)
+
+    async def _update_ocp_interlock(self, state) -> None:
+        now = time.monotonic()
+        if bool(state.ocp_tripped):
+            if self._ocp_trip_started_at is None:
+                self._ocp_trip_started_at = now
+            if (
+                not self._ocp_interlock_active
+                and now - self._ocp_trip_started_at >= OCP_INTERLOCK_SECONDS
+            ):
+                # The CPX400DP hardware OCP trip already switches the output off.
+                # This explicit command keeps the slow-control interlock action
+                # deterministic for simulation and compatible drivers.
+                self.driver.set_output(self.channel, False)
+                self._ocp_interlock_active = True
+        else:
+            self._ocp_trip_started_at = None
+            self._ocp_interlock_active = False
+        await self.OCP_INTERLOCK_ACTIVE.write(value=self._ocp_interlock_active)
 
     @APPLY_CMD.putter
     async def APPLY_CMD(self, instance, value):
@@ -316,3 +455,5 @@ class LowVoltagePowerChannelIOC(PowerChannelIOC):
         await self.OVP_RBV.write(value=state.ovp)
         await self.OCP_RBV.write(value=state.ocp)
         await self._write_protection_status(state)
+        await self._write_diagnostics(state)
+        await self._update_ocp_interlock(state)
