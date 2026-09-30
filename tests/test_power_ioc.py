@@ -220,7 +220,10 @@ def test_hardware_ocp_trip_drives_interlock_after_twenty_seconds():
         )
         group = _group(driver)
 
-        with patch("bdx_slow_control.iocs.power.time.monotonic", side_effect=[0.0, 10.0, 20.0]):
+        with patch(
+            "bdx_slow_control.iocs.power.time.monotonic",
+            side_effect=[0.0, 0.0, 10.0, 10.0, 20.0, 20.0],
+        ):
             await group.poll_device()
             assert group.OCP_TRIPPED.value == "On"
             assert group.OCP_INTERLOCK_ACTIVE.value == "Off"
