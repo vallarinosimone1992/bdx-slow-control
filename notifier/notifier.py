@@ -107,6 +107,7 @@ class NumericRule:
     reference_pv: str | None
     reference_value: float | None
     policy: NumericPolicy
+    reference_floor: float = 0.0
     conditions: tuple[Condition, ...] = ()
     group: str | None = None
     optional: bool = False
@@ -588,6 +589,10 @@ def load_config(path: Path) -> NotifierConfig:
                     reference_pv=reference_pv,
                     reference_value=reference_value,
                     policy=_policy_from_mapping(overrides, defaults),
+                    reference_floor=_number(
+                        item.get("reference_floor", 0.0),
+                        f"{rule_id}.reference_floor",
+                    ),
                     **common,
                 )
             )
@@ -811,12 +816,18 @@ class AlarmEngine:
             if rule.reference_pv is not None
             else float(rule.reference_value)
         )
-        denominator = abs(reference)
+        denominator = max(abs(reference), rule.reference_floor)
         if denominator == 0:
             raise ValueError(f"Reference for {rule.rule_id} is zero")
         if rule.mode == "deviation":
             deviation = abs(value - reference) / denominator * 100.0
             limit = f"deviation from {reference:g} must remain below configured percentages"
+            if rule.reference_floor > 0 and abs(reference) < rule.reference_floor:
+                limit += (
+                    f" (using {rule.reference_floor:g} minimum reference; "
+                    f"{rule.policy.minor_percent:g}% = "
+                    f"{rule.reference_floor * rule.policy.minor_percent / 100.0:g} absolute)"
+                )
         elif rule.mode == "above":
             deviation = max(0.0, value - reference) / denominator * 100.0
             limit = f"upper limit {reference:g}"
