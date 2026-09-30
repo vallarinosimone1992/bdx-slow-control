@@ -88,7 +88,8 @@
             "major_sustained_percent": 5,
             "major_sustained_seconds": 60,
             "recovery_seconds": 5
-          }
+          },
+          "reference_floor": 0.2
         },
         {
           "id": "{name}-output-mismatch",
