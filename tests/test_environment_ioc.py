@@ -5,6 +5,7 @@ import pytest
 
 from bdx_slow_control.iocs.environment import EnvironmentalSensorIOC
 from bdx_slow_control.iocs.environment import EnvironmentSummaryIOC
+from bdx_slow_control.iocs.environment import TemperatureSensorIOC
 from bdx_slow_control.runtime import RuntimeSettings
 
 
@@ -93,3 +94,37 @@ def test_environment_ioc_does_not_log_repeated_identical_failures(caplog):
 
     messages = [record.message for record in caplog.records if "IOC poll failed" in record.message]
     assert len(messages) == 1
+
+
+def test_temperature_ioc_exposes_change_and_spread_diagnostics():
+    async def scenario():
+        runtime = RuntimeSettings()
+        summary = EnvironmentSummaryIOC(prefix="BDX:ENV:", runtime_settings=runtime)
+        first = TemperatureSensorIOC(
+            prefix="BDX:ENV:TEMP:T00:",
+            driver=SequenceSensorDriver([20.0, 23.5]),
+            unit="degC",
+            sensor_kind="temperature",
+            sensor_name="T00",
+            summary=summary,
+            runtime_settings=runtime,
+        )
+        second = TemperatureSensorIOC(
+            prefix="BDX:ENV:TEMP:T01:",
+            driver=SequenceSensorDriver([24.5]),
+            unit="degC",
+            sensor_kind="temperature",
+            sensor_name="T01",
+            summary=summary,
+            runtime_settings=runtime,
+        )
+
+        await first.poll_device()
+        await second.poll_device()
+        assert summary.TEMPERATURE_SPREAD.value == pytest.approx(4.5)
+
+        await first.poll_device()
+        assert first.CHANGE_10M.value == pytest.approx(3.5)
+        assert first.CHANGE_1H.value == pytest.approx(3.5)
+
+    asyncio.run(scenario())
