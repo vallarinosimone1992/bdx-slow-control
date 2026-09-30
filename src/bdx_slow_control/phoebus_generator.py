@@ -736,7 +736,7 @@ def temperature_summary_height(sensor_count: int) -> int:
     if sensor_count == 0:
         return 0
     rows = (sensor_count + 3) // 4
-    return 42 + rows * 115
+    return 42 + rows * 145
 
 
 def add_environment_health(
@@ -761,8 +761,8 @@ def add_environment_health(
         display.text_update("BDX:ENV:TEMPERATURE_MAX", 1120, y + 27, 70, 24, precision=2, format_code=1)
         display.text_update("BDX:ENV:TEMPERATURE_SPREAD", 1195, y + 27, 70, 24, precision=2, format_code=1)
         display.label("degC", 1270, y + 29, 44, 20, size=10)
-    display.open_button("Expert PVs", "environment_expert.bob", 1190, y, 150, 30)
-    return y + 58
+    display.open_button("Expert PVs", "environment_expert.bob", 20, y + 34, 150, 30)
+    return y + 70
 
 
 def add_temperature_summary(display: Display, traces: Sequence[TraceInfo], y: int) -> int:
@@ -1664,7 +1664,7 @@ def generate_subsystem(
         return
 
     summary_traces = temperature_traces(chart_groups) if subsystem == "environment" else []
-    health_height = 52 if subsystem == "environment" and any(
+    health_height = 70 if subsystem == "environment" and any(
         pv.name in {"BDX:ENV:HEARTBEAT", "BDX:ENV:LAST_TEMPERATURE_UPDATE"}
         for pv in selected
     ) else 0
