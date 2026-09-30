@@ -29,6 +29,7 @@ def _pv_boolean(value) -> bool:
 
 
 CHILLER_SETTLING_TIMEOUT_SECONDS = 300.0
+CHILLER_SETTLING_CONFIRM_SECONDS = 10.0
 
 
 class ChillerIOC(ManagedIOC):
@@ -80,7 +81,7 @@ class ChillerIOC(ManagedIOC):
         *args,
         minimum_setpoint_c: float = 5.0,
         maximum_setpoint_c: float = 40.0,
-        warning_deviation_c: float = 0.2,
+        warning_deviation_c: float = 0.3,
         alarm_deviation_c: float = 0.5,
         driver_executor: ThreadPoolExecutor | None = None,
         **kwargs,
@@ -91,6 +92,7 @@ class ChillerIOC(ManagedIOC):
         self.alarm_deviation_c = float(alarm_deviation_c)
         self._setpoint_request_initialized = False
         self._settling_started_at: float | None = None
+        self._settling_in_band_started_at: float | None = None
         self._driver_executor = driver_executor or ThreadPoolExecutor(
             max_workers=1,
             thread_name_prefix="bdx-chiller",
@@ -166,11 +168,13 @@ class ChillerIOC(ManagedIOC):
 
     def _start_settling(self) -> None:
         self._settling_started_at = time.monotonic()
+        self._settling_in_band_started_at = None
 
     async def _write_deviation(self, controlled_temperature_c: float, setpoint_c: float) -> None:
         running = _pv_boolean(self.RUN_RBV.value)
         if not running:
             self._settling_started_at = None
+            self._settling_in_band_started_at = None
             await self.DEVIATION_SETTLING.write(value=False)
             await self.TEMPERATURE_DEVIATION_RBV.write(value=math.nan)
             await self.DEVIATION_WARNING.write(value=False)
@@ -187,18 +191,35 @@ class ChillerIOC(ManagedIOC):
 
         deviation = abs(controlled_temperature_c - setpoint_c)
         if self._settling_started_at is not None:
-            elapsed = time.monotonic() - self._settling_started_at
-            if deviation < self.warning_deviation_c:
+            now = time.monotonic()
+            elapsed = now - self._settling_started_at
+            if elapsed >= CHILLER_SETTLING_TIMEOUT_SECONDS:
                 self._settling_started_at = None
-            elif elapsed < CHILLER_SETTLING_TIMEOUT_SECONDS:
+                self._settling_in_band_started_at = None
+            elif deviation < self.warning_deviation_c:
+                if self._settling_in_band_started_at is None:
+                    self._settling_in_band_started_at = now
+                if (
+                    now - self._settling_in_band_started_at
+                    >= CHILLER_SETTLING_CONFIRM_SECONDS
+                ):
+                    self._settling_started_at = None
+                    self._settling_in_band_started_at = None
+                else:
+                    await self.DEVIATION_SETTLING.write(value=True)
+                    await self.TEMPERATURE_DEVIATION_RBV.write(value=deviation)
+                    await self.DEVIATION_WARNING.write(value=False)
+                    await self.DEVIATION_ALARM.write(value=False)
+                    await self.DEVIATION_STATUS.write(value="SETTLING")
+                    return
+            else:
+                self._settling_in_band_started_at = None
                 await self.DEVIATION_SETTLING.write(value=True)
                 await self.TEMPERATURE_DEVIATION_RBV.write(value=deviation)
                 await self.DEVIATION_WARNING.write(value=False)
                 await self.DEVIATION_ALARM.write(value=False)
                 await self.DEVIATION_STATUS.write(value="SETTLING")
                 return
-            else:
-                self._settling_started_at = None
 
         await self.DEVIATION_SETTLING.write(value=False)
         alarm = deviation >= self.alarm_deviation_c
@@ -265,6 +286,7 @@ class ChillerIOC(ManagedIOC):
                 self._start_settling()
             else:
                 self._settling_started_at = None
+                self._settling_in_band_started_at = None
         except Exception as exc:
             await self.mark_failure(exc)
             raise
