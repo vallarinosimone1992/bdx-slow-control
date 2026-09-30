@@ -36,6 +36,7 @@ class SimulatedPowerSupplyDriver(PowerSupplyDriver):
                 "output_enabled": False,
                 "ovp": float(initial_ovp),
                 "ocp": float(initial_ocp),
+                "ocp_tripped": False,
                 "injected_current": None,
                 "injected_output": None,
             }
@@ -75,8 +76,11 @@ class SimulatedPowerSupplyDriver(PowerSupplyDriver):
             current=simulated_load,
             current_limit=current_limit,
             output_enabled=output_enabled,
+            voltage_setpoint=float(state["voltage"]),
             ovp=float(state["ovp"]),
             ocp=float(state["ocp"]),
+            trip_active=bool(state["ocp_tripped"]),
+            ocp_tripped=bool(state["ocp_tripped"]),
         )
 
     def set_voltage(self, channel: int, value: float) -> None:
@@ -93,7 +97,10 @@ class SimulatedPowerSupplyDriver(PowerSupplyDriver):
         self._state(channel)["current_limit"] = float(value)
 
     def set_output(self, channel: int, enabled: bool) -> None:
-        self._state(channel)["output_enabled"] = bool(enabled)
+        state = self._state(channel)
+        state["output_enabled"] = bool(enabled)
+        if enabled:
+            state["ocp_tripped"] = False
 
     def set_ovp(self, channel: int, value: float) -> None:
         if value <= 0:
@@ -117,6 +124,9 @@ class SimulatedPowerSupplyDriver(PowerSupplyDriver):
 
     def set_simulated_output_readback(self, channel: int, value: bool | None) -> None:
         self._state(channel)["injected_output"] = value
+
+    def set_simulated_ocp_trip(self, channel: int, active: bool) -> None:
+        self._state(channel)["ocp_tripped"] = bool(active)
 
 
 class SimulatedHighVoltageDriver(SimulatedPowerSupplyDriver, HighVoltageDriver):
