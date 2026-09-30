@@ -755,8 +755,14 @@ def add_environment_health(
     display.label("Last temperature update", 585, y + 3, 190, 24, size=12, bold=True)
     if "BDX:ENV:LAST_TEMPERATURE_UPDATE" in names:
         display.text_update("BDX:ENV:LAST_TEMPERATURE_UPDATE", 780, y, 260, 28, size=13)
+    if "BDX:ENV:TEMPERATURE_SPREAD" in names:
+        display.label("T min/max/spread", 1045, y + 3, 120, 24, size=11, bold=True)
+        display.text_update("BDX:ENV:TEMPERATURE_MIN", 1045, y + 27, 70, 24, precision=2, format_code=1)
+        display.text_update("BDX:ENV:TEMPERATURE_MAX", 1120, y + 27, 70, 24, precision=2, format_code=1)
+        display.text_update("BDX:ENV:TEMPERATURE_SPREAD", 1195, y + 27, 70, 24, precision=2, format_code=1)
+        display.label("degC", 1270, y + 29, 44, 20, size=10)
     display.open_button("Expert PVs", "environment_expert.bob", 1190, y, 150, 30)
-    return y + 52
+    return y + 58
 
 
 def add_temperature_summary(display: Display, traces: Sequence[TraceInfo], y: int) -> int:
@@ -767,7 +773,7 @@ def add_temperature_summary(display: Display, traces: Sequence[TraceInfo], y: in
     y += 40
 
     card_width = 320
-    card_height = 92
+    card_height = 122
     column_gap = 20
     row_gap = 23
     for index, trace in enumerate(traces):
@@ -800,6 +806,12 @@ def add_temperature_summary(display: Display, traces: Sequence[TraceInfo], y: in
         )
         display.label("°C", x + 232, card_y + 17, 34, 28, size=16, bold=True)
         display.label("Status", x + 52, card_y + 56, 58, 22, size=11, bold=True)
+        base = trace.pv.removesuffix(":VALUE")
+        display.label("dT 10m", x + 118, card_y + 58, 48, 20, size=10, bold=True)
+        display.text_update(base + ":CHANGE_10M", x + 168, card_y + 54, 58, 24, precision=2, format_code=1)
+        display.label("dT 1h", x + 232, card_y + 58, 42, 20, size=10, bold=True)
+        display.text_update(base + ":CHANGE_1H", x + 274, card_y + 54, 38, 24, precision=2, format_code=1)
+        display.label("Rolling max-min temperature change [degC]", x + 12, card_y + 91, 260, 18, size=9)
 
     return y + ((len(traces) + 3) // 4) * (card_height + row_gap)
 
@@ -899,6 +911,31 @@ def trend_groups(
                 )
             )
 
+        change_traces = []
+        voltage_span_traces = []
+        current_span_traces = []
+        for channel in _psu_channels_from_names(names, device):
+            base = f"BDX:PSU:{device}:{channel}:"
+            for suffix, label in (
+                ("CURRENT_CHANGE_2S_PERCENT", f"{device} {channel} dI 2 s"),
+                ("CURRENT_CHANGE_10S_PERCENT", f"{device} {channel} dI 10 s"),
+            ):
+                pv = base + suffix
+                if pv in names:
+                    change_traces.append(TraceInfo(pv, label))
+            pv = base + "VOLTAGE_SPAN_30S"
+            if pv in names:
+                voltage_span_traces.append(TraceInfo(pv, f"{device} {channel} V span"))
+            pv = base + "CURRENT_SPAN_30S"
+            if pv in names:
+                current_span_traces.append(TraceInfo(pv, f"{device} {channel} I span"))
+        if change_traces:
+            groups["psu"].append(TrendGroup(f"{device} current change diagnostics", change_traces, "Current change [%]"))
+        if voltage_span_traces:
+            groups["psu"].append(TrendGroup(f"{device} voltage stability", voltage_span_traces, "30 s voltage span [V]"))
+        if current_span_traces:
+            groups["psu"].append(TrendGroup(f"{device} current stability", current_span_traces, "30 s current span [A]"))
+
     for subsystem in ("HV",):
         prefix = f"BDX:{subsystem}:"
         voltage = sorted(
@@ -967,6 +1004,31 @@ def trend_groups(
         ),
     )
     groups["environment"].extend(group for group in environment_groups if group is not None)
+
+    temp_change_10m = sorted(
+        name for name in names
+        if name.startswith("BDX:ENV:TEMP:") and name.endswith(":CHANGE_10M")
+    )
+    temp_change_1h = sorted(
+        name for name in names
+        if name.startswith("BDX:ENV:TEMP:") and name.endswith(":CHANGE_1H")
+    )
+    if temp_change_10m:
+        groups["environment"].append(
+            TrendGroup("Temperature change over 10 minutes", traces_for_pvs(temp_change_10m), "Temperature span [degC]")
+        )
+    if temp_change_1h:
+        groups["environment"].append(
+            TrendGroup("Temperature change over 1 hour", traces_for_pvs(temp_change_1h), "Temperature span [degC]")
+        )
+    if "BDX:ENV:TEMPERATURE_SPREAD" in names:
+        groups["environment"].append(
+            TrendGroup(
+                "Temperature sensor spread",
+                traces_for_pvs(["BDX:ENV:TEMPERATURE_SPREAD"]),
+                "Max-min temperature [degC]",
+            )
+        )
 
     if "BDX:GLOBAL:UPDATE_FREQUENCY_RBV" in names:
         groups["global"].append(
@@ -1220,7 +1282,7 @@ def _add_psu_channel_card(
     y: int,
 ) -> None:
     prefix = f"BDX:PSU:{device}:{channel}:"
-    display.label("", x, y, 650, 218, background=(245, 248, 250))
+    display.label("", x, y, 650, 298, background=(245, 248, 250))
     display.label(f"{device} {channel}", x + 14, y + 10, 130, 28, size=18, bold=True)
 
     _add_readback_pair(display, "Actual voltage", _pv(prefix, "VOLTAGE_RBV"), x + 14, y + 48, unit="V")
@@ -1311,6 +1373,28 @@ def _add_psu_channel_card(
     display.text_update(_pv(prefix, "LAST_UPDATE"), x + 430, y + 184, 204, 26, size=10)
     display.text_update(_pv(prefix, "ERROR_MESSAGE"), x + 148, y + 12, 486, 24, size=10)
 
+    display.label("Diagnostics", x + 14, y + 226, 90, 20, size=11, bold=True)
+    display.label("OCP trip", x + 110, y + 226, 55, 20, size=10, bold=True)
+    display.led(_pv(prefix, "OCP_TRIPPED"), x + 168, y + 222, 24, 24,
+                off_color=(40, 170, 80), on_color=(190, 40, 40))
+    display.label("dI 2s [%]", x + 205, y + 226, 62, 20, size=10, bold=True)
+    display.text_update(_pv(prefix, "CURRENT_CHANGE_2S_PERCENT"), x + 270, y + 222, 72, 24,
+                        precision=2, format_code=1)
+    display.label("dI 10s [%]", x + 350, y + 226, 68, 20, size=10, bold=True)
+    display.text_update(_pv(prefix, "CURRENT_CHANGE_10S_PERCENT"), x + 421, y + 222, 72, 24,
+                        precision=2, format_code=1)
+    display.label("V span 30s", x + 14, y + 260, 72, 20, size=10, bold=True)
+    display.text_update(_pv(prefix, "VOLTAGE_SPAN_30S"), x + 90, y + 256, 72, 24,
+                        precision=3, format_code=1)
+    display.label("V", x + 165, y + 260, 16, 20, size=10)
+    display.label("I span 30s", x + 205, y + 260, 72, 20, size=10, bold=True)
+    display.text_update(_pv(prefix, "CURRENT_SPAN_30S"), x + 281, y + 256, 72, 24,
+                        precision=3, format_code=1)
+    display.label("A", x + 356, y + 260, 16, 20, size=10)
+    display.label("OCP interlock", x + 405, y + 260, 82, 20, size=10, bold=True)
+    display.led(_pv(prefix, "OCP_INTERLOCK_ACTIVE"), x + 490, y + 256, 24, 24,
+                off_color=(40, 170, 80), on_color=(190, 40, 40))
+
 
 def generate_psu_operator(
     pvs: Sequence[PVInfo],
@@ -1322,7 +1406,7 @@ def generate_psu_operator(
     layout = _psu_layout(pvs)
     rows = sum((len(channels) + 1) // 2 for channels in layout.values())
     plot_rows = (len(chart_groups) + 1) // 2
-    height = max(960, 205 + rows * 245 + plot_rows * 360)
+    height = max(960, 205 + rows * 325 + plot_rows * 360)
     display = Display("BDX PSU", 1400, height)
     add_header(display, "BDX low-voltage power supplies", navigation)
     display.open_button("Expert", "psu_expert.bob", 1220, 12, 140, 32)
@@ -1363,9 +1447,9 @@ def generate_psu_operator(
                 device,
                 channel,
                 20 + column * 690,
-                y + row * 240,
+                y + row * 320,
             )
-        y += ((len(channels) + 1) // 2) * 240 + 20
+        y += ((len(channels) + 1) // 2) * 320 + 20
 
     for index, group in enumerate(chart_groups):
         column = index % 2
