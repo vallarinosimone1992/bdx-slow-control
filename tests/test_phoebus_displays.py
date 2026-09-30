@@ -379,8 +379,15 @@ def test_raspberry_environment_display_contains_live_temperature_summary(
         for widget in _widgets(tmp_path / "environment.bob", "led")
     }
 
-    assert summary_values == RASPBERRY_TEMPERATURE_PVS
+    assert RASPBERRY_TEMPERATURE_PVS.issubset(summary_values)
     assert ENVIRONMENT_SUMMARY_PVS.issubset(summary_pvs)
+    assert {
+        "BDX:ENV:TEMPERATURE_MIN",
+        "BDX:ENV:TEMPERATURE_MAX",
+        "BDX:ENV:TEMPERATURE_SPREAD",
+        "BDX:ENV:TEMP:T00:CHANGE_10M",
+        "BDX:ENV:TEMP:T00:CHANGE_1H",
+    }.issubset(summary_pvs)
     assert status_leds == RASPBERRY_STATUS_OK_PVS
 
 
@@ -419,8 +426,12 @@ def test_raspberry_environment_operator_links_to_full_temperature_history(
     generate(RASPBERRY_PROFILE, tmp_path, only="environment")
 
     targets = _open_file_targets(tmp_path / "environment.bob")
-    assert targets == {"environment_0_environment_temperatures.plt"}
-    assert (tmp_path / "environment_0_environment_temperatures.plt").exists()
+    assert "environment_0_environment_temperatures.plt" in targets
+    assert any("temperature_change_over_10_minutes" in target for target in targets)
+    assert any("temperature_change_over_1_hour" in target for target in targets)
+    assert any("temperature_sensor_spread" in target for target in targets)
+    for target in targets:
+        assert (tmp_path / target).exists()
 
 
 def test_generate_only_environment_does_not_overwrite_unrelated_displays(tmp_path: Path):
@@ -520,8 +531,13 @@ def test_psu_generates_one_dual_axis_actual_readback_plot_per_supply(tmp_path: P
     generate(MAIN_SERVER_PROFILE, tmp_path, only="psu")
 
     plot_files = sorted(tmp_path.glob("psu_*.plt"))
-    assert len(plot_files) == 2
-    for path in plot_files:
+    actual_plots = [
+        path
+        for path in plot_files
+        if _plt(path).findtext("title").endswith("actual voltage and current")
+    ]
+    assert len(actual_plots) == 2
+    for path in actual_plots:
         root = _plt(path)
         assert [axis.text for axis in root.findall("axes/axis/name")] == [
             "Voltage [V]",
@@ -536,15 +552,21 @@ def test_psu_generates_one_dual_axis_actual_readback_plot_per_supply(tmp_path: P
         assert len(trace_names) == 4
         assert {element.text for element in root.findall("pvlist/pv/axis")} == {"0", "1"}
 
+    titles = {_plt(path).findtext("title") for path in plot_files}
+    assert "LV1 current change diagnostics" in titles
+    assert "LV1 voltage stability" in titles
+    assert "LV1 current stability" in titles
+
 
 def test_psu_operator_links_to_full_historical_databrowser_resources(tmp_path: Path):
     generate(MAIN_SERVER_PROFILE, tmp_path, only="psu")
 
     targets = _open_file_targets(tmp_path / "psu.bob")
-    assert targets == {
-        "psu_0_lv1_actual_voltage_and_current.plt",
-        "psu_1_lv2_actual_voltage_and_current.plt",
-    }
+    assert any("lv1_actual_voltage_and_current" in target for target in targets)
+    assert any("lv2_actual_voltage_and_current" in target for target in targets)
+    assert any("current_change_diagnostics" in target for target in targets)
+    assert any("voltage_stability" in target for target in targets)
+    assert any("current_stability" in target for target in targets)
     for target in targets:
         assert (tmp_path / target).exists()
 
