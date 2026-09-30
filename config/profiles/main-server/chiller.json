@@ -3,7 +3,7 @@
     "interfaces": [
       "0.0.0.0"
     ],
-    "poll_interval": 5.0,
+    "poll_interval": 5,
     "log_pv_names": false
   },
   "device": {
@@ -13,8 +13,8 @@
     "driver": "ecosilver_re_1225s",
     "host": "172.22.50.60",
     "port": 54321,
-    "timeout": 5.0,
-    "reconnect_delay": 15.0,
+    "timeout": 5,
+    "reconnect_delay": 15,
     "bath_temperature_command": "IN_PV_00",
     "controlled_temperature_command": "IN_PV_01",
     "pressure_command": "IN_PV_02",
@@ -34,10 +34,10 @@
     "external_temperature_enabled": false,
     "pressure_required": false,
     "external_temperature_required": false,
-    "minimum_setpoint_c": 5.0,
-    "maximum_setpoint_c": 40.0,
-    "nominal_setpoint_c": 20.0,
-    "warning_deviation_c": 0.2,
+    "minimum_setpoint_c": 5,
+    "maximum_setpoint_c": 40,
+    "nominal_setpoint_c": 20,
+    "warning_deviation_c": 0.3,
     "alarm_deviation_c": 0.5
   }
 }
