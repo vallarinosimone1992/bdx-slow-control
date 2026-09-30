@@ -23,37 +23,43 @@
           "name": "lv1-ch1",
           "prefix": "BDX:PSU:LV1:CH1",
           "voltage_setpoint": "VOLTAGE_SET_RBV",
-          "optional": false
+          "optional": false,
+          "lv_monitoring": true
         },
         {
           "name": "lv1-ch2",
           "prefix": "BDX:PSU:LV1:CH2",
           "voltage_setpoint": "VOLTAGE_SET_RBV",
-          "optional": false
+          "optional": false,
+          "lv_monitoring": true
         },
         {
           "name": "lv2-ch1",
           "prefix": "BDX:PSU:LV2:CH1",
           "voltage_setpoint": "VOLTAGE_SET_RBV",
-          "optional": false
+          "optional": false,
+          "lv_monitoring": true
         },
         {
           "name": "lv2-ch2",
           "prefix": "BDX:PSU:LV2:CH2",
           "voltage_setpoint": "VOLTAGE_SET_RBV",
-          "optional": false
+          "optional": false,
+          "lv_monitoring": true
         },
         {
           "name": "hv1-ch1",
           "prefix": "BDX:HV:HV1:CH1",
           "voltage_setpoint": "VOLTAGE_SET",
-          "optional": true
+          "optional": true,
+          "lv_monitoring": false
         },
         {
           "name": "hv1-ch2",
           "prefix": "BDX:HV:HV1:CH2",
           "voltage_setpoint": "VOLTAGE_SET",
-          "optional": true
+          "optional": true,
+          "lv_monitoring": false
         }
       ],
       "alarms": [
@@ -153,7 +159,8 @@
           "recovery_seconds": 5,
           "limit_description": "hardware OCP trip must remain inactive",
           "group": "{name}-current-protection",
-          "optional": "{optional}"
+          "optional": "{optional}",
+          "enabled": "{lv_monitoring}"
         },
         {
           "id": "{name}-current-change-10s",
@@ -173,7 +180,8 @@
           "recovery_seconds": 5,
           "limit_description": "10 s current change must remain below 10%",
           "group": "{name}-current-dynamics",
-          "optional": "{optional}"
+          "optional": "{optional}",
+          "enabled": "{lv_monitoring}"
         },
         {
           "id": "{name}-current-change-2s",
@@ -193,14 +201,15 @@
           "recovery_seconds": 5,
           "limit_description": "2 s current change must remain below 10%",
           "group": "{name}-current-dynamics",
-          "optional": "{optional}"
+          "optional": "{optional}",
+          "enabled": "{lv_monitoring}"
         },
         {
           "id": "{name}-voltage-span-minor",
           "kind": "comparison",
           "label": "{name} voltage readback span exceeds 0.1 V over 30 seconds",
           "pv": "{prefix}:VOLTAGE_SPAN_30S",
-          "operator": "lt",
+          "operator": "lte",
           "reference": {
             "value": 0.1
           },
@@ -213,14 +222,15 @@
           "recovery_seconds": 5,
           "limit_description": "30 s voltage span must remain below 0.1 V",
           "group": "{name}-voltage-stability",
-          "optional": "{optional}"
+          "optional": "{optional}",
+          "enabled": "{lv_monitoring}"
         },
         {
           "id": "{name}-voltage-span-major",
           "kind": "comparison",
           "label": "{name} voltage readback span exceeds 0.5 V over 30 seconds",
           "pv": "{prefix}:VOLTAGE_SPAN_30S",
-          "operator": "lt",
+          "operator": "lte",
           "reference": {
             "value": 0.5
           },
@@ -233,7 +243,8 @@
           "recovery_seconds": 5,
           "limit_description": "30 s voltage span must remain below 0.5 V",
           "group": "{name}-voltage-stability",
-          "optional": "{optional}"
+          "optional": "{optional}",
+          "enabled": "{lv_monitoring}"
         }
       ]
     },
