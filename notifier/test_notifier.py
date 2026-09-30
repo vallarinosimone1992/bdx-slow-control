@@ -10,6 +10,7 @@ from notifier import (
     ComparisonRule,
     Condition,
     NotifierConfig,
+    NotificationPolicy,
     NumericPolicy,
     NumericRule,
     RangeRule,
@@ -33,6 +34,13 @@ def config_for(*rules):
             people={},
             major_people=(),
             interlock_people="all",
+        ),
+        notifications=NotificationPolicy(
+            routing={
+                "MINOR": ("telegram",),
+                "MAJOR": ("telegram", "email"),
+                "INTERLOCK": ("telegram", "email"),
+            }
         ),
         rules=tuple(rules),
     )
@@ -78,6 +86,8 @@ class AlarmEngineTests(unittest.TestCase):
             patch("notifier.load_dotenv"),
             patch("notifier.load_config", return_value=config_for()),
             patch("notifier.TelegramSender", return_value=sender),
+            patch("notifier.EmailSender"),
+            patch("notifier.NotificationSender"),
             patch("notifier.BdxNotifier") as notifier_class,
         ):
             status = main(["--test-telegram"])
@@ -216,6 +226,23 @@ class AlarmEngineTests(unittest.TestCase):
         engine.set_sample("HEARTBEAT", 2, 21.0)
         self.assertEqual(engine.evaluate(21.0), [])
         self.assertTrue(engine.evaluate(22.0)[0].resolved)
+
+    def test_nonfinite_rolling_metric_does_not_alarm(self):
+        rule = ComparisonRule(
+            rule_id="rolling",
+            label="Rolling diagnostic",
+            pv="METRIC",
+            reference_pv=None,
+            reference_value=10.0,
+            operator="lt",
+            stages=(AlarmStage("MINOR", 0.0),),
+            recovery_seconds=1.0,
+            limit_description="must remain below 10",
+        )
+        engine = AlarmEngine(config_for(rule))
+        engine.set_sample("METRIC", float("nan"), 0.0)
+        engine.prime(0.0, notify_initial=False)
+        self.assertEqual(engine.evaluate(1.0), [])
 
     def test_comparison_rule_is_gated_by_condition(self):
         rule = ComparisonRule(
