@@ -540,7 +540,19 @@
       ],
       "recovery_seconds": 5,
       "limit_description": "READY must remain On (1)",
-      "group": "global-health"
+      "group": "global-health",
+      "conditions": [
+        {
+          "pv": "BDX:GLOBAL:SYSTEM_STATE",
+          "operator": "ne",
+          "value": "STANDBY"
+        },
+        {
+          "pv": "BDX:GLOBAL:SYSTEM_STATE",
+          "operator": "ne",
+          "value": "SAFE"
+        }
+      ]
     },
     {
       "id": "global-heartbeat-stale",
@@ -572,7 +584,17 @@
       "reference": {
         "pv": "BDX:CHILLER:CHILLER1:SETPOINT_RBV"
       },
-      "group": "chiller-temperature"
+      "group": "chiller-temperature",
+      "conditions": [
+        {
+          "pv": "BDX:CHILLER:CHILLER1:RUN_RBV",
+          "operator": "truthy"
+        },
+        {
+          "pv": "BDX:CHILLER:CHILLER1:DEVIATION_SETTLING",
+          "operator": "falsy"
+        }
+      ]
     },
     {
       "id": "chiller-communication",
