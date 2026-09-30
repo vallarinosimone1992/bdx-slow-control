@@ -1,4 +1,5 @@
 import asyncio
+from unittest.mock import patch
 
 import pytest
 
@@ -201,6 +202,52 @@ def test_first_poll_reconciles_output_setting_without_hardware_write():
         assert ("set_output", 1, True) not in driver.calls
 
     asyncio.run(scenario())
+
+
+def test_hardware_ocp_trip_drives_interlock_after_twenty_seconds():
+    async def scenario():
+        driver = RecordingPowerDriver()
+        driver.state = PowerChannelState(
+            voltage=0.0,
+            current=0.0,
+            current_limit=0.5,
+            output_enabled=False,
+            voltage_setpoint=12.0,
+            ovp=15.0,
+            ocp=1.0,
+            trip_active=True,
+            ocp_tripped=True,
+        )
+        group = _group(driver)
+
+        with patch("bdx_slow_control.iocs.power.time.monotonic", side_effect=[0.0, 10.0, 20.0]):
+            await group.poll_device()
+            assert group.OCP_TRIPPED.value == "On"
+            assert group.OCP_INTERLOCK_ACTIVE.value == "Off"
+            await group.poll_device()
+            assert group.OCP_INTERLOCK_ACTIVE.value == "Off"
+            await group.poll_device()
+            assert group.OCP_INTERLOCK_ACTIVE.value == "On"
+
+        assert ("set_output", 1, False) in driver.calls
+
+    asyncio.run(scenario())
+
+
+def test_low_voltage_diagnostic_pvs_are_exposed():
+    pvdb, _ = build_psu(load_json(Path("config/profiles/main-server/psu.json")))
+    for device in ("LV1", "LV2"):
+        for channel in ("CH1", "CH2"):
+            prefix = f"BDX:PSU:{device}:{channel}:"
+            for suffix in (
+                "OCP_TRIPPED",
+                "CURRENT_CHANGE_2S_PERCENT",
+                "CURRENT_CHANGE_10S_PERCENT",
+                "VOLTAGE_SPAN_30S",
+                "CURRENT_SPAN_30S",
+                "OCP_INTERLOCK_ACTIVE",
+            ):
+                assert f"{prefix}{suffix}" in pvdb
 
 
 def test_low_voltage_psu_float_pvs_advertise_three_decimal_precision():
