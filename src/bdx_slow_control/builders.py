@@ -146,7 +146,7 @@ def build_chiller(config: dict[str, Any], context: PrototypeContext | None = Non
         runtime_settings=context.runtime,
         minimum_setpoint_c=float(device.get("minimum_setpoint_c", 5.0)),
         maximum_setpoint_c=float(device.get("maximum_setpoint_c", 40.0)),
-        warning_deviation_c=float(device.get("warning_deviation_c", 0.2)),
+        warning_deviation_c=float(device.get("warning_deviation_c", 0.3)),
         alarm_deviation_c=float(device.get("alarm_deviation_c", 0.5)),
     )
     return group.pvdb, settings
