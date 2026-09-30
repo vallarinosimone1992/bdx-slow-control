@@ -362,6 +362,7 @@ class AlarmEngineTests(unittest.TestCase):
         self.assertEqual(engine.evaluate(20.0), [])
 
         engine.set_sample("BDX:GLOBAL:SYSTEM_STATE", "RUNNING", 21.0)
+        self.assertEqual(engine.evaluate(21.0), [])
         self.assertEqual(engine.evaluate(25.9), [])
         events = engine.evaluate(26.0)
         self.assertEqual([(event.level, event.resolved) for event in events], [("MINOR", False)])
