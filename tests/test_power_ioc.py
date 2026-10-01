@@ -227,7 +227,7 @@ def test_output_mismatch_monitor_rearms_only_after_hardware_acknowledgement():
 
         with patch(
             "bdx_slow_control.iocs.power.time.monotonic",
-            side_effect=[0.0, 5.0],
+            side_effect=[0.0, 5.0, 5.0],
         ):
             await group.OUTPUT_SET.write(value=True)
             assert group.OUTPUT_MONITOR_READY.value == "Off"
@@ -277,7 +277,7 @@ def test_output_mismatch_becomes_fault_only_after_command_timeout():
 
         with patch(
             "bdx_slow_control.iocs.power.time.monotonic",
-            side_effect=[0.0, 5.0, 16.0],
+            side_effect=[0.0, 5.0, 5.0, 16.0, 16.0],
         ):
             await group.OUTPUT_SET.write(value=True)
             await group.poll_device()
