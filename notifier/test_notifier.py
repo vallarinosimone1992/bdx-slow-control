@@ -477,6 +477,13 @@ class AlarmEngineTests(unittest.TestCase):
             [("MAJOR", 10.0)],
         )
 
+    def test_output_state_transition_rules_are_disabled(self):
+        config = load_config(DEFAULT_CONFIG_FILE)
+        rule_ids = {rule.rule_id for rule in config.rules}
+        for name in ("lv1-ch1", "lv1-ch2", "lv2-ch1", "lv2-ch2"):
+            self.assertNotIn(f"{name}-output-mismatch", rule_ids)
+            self.assertNotIn(f"{name}-output-command-timeout", rule_ids)
+
     def test_mentions_follow_level_policy(self):
         people = {
             101: Person(user_id=101, name="Major Operator"),
