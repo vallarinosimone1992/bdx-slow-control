@@ -223,20 +223,25 @@ def test_output_mismatch_monitor_rearms_only_after_hardware_acknowledgement():
         await group.poll_device()
         assert group.OUTPUT_MONITOR_READY.value == "On"
         assert group.OUTPUT_COMMAND_PENDING.value == "Off"
+        assert group.OUTPUT_MISMATCH.value == "Off"
 
-        await group.OUTPUT_SET.write(value=True)
-        assert group.OUTPUT_MONITOR_READY.value == "Off"
-        assert group.OUTPUT_COMMAND_PENDING.value == "On"
+        with patch(
+            "bdx_slow_control.iocs.power.time.monotonic",
+            side_effect=[0.0, 5.0],
+        ):
+            await group.OUTPUT_SET.write(value=True)
+            assert group.OUTPUT_MONITOR_READY.value == "Off"
+            assert group.OUTPUT_COMMAND_PENDING.value == "On"
+            assert group.OUTPUT_MISMATCH.value == "Off"
 
-        # First poll still returns the old hardware state: monitoring must stay
-        # suppressed and the command must remain pending.
-        await group.poll_device()
-        assert group.OUTPUT_RBV.value == "Off"
-        assert group.OUTPUT_MONITOR_READY.value == "Off"
-        assert group.OUTPUT_COMMAND_PENDING.value == "On"
+            # The first poll may still see the old hardware state.  This is an
+            # expected commanded transition, not an alarm condition.
+            await group.poll_device()
+            assert group.OUTPUT_RBV.value == "Off"
+            assert group.OUTPUT_MONITOR_READY.value == "Off"
+            assert group.OUTPUT_COMMAND_PENDING.value == "On"
+            assert group.OUTPUT_MISMATCH.value == "Off"
 
-        # Only the first matching hardware readback acknowledges the command
-        # and re-arms unexpected mismatch monitoring.
         driver.state = PowerChannelState(
             voltage=12.0,
             current=0.1,
@@ -250,8 +255,73 @@ def test_output_mismatch_monitor_rearms_only_after_hardware_acknowledgement():
         assert group.OUTPUT_RBV.value == "On"
         assert group.OUTPUT_MONITOR_READY.value == "On"
         assert group.OUTPUT_COMMAND_PENDING.value == "Off"
+        assert group.OUTPUT_MISMATCH.value == "Off"
 
     asyncio.run(scenario())
+
+
+def test_output_mismatch_becomes_fault_only_after_command_timeout():
+    async def scenario():
+        driver = RecordingPowerDriver()
+        group = _group(driver)
+        driver.state = PowerChannelState(
+            voltage=0.0,
+            current=0.0,
+            current_limit=0.5,
+            output_enabled=False,
+            voltage_setpoint=12.0,
+            ovp=15.0,
+            ocp=1.0,
+        )
+        await group.poll_device()
+
+        with patch(
+            "bdx_slow_control.iocs.power.time.monotonic",
+            side_effect=[0.0, 5.0, 16.0],
+        ):
+            await group.OUTPUT_SET.write(value=True)
+            await group.poll_device()
+            assert group.OUTPUT_MISMATCH.value == "Off"
+            assert group.OUTPUT_COMMAND_PENDING.value == "On"
+
+            await group.poll_device()
+            assert group.OUTPUT_MISMATCH.value == "On"
+            assert group.OUTPUT_COMMAND_PENDING.value == "Off"
+            assert group.OUTPUT_MONITOR_READY.value == "On"
+
+    asyncio.run(scenario())
+
+
+def test_unexpected_output_change_sets_synthesized_mismatch():
+    async def scenario():
+        driver = RecordingPowerDriver()
+        group = _group(driver)
+        driver.state = PowerChannelState(
+            voltage=12.0,
+            current=0.1,
+            current_limit=0.5,
+            output_enabled=True,
+            voltage_setpoint=12.0,
+            ovp=15.0,
+            ocp=1.0,
+        )
+        await group.poll_device()
+        assert group.OUTPUT_MISMATCH.value == "Off"
+
+        driver.state = PowerChannelState(
+            voltage=0.0,
+            current=0.0,
+            current_limit=0.5,
+            output_enabled=False,
+            voltage_setpoint=12.0,
+            ovp=15.0,
+            ocp=1.0,
+        )
+        await group.poll_device()
+        assert group.OUTPUT_MISMATCH.value == "On"
+
+    asyncio.run(scenario())
+
 
 def test_hardware_ocp_trip_drives_interlock_after_twenty_seconds():
     async def scenario():
@@ -351,6 +421,7 @@ def test_low_voltage_diagnostic_pvs_are_exposed():
             prefix = f"BDX:PSU:{device}:{channel}:"
             for suffix in (
                 "OCP_TRIPPED",
+                "OUTPUT_MISMATCH",
                 "CURRENT_CHANGE_2S_PERCENT",
                 "CURRENT_CHANGE_10S_PERCENT",
                 "VOLTAGE_SPAN_30S",
