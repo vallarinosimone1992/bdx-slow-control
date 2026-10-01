@@ -14,6 +14,7 @@ from .common import ManagedIOC
 
 PSU_FLOAT_PRECISION = 3
 CURRENT_CHANGE_REFERENCE_FLOOR_A = 0.010
+CURRENT_CHANGE_MIN_SIGNIFICANT_A = 0.030
 DIAGNOSTIC_HISTORY_SECONDS = 35.0
 DIAGNOSTIC_CONTROL_GRACE_SECONDS = 5.0
 OCP_INTERLOCK_SECONDS = 20.0
@@ -323,12 +324,15 @@ class LowVoltagePowerChannelIOC(PowerChannelIOC):
 
     @staticmethod
     def _percent_change(current: float, reference: float) -> float:
+        delta = abs(float(current) - float(reference))
+        if delta < CURRENT_CHANGE_MIN_SIGNIFICANT_A:
+            return 0.0
         denominator = max(
             abs(float(current)),
             abs(float(reference)),
             CURRENT_CHANGE_REFERENCE_FLOOR_A,
         )
-        return abs(float(current) - float(reference)) / denominator * 100.0
+        return delta / denominator * 100.0
 
     def _sample_at_or_before(self, target: float):
         for sample in reversed(self._diagnostic_history):
