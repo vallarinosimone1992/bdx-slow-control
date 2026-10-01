@@ -18,6 +18,7 @@ CURRENT_CHANGE_MIN_SIGNIFICANT_A = 0.030
 DIAGNOSTIC_HISTORY_SECONDS = 35.0
 DIAGNOSTIC_CONTROL_GRACE_SECONDS = 5.0
 OCP_INTERLOCK_SECONDS = 20.0
+OUTPUT_COMMAND_TIMEOUT_SECONDS = 15.0
 
 
 @dataclass(frozen=True)
@@ -101,6 +102,7 @@ class PowerChannelIOC(ManagedIOC):
     OUTPUT_RBV = pvproperty(value=False, dtype=bool, read_only=True)
     OUTPUT_MONITOR_READY = pvproperty(value=False, dtype=bool, read_only=True)
     OUTPUT_COMMAND_PENDING = pvproperty(value=False, dtype=bool, read_only=True)
+    OUTPUT_MISMATCH = pvproperty(value=False, dtype=bool, read_only=True)
     OVP_SET = pvproperty(value=0.0, dtype=float, precision=PSU_FLOAT_PRECISION)
     OVP_RBV = pvproperty(
         value=0.0,
@@ -132,7 +134,8 @@ class PowerChannelIOC(ManagedIOC):
     def __init__(self, *args, channel: int, **kwargs) -> None:
         self.channel = int(channel)
         self._output_setting_initialized = False
-        self._output_monitor_pending_poll = False
+        self._commanded_output_state: bool | None = None
+        self._output_transition_started_at: float | None = None
         super().__init__(*args, **kwargs)
 
     async def poll_device(self) -> None:
@@ -142,7 +145,7 @@ class PowerChannelIOC(ManagedIOC):
         await self.CURRENT_LIMIT_RBV.write(value=state.current_limit)
         await self.CURRENT_RBV.write(value=state.current)
         await self.OUTPUT_RBV.write(value=state.output_enabled)
-        await self._update_output_monitor_ready(state.output_enabled)
+        await self._update_output_status(state.output_enabled)
         await self.OVP_RBV.write(value=state.ovp)
         await self.OCP_RBV.write(value=state.ocp)
         await self._write_protection_status(state)
@@ -156,21 +159,52 @@ class PowerChannelIOC(ManagedIOC):
                 verify_value=False,
             )
             self._output_setting_initialized = True
+            self._commanded_output_state = bool(state.output_enabled)
+            self._output_transition_started_at = None
             await self.OUTPUT_COMMAND_PENDING.write(value=False)
             await self.OUTPUT_MONITOR_READY.write(value=True)
+            await self.OUTPUT_MISMATCH.write(value=False)
 
-    async def _update_output_monitor_ready(self, output_enabled: bool) -> None:
-        if not self._output_monitor_pending_poll:
+    async def _update_output_status(self, output_enabled: bool) -> None:
+        """Publish a race-free output-transition/mismatch state.
+
+        The requested target is kept internally instead of reconstructed from
+        asynchronously monitored PVs.  A commanded transition is not a fault:
+        mismatch remains false while the hardware is given time to acknowledge
+        the request.  Only a transition that exceeds the timeout, or an
+        unexpected readback change outside a command, becomes OUTPUT_MISMATCH.
+        """
+        actual = bool(output_enabled)
+        target = self._commanded_output_state
+        if target is None:
+            target = actual
+            self._commanded_output_state = actual
+
+        if self._output_transition_started_at is not None:
+            if actual == target:
+                self._output_transition_started_at = None
+                await self.OUTPUT_COMMAND_PENDING.write(value=False)
+                await self.OUTPUT_MONITOR_READY.write(value=True)
+                await self.OUTPUT_MISMATCH.write(value=False)
+                return
+
+            elapsed = time.monotonic() - self._output_transition_started_at
+            if elapsed < OUTPUT_COMMAND_TIMEOUT_SECONDS:
+                await self.OUTPUT_COMMAND_PENDING.write(value=True)
+                await self.OUTPUT_MONITOR_READY.write(value=False)
+                await self.OUTPUT_MISMATCH.write(value=False)
+                return
+
+            # The command was not acknowledged within the allowed transition
+            # interval.  This is now a genuine output-state fault.
+            await self.OUTPUT_COMMAND_PENDING.write(value=False)
+            await self.OUTPUT_MONITOR_READY.write(value=True)
+            await self.OUTPUT_MISMATCH.write(value=True)
             return
-        if bool(output_enabled) != bool(self.OUTPUT_SET.value):
-            # The hardware has not acknowledged the requested transition yet.
-            # Keep mismatch monitoring disarmed until the readback confirms it.
-            await self.OUTPUT_COMMAND_PENDING.write(value=True)
-            await self.OUTPUT_MONITOR_READY.write(value=False)
-            return
-        self._output_monitor_pending_poll = False
+
         await self.OUTPUT_COMMAND_PENDING.write(value=False)
         await self.OUTPUT_MONITOR_READY.write(value=True)
+        await self.OUTPUT_MISMATCH.write(value=actual != target)
 
     async def _write_protection_status(self, state) -> None:
         voltage = abs(float(state.voltage))
@@ -208,18 +242,22 @@ class PowerChannelIOC(ManagedIOC):
 
     @OUTPUT_SET.putter
     async def OUTPUT_SET(self, instance, value):
+        target = bool(value)
+        self._commanded_output_state = target
+        self._output_transition_started_at = time.monotonic()
         await self.OUTPUT_MONITOR_READY.write(value=False)
         await self.OUTPUT_COMMAND_PENDING.write(value=True)
-        self._output_monitor_pending_poll = True
+        await self.OUTPUT_MISMATCH.write(value=False)
         try:
-            self.driver.set_output(self.channel, bool(value))
+            self.driver.set_output(self.channel, target)
         except Exception as exc:
-            self._output_monitor_pending_poll = False
+            self._output_transition_started_at = None
             await self.OUTPUT_COMMAND_PENDING.write(value=False)
             await self.OUTPUT_MONITOR_READY.write(value=True)
+            await self.OUTPUT_MISMATCH.write(value=True)
             await self.mark_failure(exc)
             raise
-        return bool(value)
+        return target
 
     @OVP_SET.putter
     async def OVP_SET(self, instance, value):
@@ -324,7 +362,7 @@ class LowVoltagePowerChannelIOC(PowerChannelIOC):
         await self.CURRENT_LIMIT_RBV.write(value=state.current_limit)
         await self.CURRENT_RBV.write(value=state.current)
         await self.OUTPUT_RBV.write(value=state.output_enabled)
-        await self._update_output_monitor_ready(state.output_enabled)
+        await self._update_output_status(state.output_enabled)
         await self.OUTPUT_STATE.write(value="ON" if state.output_enabled else "OFF")
         await self.OVP_RBV.write(value=state.ovp)
         await self.OCP_RBV.write(value=state.ocp)
@@ -519,7 +557,7 @@ class LowVoltagePowerChannelIOC(PowerChannelIOC):
         await self.CURRENT_LIMIT_RBV.write(value=state.current_limit)
         await self.CURRENT_RBV.write(value=state.current)
         await self.OUTPUT_RBV.write(value=state.output_enabled)
-        await self._update_output_monitor_ready(state.output_enabled)
+        await self._update_output_status(state.output_enabled)
         await self.OUTPUT_STATE.write(value="ON" if state.output_enabled else "OFF")
         await self.OVP_RBV.write(value=state.ovp)
         await self.OCP_RBV.write(value=state.ocp)
