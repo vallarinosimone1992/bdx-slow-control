@@ -275,6 +275,13 @@ def test_hardware_ocp_trip_drives_interlock_after_twenty_seconds():
 
 
 
+
+def test_current_change_below_thirty_ma_is_not_significant():
+    assert LowVoltagePowerChannelIOC._percent_change(0.020, 0.000) == 0.0
+    assert LowVoltagePowerChannelIOC._percent_change(0.050, 0.025) == 0.0
+    assert LowVoltagePowerChannelIOC._percent_change(0.040, 0.000) > 10.0
+
+
 def test_low_voltage_diagnostics_ignore_commanded_transient_during_grace_period():
     async def scenario():
         driver = RecordingPowerDriver()
