@@ -89,7 +89,8 @@
             "major_sustained_seconds": 60,
             "recovery_seconds": 5
           },
-          "reference_floor": 0.2
+          "reference_floor": 0.2,
+          "minimum_absolute_difference": 0.03
         },
         {
           "id": "{name}-output-mismatch",
@@ -141,7 +142,8 @@
             "major_sustained_seconds": 0
           },
           "group": "{name}-voltage-protection",
-          "optional": "{optional}"
+          "optional": "{optional}",
+          "minimum_reference": 0.03
         },
         {
           "id": "{name}-ocp-trip",
