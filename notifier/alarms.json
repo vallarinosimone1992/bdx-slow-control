@@ -107,7 +107,8 @@
           "recovery_seconds": 2,
           "limit_description": "OUTPUT_COMMAND_PENDING must clear within 10 seconds",
           "group": "{name}-output",
-          "optional": "{optional}"
+          "optional": "{optional}",
+          "enabled": false
         },
         {
           "id": "{name}-output-mismatch",
@@ -124,7 +125,8 @@
           "limit_description": "OUTPUT_MISMATCH must remain false",
           "group": "{name}-output",
           "optional": "{optional}",
-          "alarm_when": true
+          "alarm_when": true,
+          "enabled": false
         },
         {
           "id": "{name}-ovp-proximity",
