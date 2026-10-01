@@ -21,6 +21,20 @@ OCP_INTERLOCK_SECONDS = 20.0
 OUTPUT_COMMAND_TIMEOUT_SECONDS = 15.0
 
 
+def _pv_boolean(value) -> bool:
+    """Convert caproto boolean-enum values without treating 'Off' as true."""
+    if isinstance(value, bytes):
+        value = value.decode("ascii", errors="strict")
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"on", "true", "yes", "1"}:
+            return True
+        if normalized in {"off", "false", "no", "0"}:
+            return False
+        raise ValueError(f"Unsupported boolean PV value: {value!r}")
+    return bool(value)
+
+
 @dataclass(frozen=True)
 class PowerChannelLimits:
     """Software limits applied before low-voltage PSU writes."""
@@ -242,7 +256,7 @@ class PowerChannelIOC(ManagedIOC):
 
     @OUTPUT_SET.putter
     async def OUTPUT_SET(self, instance, value):
-        target = bool(value)
+        target = _pv_boolean(value)
         self._commanded_output_state = target
         self._output_transition_started_at = time.monotonic()
         await self.OUTPUT_MONITOR_READY.write(value=False)
