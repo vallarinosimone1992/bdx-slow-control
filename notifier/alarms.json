@@ -417,11 +417,11 @@
           "stages": [
             {
               "level": "MINOR",
-              "after_seconds": 5
+              "after_seconds": 10
             },
             {
               "level": "MAJOR",
-              "after_seconds": 20
+              "after_seconds": 60
             }
           ],
           "recovery_seconds": 5,
@@ -443,7 +443,7 @@
             },
             {
               "level": "MAJOR",
-              "after_seconds": 15
+              "after_seconds": 50
             }
           ],
           "recovery_seconds": 5,
@@ -958,8 +958,12 @@
       "alarm_when": false,
       "stages": [
         {
+          "level": "MINOR",
+          "after_seconds": 10
+        },
+        {
           "level": "MAJOR",
-          "after_seconds": 5
+          "after_seconds": 60
         }
       ],
       "recovery_seconds": 5,
@@ -981,7 +985,7 @@
         },
         {
           "level": "MAJOR",
-          "after_seconds": 10
+          "after_seconds": 50
         }
       ],
       "recovery_seconds": 5,
@@ -997,8 +1001,12 @@
       "alarm_when": false,
       "stages": [
         {
+          "level": "MINOR",
+          "after_seconds": 10
+        },
+        {
           "level": "MAJOR",
-          "after_seconds": 5
+          "after_seconds": 60
         }
       ],
       "recovery_seconds": 5,
@@ -1020,7 +1028,7 @@
         },
         {
           "level": "MAJOR",
-          "after_seconds": 10
+          "after_seconds": 50
         }
       ],
       "recovery_seconds": 5,
