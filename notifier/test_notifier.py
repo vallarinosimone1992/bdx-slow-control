@@ -418,6 +418,54 @@ class AlarmEngineTests(unittest.TestCase):
         events = engine.evaluate(26.0)
         self.assertEqual([(event.level, event.resolved) for event in events], [("MINOR", False)])
 
+    def test_communication_rules_use_ten_second_minor_and_sixty_second_major(self):
+        config = load_config(DEFAULT_CONFIG_FILE)
+        by_id = {rule.rule_id: rule for rule in config.rules}
+
+        state_ids = (
+            "chiller-communication",
+            "lv1-health",
+            "lv2-health",
+            "hv1-health",
+            "daq-health",
+            "humidity-h01-health",
+            "pressure-p01-health",
+            "temperature-t00-health",
+            "temperature-t01-health",
+            "temperature-t02-health",
+            "temperature-t03-health",
+        )
+        for rule_id in state_ids:
+            rule = by_id[rule_id]
+            self.assertEqual(
+                [(stage.level, stage.after_seconds) for stage in rule.effective_stages],
+                [("MINOR", 10.0), ("MAJOR", 60.0)],
+                rule_id,
+            )
+
+        stale_ids = (
+            "global-heartbeat-stale",
+            "chiller-heartbeat-stale",
+            "lv1-heartbeat-stale",
+            "lv2-heartbeat-stale",
+            "hv1-heartbeat-stale",
+            "daq-heartbeat-stale",
+            "humidity-h01-stale",
+            "pressure-p01-stale",
+            "temperature-t00-stale",
+            "temperature-t01-stale",
+            "temperature-t02-stale",
+            "temperature-t03-stale",
+        )
+        for rule_id in stale_ids:
+            rule = by_id[rule_id]
+            self.assertEqual(rule.stale_after_seconds, 10.0, rule_id)
+            self.assertEqual(
+                [(stage.level, stage.after_seconds) for stage in rule.stages],
+                [("MINOR", 0.0), ("MAJOR", 50.0)],
+                rule_id,
+            )
+
     def test_mentions_follow_level_policy(self):
         people = {
             101: Person(user_id=101, name="Major Operator"),
