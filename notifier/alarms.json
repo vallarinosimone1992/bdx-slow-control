@@ -93,6 +93,23 @@
           "minimum_absolute_difference": 0.03
         },
         {
+          "id": "{name}-output-command-timeout",
+          "kind": "state",
+          "label": "{name} output command was not acknowledged by hardware",
+          "pv": "{prefix}:OUTPUT_COMMAND_PENDING",
+          "alarm_when": true,
+          "stages": [
+            {
+              "level": "MAJOR",
+              "after_seconds": 10
+            }
+          ],
+          "recovery_seconds": 2,
+          "limit_description": "OUTPUT_COMMAND_PENDING must clear within 10 seconds",
+          "group": "{name}-output",
+          "optional": "{optional}"
+        },
+        {
           "id": "{name}-output-mismatch",
           "kind": "comparison",
           "label": "{name} output readback differs from its setting",
