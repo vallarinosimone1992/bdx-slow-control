@@ -519,7 +519,7 @@ class LowVoltagePowerChannelIOC(PowerChannelIOC):
         await self.CURRENT_LIMIT_RBV.write(value=state.current_limit)
         await self.CURRENT_RBV.write(value=state.current)
         await self.OUTPUT_RBV.write(value=state.output_enabled)
-        await self._update_output_monitor_ready()
+        await self._update_output_monitor_ready(state.output_enabled)
         await self.OUTPUT_STATE.write(value="ON" if state.output_enabled else "OFF")
         await self.OVP_RBV.write(value=state.ovp)
         await self.OCP_RBV.write(value=state.ocp)
