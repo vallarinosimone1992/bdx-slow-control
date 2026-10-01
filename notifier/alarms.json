@@ -111,13 +111,9 @@
         },
         {
           "id": "{name}-output-mismatch",
-          "kind": "comparison",
+          "kind": "state",
           "label": "{name} output readback differs from its setting",
-          "pv": "{prefix}:OUTPUT_RBV",
-          "operator": "eq",
-          "reference": {
-            "pv": "{prefix}:OUTPUT_SET"
-          },
+          "pv": "{prefix}:OUTPUT_MISMATCH",
           "stages": [
             {
               "level": "MAJOR",
@@ -125,15 +121,10 @@
             }
           ],
           "recovery_seconds": 5,
-          "limit_description": "OUTPUT_RBV must equal OUTPUT_SET",
+          "limit_description": "OUTPUT_MISMATCH must remain false",
           "group": "{name}-output",
           "optional": "{optional}",
-          "conditions": [
-            {
-              "pv": "{prefix}:OUTPUT_MONITOR_READY",
-              "operator": "truthy"
-            }
-          ]
+          "alarm_when": true
         },
         {
           "id": "{name}-ovp-proximity",
