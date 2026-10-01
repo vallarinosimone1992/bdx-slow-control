@@ -3,7 +3,8 @@
 This directory contains the English LaTeX sources for two maintained documents:
 
 - `quickstart_guide.tex`: a concise, command-oriented reference for routine operators;
-- `developer_manual.tex`: the detailed user manual plus the architecture, configuration, extension, testing, deployment, and release guide for maintainers.
+- `developer_manual.tex`: the detailed user manual plus the architecture, configuration, extension, testing, deployment, and release guide for maintainers;
+- `BDX_Slow_Control_Alarm_Reference.pdf`: consolidated operational reference for notifier alarms, thresholds, delays, meanings, transient suppression, and notification routing;
 
 Shared formatting is defined in `common/preamble.tex`.
 
