@@ -466,6 +466,17 @@ class AlarmEngineTests(unittest.TestCase):
                 rule_id,
             )
 
+    def test_output_command_timeout_requires_ten_seconds_pending(self):
+        config = load_config(DEFAULT_CONFIG_FILE)
+        rule = next(
+            rule for rule in config.rules
+            if rule.rule_id == "lv1-ch1-output-command-timeout"
+        )
+        self.assertEqual(
+            [(stage.level, stage.after_seconds) for stage in rule.effective_stages],
+            [("MAJOR", 10.0)],
+        )
+
     def test_mentions_follow_level_policy(self):
         people = {
             101: Person(user_id=101, name="Major Operator"),
