@@ -108,6 +108,8 @@ class NumericRule:
     reference_value: float | None
     policy: NumericPolicy
     reference_floor: float = 0.0
+    minimum_absolute_difference: float = 0.0
+    minimum_reference: float = 0.0
     conditions: tuple[Condition, ...] = ()
     group: str | None = None
     optional: bool = False
@@ -593,6 +595,14 @@ def load_config(path: Path) -> NotifierConfig:
                         item.get("reference_floor", 0.0),
                         f"{rule_id}.reference_floor",
                     ),
+                    minimum_absolute_difference=_number(
+                        item.get("minimum_absolute_difference", 0.0),
+                        f"{rule_id}.minimum_absolute_difference",
+                    ),
+                    minimum_reference=_number(
+                        item.get("minimum_reference", 0.0),
+                        f"{rule_id}.minimum_reference",
+                    ),
                     **common,
                 )
             )
@@ -816,12 +826,28 @@ class AlarmEngine:
             if rule.reference_pv is not None
             else float(rule.reference_value)
         )
+        if abs(reference) < rule.minimum_reference:
+            limit = (
+                f"reference {reference:g} is below the active threshold "
+                f"{rule.minimum_reference:g}"
+            )
+            return value, reference, 0.0, limit
+
         denominator = max(abs(reference), rule.reference_floor)
         if denominator == 0:
             raise ValueError(f"Reference for {rule.rule_id} is zero")
         if rule.mode == "deviation":
-            deviation = abs(value - reference) / denominator * 100.0
+            absolute_difference = abs(value - reference)
+            if absolute_difference < rule.minimum_absolute_difference:
+                deviation = 0.0
+            else:
+                deviation = absolute_difference / denominator * 100.0
             limit = f"deviation from {reference:g} must remain below configured percentages"
+            if rule.minimum_absolute_difference > 0:
+                limit += (
+                    f" and absolute difference must be at least "
+                    f"{rule.minimum_absolute_difference:g}"
+                )
             if rule.reference_floor > 0 and abs(reference) < rule.reference_floor:
                 limit += (
                     f" (using {rule.reference_floor:g} minimum reference; "
