@@ -149,6 +149,57 @@ class AlarmEngineTests(unittest.TestCase):
         events = engine.evaluate(31.0)
         self.assertEqual([(event.level, event.resolved) for event in events], [("MAJOR", False)])
 
+    def test_voltage_deviation_requires_thirty_mv_absolute_difference(self):
+        rule = NumericRule(
+            rule_id="voltage",
+            label="Voltage deviation",
+            pv="VALUE",
+            mode="deviation",
+            reference_pv="SETPOINT",
+            reference_value=None,
+            policy=NumericPolicy(),
+            reference_floor=0.2,
+            minimum_absolute_difference=0.03,
+        )
+        engine = AlarmEngine(config_for(rule))
+        engine.set_sample("VALUE", 0.020, 0.0)
+        engine.set_sample("SETPOINT", 0.000, 0.0)
+        self.assertEqual(engine.prime(0.0, notify_initial=False), [])
+        self.assertEqual(engine.evaluate(30.0), [])
+
+        engine.set_sample("VALUE", 0.040, 31.0)
+        events = engine.evaluate(31.0)
+        self.assertEqual([(event.level, event.resolved) for event in events], [("MAJOR", False)])
+
+    def test_ratio_rule_is_inactive_below_minimum_reference(self):
+        rule = NumericRule(
+            rule_id="ovp",
+            label="OVP proximity",
+            pv="VALUE",
+            mode="ratio",
+            reference_pv="LIMIT",
+            reference_value=None,
+            policy=NumericPolicy(
+                minor_percent=95,
+                minor_seconds=0,
+                major_percent=100,
+                major_seconds=0,
+                major_sustained_percent=100,
+                major_sustained_seconds=0,
+            ),
+            minimum_reference=0.03,
+        )
+        engine = AlarmEngine(config_for(rule))
+        engine.set_sample("VALUE", 0.020, 0.0)
+        engine.set_sample("LIMIT", 0.000, 0.0)
+        self.assertEqual(engine.prime(0.0, notify_initial=False), [])
+        self.assertEqual(engine.evaluate(10.0), [])
+
+        engine.set_sample("LIMIT", 1.000, 11.0)
+        engine.set_sample("VALUE", 0.960, 11.0)
+        events = engine.evaluate(11.0)
+        self.assertEqual([(event.level, event.resolved) for event in events], [("MINOR", False)])
+
     def test_direct_major_above_ten_percent_is_immediate(self):
         rule = NumericRule(
             rule_id="temperature",
