@@ -323,6 +323,20 @@ def test_unexpected_output_change_sets_synthesized_mismatch():
     asyncio.run(scenario())
 
 
+def test_output_set_accepts_phoebus_on_off_enum_strings():
+    async def scenario():
+        driver = RecordingPowerDriver()
+        group = _group(driver)
+
+        await group.OUTPUT_SET.write(value="On")
+        assert ("set_output", 1, True) in driver.calls
+
+        await group.OUTPUT_SET.write(value="Off")
+        assert ("set_output", 1, False) in driver.calls
+
+    asyncio.run(scenario())
+
+
 def test_hardware_ocp_trip_drives_interlock_after_twenty_seconds():
     async def scenario():
         driver = RecordingPowerDriver()
