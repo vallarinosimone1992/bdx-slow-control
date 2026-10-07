@@ -14,6 +14,7 @@ import time
 from zoneinfo import ZoneInfo
 
 import notifier_core as core
+from notifier_core import *  # noqa: F401,F403
 
 
 LOG = logging.getLogger("bdx-notifier-control")
@@ -199,12 +200,9 @@ class ControlledBdxNotifier(core.BdxNotifier):
         if local_now.hour < DAILY_REPORT_HOUR:
             return
         if local_now.hour > DAILY_REPORT_HOUR:
-            # Keep the report scheduled at 08:00 rather than sending a late
-            # check-in after a process restart later in the day.
             self.history.set_last_daily_date(today)
             return
 
-        # Mark before delivery to avoid duplicates if Telegram times out.
         self.history.set_last_daily_date(today)
         if not self.notifications_enabled:
             LOG.info("Skipping 08:00 daily notifier report because notifications are snoozed")
@@ -226,7 +224,8 @@ class ControlledBdxNotifier(core.BdxNotifier):
                 except Exception as exc:
                     LOG.warning("Could not update notifier EPICS heartbeat: %s", exc)
                 next_heartbeat = now + HEARTBEAT_SECONDS
-            self._maybe_daily_report()
+            if heartbeat_pv is not None:
+                self._maybe_daily_report()
 
     def run(self) -> None:
         service_thread = threading.Thread(
@@ -242,11 +241,12 @@ class ControlledBdxNotifier(core.BdxNotifier):
             service_thread.join(timeout=3.0)
 
 
-# core.main resolves BdxNotifier at runtime.  Replace it with the controlled
-# subclass while keeping config parsing, alarm evaluation, senders and CLI
-# behavior from the established implementation.
 core.BdxNotifier = ControlledBdxNotifier
 
 
+def main(argv: list[str] | None = None) -> int:
+    return core.main(argv)
+
+
 if __name__ == "__main__":
-    raise SystemExit(core.main())
+    raise SystemExit(main())
