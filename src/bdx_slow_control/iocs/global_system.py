@@ -18,6 +18,20 @@ NOTIFIER_HEARTBEAT_TIMEOUT_SECONDS = 15.0
 NOTIFIER_TIMEZONE = ZoneInfo("Europe/Rome")
 
 
+def _pv_boolean(value) -> bool:
+    """Convert EPICS boolean-enum values without treating 'Off' as true."""
+    if isinstance(value, bytes):
+        value = value.decode("ascii", errors="strict")
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"on", "true", "yes", "1"}:
+            return True
+        if normalized in {"off", "false", "no", "0"}:
+            return False
+        raise ValueError(f"Unsupported boolean PV value: {value!r}")
+    return bool(value)
+
+
 class GlobalIOC(PVGroup):
     HEARTBEAT = pvproperty(value=0, dtype=int, read_only=True)
     SYSTEM_STATE = pvproperty(value="STANDBY", dtype=ChannelType.STRING, read_only=True)
@@ -78,7 +92,7 @@ class GlobalIOC(PVGroup):
             self._notifier_last_heartbeat_monotonic is not None
             and now_monotonic - self._notifier_last_heartbeat_monotonic <= NOTIFIER_HEARTBEAT_TIMEOUT_SECONDS
         )
-        enabled = bool(self.NOTIFIER_ENABLED.value)
+        enabled = _pv_boolean(self.NOTIFIER_ENABLED.value)
         await self.NOTIFIER_ONLINE.write(value=online)
         if not online:
             status = "OFFLINE"
@@ -123,7 +137,7 @@ class GlobalIOC(PVGroup):
 
     @NOTIFIER_SNOOZE_CMD.putter
     async def NOTIFIER_SNOOZE_CMD(self, instance, value):
-        if value:
+        if _pv_boolean(value):
             minutes = float(self.NOTIFIER_SNOOZE_MINUTES.value)
             self._notifier_snooze_until_epoch = time.time() + 60.0 * minutes
             local_until = datetime.fromtimestamp(
@@ -139,7 +153,7 @@ class GlobalIOC(PVGroup):
 
     @NOTIFIER_RESUME_CMD.putter
     async def NOTIFIER_RESUME_CMD(self, instance, value):
-        if value:
+        if _pv_boolean(value):
             self._notifier_snooze_until_epoch = None
             await self.NOTIFIER_ENABLED.write(value=True)
             await self.NOTIFIER_SNOOZE_UNTIL.write(value="")
